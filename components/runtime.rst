@@ -36,6 +36,9 @@ So how does this front-controller work? At first, the special
 the component. This file runs the following logic:
 
 #. It instantiates a :class:`Symfony\\Component\\Runtime\\RuntimeInterface`;
+#. The front-controller script (e.g. ``public/index.php``) is included by the
+   runtime, making it run again. Ensure this doesn't produce any side effects
+   in your code;
 #. The callable (returned by ``public/index.php``) is passed to the Runtime, whose job
    is to resolve the arguments (in this example: ``array $context``);
 #. Then, this callable is called to get the application (``App\Kernel``);
@@ -299,11 +302,14 @@ Using Options
 ~~~~~~~~~~~~~
 
 Some behavior of the Runtimes can be modified through runtime options. They
-can be set using the ``APP_RUNTIME_OPTIONS`` environment variable::
+can be set using the ``APP_RUNTIME_OPTIONS`` environment variable as an array
+or a JSON encoded string::
 
     $_SERVER['APP_RUNTIME_OPTIONS'] = [
         'project_dir' => '/var/task',
     ];
+    // same configuration using JSON:
+    // $_SERVER['APP_RUNTIME_OPTIONS'] = '{"project_dir":"\/var\/task"}';
 
     require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
 

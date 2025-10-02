@@ -18,12 +18,13 @@ your favorite.
 :ref:`Symfony recommends attributes <best-practice-controller-attributes>`
 because it's convenient to put the route and controller in the same place.
 
+.. _routing-route-attributes:
+
 Creating Routes as Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PHP attributes allow to define routes next to the code of the
-:doc:`controllers </controller>` associated to those routes. Attributes are
-native in PHP 8 and higher versions, so you can use them right away.
+PHP attributes allow you to define routes next to the code of the
+:doc:`controllers </controller>` associated to those routes.
 
 You need to add a bit of configuration to your project before using them. If your
 project uses :ref:`Symfony Flex <symfony-flex>`, this file is already created for you.
@@ -248,6 +249,76 @@ Use the ``methods`` option to restrict the verbs each route should respond to:
     automatically for you when the :ref:`framework.http_method_override <configuration-framework-http_method_override>`
     option is ``true``.
 
+Matching Environments
+~~~~~~~~~~~~~~~~~~~~~
+
+Use the ``env`` option to register a route only when the current
+:ref:`configuration environment <configuration-environments>` matches the
+given value:
+
+.. configuration-block::
+
+    .. code-block:: php-attributes
+
+        // src/Controller/DefaultController.php
+        namespace App\Controller;
+
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+        use Symfony\Component\HttpFoundation\Response;
+        use Symfony\Component\Routing\Attribute\Route;
+
+        class DefaultController extends AbstractController
+        {
+            #[Route('/tools', name: 'tools', env: 'dev')]
+            public function developerTools(): Response
+            {
+                // ...
+            }
+
+            // You can also pass an array of environments
+            #[Route('/tools', name: 'tools', env: ['dev', 'test'])]
+            public function developerTools(): Response
+            {
+                // ...
+            }
+        }
+
+    .. code-block:: yaml
+
+        # config/routes.yaml
+        when@dev:
+            tools:
+                path: /tools
+                controller: App\Controller\DefaultController::developerTools
+
+    .. code-block:: xml
+
+        <!-- config/routes.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <routes xmlns="http://symfony.com/schema/routing"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/routing
+                https://symfony.com/schema/routing/routing-1.0.xsd">
+
+            <when env="dev">
+                <route id="tools" path="/tools" controller="App\Controller\DefaultController::developerTools"/>
+            </when>
+        </routes>
+
+    .. code-block:: php
+
+        // config/routes.php
+        use App\Controller\DefaultController;
+        use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+
+        return function (RoutingConfigurator $routes): void {
+            if('dev' === $routes->env()) {
+                $routes->add('tools', '/tools')
+                    ->controller([DefaultController::class, 'developerTools'])
+                ;
+            }
+        };
+
 .. _routing-matching-expressions:
 
 Matching Expressions
@@ -423,16 +494,27 @@ evaluates them:
 
     $ php bin/console debug:router
 
-    ----------------  -------  -------  -----  --------------------------------------------
-    Name              Method   Scheme   Host   Path
-    ----------------  -------  -------  -----  --------------------------------------------
-    homepage          ANY      ANY      ANY    /
-    contact           GET      ANY      ANY    /contact
-    contact_process   POST     ANY      ANY    /contact
-    article_show      ANY      ANY      ANY    /articles/{_locale}/{year}/{title}.{_format}
-    blog              ANY      ANY      ANY    /blog/{page}
-    blog_show         ANY      ANY      ANY    /blog/{slug}
-    ----------------  -------  -------  -----  --------------------------------------------
+    ----------------  -------  --------------------------------------------
+    Name              Method   Path
+    ----------------  -------  --------------------------------------------
+    homepage          ANY      /
+    contact           GET      /contact
+    contact_process   POST     /contact
+    article_show      ANY      /articles/{_locale}/{year}/{title}.{_format}
+    blog              ANY      /blog/{page}
+    blog_show         ANY      /blog/{slug}
+    ----------------  -------  --------------------------------------------
+
+    # pass this option to also display all the defined route aliases
+    $ php bin/console debug:router --show-aliases
+
+    # pass this option to also display the associated controllers with the routes
+    $ php bin/console debug:router --show-controllers
+
+    # pass this option to only display routes that match the given HTTP method
+    # (you can use the special value ANY to see routes that match any method)
+    $ php bin/console debug:router --method=GET
+    $ php bin/console debug:router --method=ANY
 
 Pass the name (or part of the name) of some route to this argument to print the
 route details:
@@ -450,11 +532,6 @@ route details:
     | Options     | compiler_class: Symfony\Component\Routing\RouteCompiler |
     |             | utf8: true                                              |
     +-------------+---------------------------------------------------------+
-
-.. tip::
-
-    Use the ``--show-aliases`` option to show all available aliases for a given
-    route.
 
 The other command is called ``router:match`` and it shows which route will match
 the given URL. It's useful to find out why some URL is not executing the
@@ -578,7 +655,7 @@ the ``{page}`` parameter using the ``requirements`` option:
             }
 
             #[Route('/blog/{slug}', name: 'blog_show')]
-            public function show($slug): Response
+            public function show(string $slug): Response
             {
                 // ...
             }
@@ -706,12 +783,6 @@ URL                       Route          Parameters
     sequences that match generic character types. For example, ``\p{Lu}``
     matches any uppercase character in any language, ``\p{Greek}`` matches any
     Greek characters, etc.
-
-.. note::
-
-    When using regular expressions in route parameters, you can set the ``utf8``
-    route option to ``true`` to make any ``.`` character match any UTF-8
-    characters instead of just a single byte.
 
 If you prefer, requirements can be inlined in each parameter using the syntax
 ``{parameter_name<requirements>}``. This feature makes configuration more
@@ -853,6 +924,10 @@ other configuration formats they are defined with the ``defaults`` option:
 Now, when the user visits ``/blog``, the ``blog_list`` route will match and
 ``$page`` will default to a value of ``1``.
 
+.. tip::
+
+    The default value is allowed to not match the requirement.
+
 .. warning::
 
     You can have more than one optional parameter (e.g. ``/blog/{slug}/{page}``),
@@ -948,6 +1023,7 @@ optional ``priority`` parameter in those routes to control their priority:
         namespace App\Controller;
 
         use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+        use Symfony\Component\HttpFoundation\Response;
         use Symfony\Component\Routing\Attribute\Route;
 
         class BlogController extends AbstractController
@@ -997,7 +1073,7 @@ controller action. Instead of ``string $slug``, add ``BlogPost $post``::
     {
         // ...
 
-        #[Route('/blog/{slug}', name: 'blog_show')]
+        #[Route('/blog/{slug:post}', name: 'blog_show')]
         public function show(BlogPost $post): Response
         {
             // $post is the object whose slug matches the routing parameter
@@ -1011,9 +1087,29 @@ this case), the "param converter" makes a database request to find the object
 using the request parameters (``slug`` in this case). If no object is found,
 Symfony generates a 404 response automatically.
 
+The ``{slug:post}`` syntax maps the route parameter named ``slug`` to the controller
+argument named ``$post``. It also hints the "param converter" to look up the
+corresponding ``BlogPost`` object from the database using the slug.
+
+When mapping multiple entities from route parameters, name collisions can occur.
+In this example, the route tries to define two mappings: one for an author and one
+for a category; both using the same ``name`` parameter. This isn't allowed because
+the route ends up declaring ``name`` twice::
+
+    #[Route('/search-book/{name:author}/{name:category}')]
+
+Such routes should instead be defined using the following syntax::
+
+    #[Route('/search-book/{authorName:author.name}/{categoryName:category.name}')]
+
+This way, the route parameter names are unique (``authorName`` and ``categoryName``),
+and the "param converter" can correctly map them to controller arguments (``$author``
+and ``$category``), loading them both by their name.
+
+More advanced mappings can be achieved using the ``#[MapEntity]`` attribute.
 Check out the :ref:`Doctrine param conversion documentation <doctrine-entity-value-resolver>`
-to learn about the ``#[MapEntity]`` attribute that can be used to customize the
-database queries used to fetch the object from the route parameter.
+to learn how to customize the database queries used to fetch the object from the route
+parameter.
 
 Backed Enum Parameters
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -1065,6 +1161,9 @@ special parameters created by Symfony:
 ``_locale``
     Used to set the :ref:`locale <translation-locale-url>` on the request.
 
+``_query``
+    An array of query parameters to add to the generated URL.
+
 You can include these attributes (except ``_fragment``) both in individual routes
 and in route imports. Symfony defines some special attributes with the same name
 (except for the leading underscore) so you can define them easier:
@@ -1083,6 +1182,7 @@ and in route imports. Symfony defines some special attributes with the same name
                 path: '/articles/{_locale}/search.{_format}',
                 locale: 'en',
                 format: 'html',
+                query: ['page' => 1],
                 requirements: [
                     '_locale' => 'en|fr',
                     '_format' => 'html|xml',
@@ -1101,6 +1201,8 @@ and in route imports. Symfony defines some special attributes with the same name
           controller:  App\Controller\ArticleController::search
           locale:      en
           format:      html
+          query:
+              page:    1
           requirements:
               _locale: en|fr
               _format: html|xml
@@ -1138,6 +1240,7 @@ and in route imports. Symfony defines some special attributes with the same name
                 ->controller([ArticleController::class, 'search'])
                 ->locale('en')
                 ->format('html')
+                ->query(['page' => 1])
                 ->requirements([
                     '_locale' => 'en|fr',
                     '_format' => 'html|xml',
@@ -1305,15 +1408,35 @@ A possible solution is to change the parameter requirements to be more permissiv
 Route Aliasing
 --------------
 
-Route alias allow you to have multiple name for the same route:
+Route alias allows you to have multiple names for the same route
+and can be used to provide backward compatibility for routes that
+have been renamed. Let's say you have a route called ``product_show``:
 
 .. configuration-block::
+
+    .. code-block:: php-attributes
+
+        // src/Controller/ProductController.php
+        namespace App\Controller;
+
+        use Symfony\Component\HttpFoundation\Response;
+        use Symfony\Component\Routing\Attribute\Route;
+
+        class ProductController
+        {
+            #[Route('/product/{id}', name: 'product_show')]
+            public function show(): Response
+            {
+                // ...
+            }
+        }
 
     .. code-block:: yaml
 
         # config/routes.yaml
-        new_route_name:
-            alias: original_route_name
+        product_show:
+            path: /product/{id}
+            controller: App\Controller\ProductController::show
 
     .. code-block:: xml
 
@@ -1324,7 +1447,7 @@ Route alias allow you to have multiple name for the same route:
             xsi:schemaLocation="http://symfony.com/schema/routing
                 https://symfony.com/schema/routing/routing-1.0.xsd">
 
-            <route id="new_route_name" alias="original_route_name"/>
+            <route id="product_show" path="/product/{id}" controller="App\Controller\ProductController::show"/>
         </routes>
 
     .. code-block:: php
@@ -1333,38 +1456,166 @@ Route alias allow you to have multiple name for the same route:
         use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
         return static function (RoutingConfigurator $routes): void {
-            $routes->alias('new_route_name', 'original_route_name');
+            $routes->add('product_show', '/product/{id}')
+                    ->controller('App\Controller\ProductController::show');
         };
 
-In this example, both ``original_route_name`` and ``new_route_name`` routes can
+Now, let's say you want to create a new route called ``product_details``
+that acts exactly the same as ``product_show``.
+
+Instead of duplicating the original route, you can create an alias for it.
+
+.. configuration-block::
+
+    .. code-block:: php-attributes
+
+        // src/Controller/ProductController.php
+        namespace App\Controller;
+
+        use Symfony\Component\HttpFoundation\Response;
+        use Symfony\Component\Routing\Attribute\Route;
+
+        class ProductController
+        {
+            // the "alias" argument assigns an alternate name to this route;
+            // the alias will point to the actual route "product_show"
+            #[Route('/product/{id}', name: 'product_show', alias: ['product_details'])]
+            public function show(): Response
+            {
+                // ...
+            }
+        }
+
+    .. code-block:: yaml
+
+        # config/routes.yaml
+        product_show:
+            path: /product/{id}
+            controller: App\Controller\ProductController::show
+
+        product_details:
+            # "alias" option refers to the name of the route declared above
+            alias: product_show
+
+    .. code-block:: xml
+
+        <!-- config/routes.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <routes xmlns="http://symfony.com/schema/routing"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/routing
+                https://symfony.com/schema/routing/routing-1.0.xsd">
+
+            <route id="product_show" path="/product/{id}" controller="App\Controller\ProductController::show"/>
+            <!-- "alias" attribute value refers to the name of the route declared above -->
+            <route id="product_details" alias="product_show"/>
+        </routes>
+
+    .. code-block:: php
+
+        // config/routes.php
+        use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+
+        return static function (RoutingConfigurator $routes): void {
+            $routes->add('product_show', '/product/{id}')
+                    ->controller('App\Controller\ProductController::show');
+            // second argument refers to the name of the route declared above
+            $routes->alias('product_details', 'product_show');
+        };
+
+In this example, both ``product_show`` and ``product_details`` routes can
 be used in the application and will produce the same result.
+
+.. note::
+
+    YAML, XML, and PHP configuration formats are the only ways to define an alias
+    for a route that you do not own. You can't do this when using PHP attributes.
+
+    This allows you for example to use your own route name for URL generation,
+    while still targeting a route defined by a third-party bundle. The alias and
+    the original route do not need to be declared in the same file or format.
 
 .. _routing-alias-deprecation:
 
 Deprecating Route Aliases
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If some route alias should no longer be used (because it is outdated or
-you decided not to maintain it anymore), you can deprecate its definition:
+Route aliases can be used to provide backward compatibility for routes that
+have been renamed.
+
+Now, let's say you want to replace the ``product_show`` route in favor of
+``product_details`` and mark the old one as deprecated.
+
+In the previous example, the alias ``product_details`` was pointing to
+``product_show`` route.
+
+To mark the ``product_show`` route as deprecated, you need to "switch" the alias.
+The ``product_show`` become the alias, and will now point to the ``product_details`` route.
+This way, the ``product_show`` alias could be deprecated.
 
 .. configuration-block::
 
+    .. code-block:: php-attributes
+
+        // src/Controller/ProductController.php
+        namespace App\Controller;
+
+        use Symfony\Component\HttpFoundation\Response;
+        use Symfony\Component\Routing\Attribute\DeprecatedAlias;
+        use Symfony\Component\Routing\Attribute\Route;
+
+        class ProductController
+        {
+            // this outputs the following generic deprecation message:
+            // Since acme/package 1.2: The "product_show" route alias is deprecated. You should stop using it, as it will be removed in the future.
+            #[Route('/product/{id}',
+                name: 'product_details',
+                alias: new DeprecatedAlias(
+                    aliasName: 'product_show',
+                    package: 'acme/package',
+                    version: '1.2',
+                ),
+            )]
+            // Or, you can also define a custom deprecation message (%alias_id% placeholder is available)
+            #[Route('/product/{id}',
+                name: 'product_details',
+                alias: new DeprecatedAlias(
+                    aliasName: 'product_show',
+                    package: 'acme/package',
+                    version: '1.2',
+                    message: 'The "%alias_id%" route alias is deprecated. Please use "product_details" instead.',
+                ),
+            )]
+            public function show(): Response
+            {
+                // ...
+            }
+        }
+
     .. code-block:: yaml
 
-        new_route_name:
-            alias: original_route_name
+        # Move the concrete route definition under ``product_details``
+        product_details:
+            path: /product/{id}
+            controller: App\Controller\ProductController::show
+
+        # Define the alias and the deprecation under the ``product_show`` definition
+        product_show:
+            alias: product_details
 
             # this outputs the following generic deprecation message:
-            # Since acme/package 1.2: The "new_route_name" route alias is deprecated. You should stop using it, as it will be removed in the future.
+            # Since acme/package 1.2: The "product_show" route alias is deprecated. You should stop using it, as it will be removed in the future.
             deprecated:
                 package: 'acme/package'
                 version: '1.2'
 
-            # you can also define a custom deprecation message (%alias_id% placeholder is available)
+            # or
+
+            # you can define a custom deprecation message (%alias_id% placeholder is available)
             deprecated:
                 package: 'acme/package'
                 version: '1.2'
-                message: 'The "%alias_id%" route alias is deprecated. Do not use it anymore.'
+                message: 'The "%alias_id%" route alias is deprecated. Please use "product_details" instead.'
 
     .. code-block:: xml
 
@@ -1374,35 +1625,46 @@ you decided not to maintain it anymore), you can deprecate its definition:
             xsi:schemaLocation="http://symfony.com/schema/routing
                 https://symfony.com/schema/routing/routing-1.0.xsd">
 
-            <route id="new_route_name" alias="original_route_name">
+            <!-- Move the concrete route definition under ``product_details`` -->
+            <route id="product_details" path="/product/{id}" controller="App\Controller\ProductController::show"/>
+
+            <!-- Define the alias and the deprecation under the ``product_show`` definition -->
+            <route id="product_show" alias="product_details">
                 <!-- this outputs the following generic deprecation message:
-                     Since acme/package 1.2: The "new_route_name" route alias is deprecated. You should stop using it, as it will be removed in the future. -->
+                     Since acme/package 1.2: The "product_show" route alias is deprecated. You should stop using it, as it will be removed in the future. -->
                 <deprecated package="acme/package" version="1.2"/>
 
-                <!-- you can also define a custom deprecation message (%alias_id% placeholder is available) -->
+                <!-- or -->
+
+                <!-- you can define a custom deprecation message (%alias_id% placeholder is available) -->
                 <deprecated package="acme/package" version="1.2">
-                    The "%alias_id%" route alias is deprecated. Do not use it anymore.
+                    The "%alias_id%" route alias is deprecated. Please use "product_details" instead.
                 </deprecated>
             </route>
         </routes>
 
     .. code-block:: php
 
-        $routes->alias('new_route_name', 'original_route_name')
+        $routes->add('product_details', '/product/{id}')
+                ->controller('App\Controller\ProductController::show');
+
+        $routes->alias('product_show', 'product_details')
             // this outputs the following generic deprecation message:
-            // Since acme/package 1.2: The "new_route_name" route alias is deprecated. You should stop using it, as it will be removed in the future.
+            // Since acme/package 1.2: The "product_show" route alias is deprecated. You should stop using it, as it will be removed in the future.
             ->deprecate('acme/package', '1.2', '')
 
-            // you can also define a custom deprecation message (%alias_id% placeholder is available)
+            // or
+
+            // you can define a custom deprecation message (%alias_id% placeholder is available)
             ->deprecate(
                 'acme/package',
                 '1.2',
-                'The "%alias_id%" route alias is deprecated. Do not use it anymore.'
+                'The "%alias_id%" route alias is deprecated. Please use "product_details" instead.'
             )
         ;
 
-In this example, every time the ``new_route_name`` alias is used, a deprecation
-warning is triggered, advising you to stop using that alias.
+In this example, every time the ``product_show`` alias is used, a deprecation
+warning is triggered, advising you to stop using this route and prefer using ``product_details``.
 
 The message is actually a message template, which replaces occurrences of the
 ``%alias_id%`` placeholder by the route alias name. You **must** have
@@ -2476,23 +2738,23 @@ The solution is to configure the ``default_uri`` option to define the
 
 Now you'll get the expected results when generating URLs in your commands::
 
-    // src/Command/SomeCommand.php
+    // src/Command/MyCommand.php
     namespace App\Command;
 
-    use Symfony\Component\Console\Command\Command;
-    use Symfony\Component\Console\Input\InputInterface;
-    use Symfony\Component\Console\Output\OutputInterface;
+    use Symfony\Component\Console\Attribute\AsCommand;
+    use Symfony\Component\Console\Style\SymfonyStyle;
     use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
     // ...
 
-    class SomeCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
-        public function __construct(private UrlGeneratorInterface $urlGenerator)
-        {
-            parent::__construct();
+        public function __construct(
+            private UrlGeneratorInterface $urlGenerator,
+        ) {
         }
 
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(SymfonyStyle $io): int
         {
             // generate a URL with no route arguments
             $signUpPage = $this->urlGenerator->generate('sign_up');
@@ -2798,15 +3060,93 @@ argument of :method:`Symfony\\Component\\HttpFoundation\\UriSigner::sign`::
     The expiration date/time is included in the signed URIs as a timestamp via
     the ``_expiration`` query parameter.
 
-.. versionadded:: 7.1
+If you need to know the reason why a signed URI is invalid, you can use the
+``verify()`` method which throws exceptions on failure::
 
-    The feature to add an expiration date for a signed URI was introduced in Symfony 7.1.
+    use Symfony\Component\HttpFoundation\Exception\ExpiredSignedUriException;
+    use Symfony\Component\HttpFoundation\Exception\UnsignedUriException;
+    use Symfony\Component\HttpFoundation\Exception\UnverifiedSignedUriException;
 
-.. note::
+    // ...
 
-    The generated URI hashes may include the ``/`` and ``+`` characters, which
-    can cause issues with certain clients. If you encounter this problem, replace
-    them using the following: ``strtr($hash, ['/' => '_', '+' => '-'])``.
+    try {
+        $uriSigner->verify($uri); // $uri can be a string or Request object
+
+        // the URI is valid
+    } catch (UnsignedUriException) {
+        // the URI isn't signed
+    } catch (UnverifiedSignedUriException) {
+        // the URI is signed but the signature is invalid
+    } catch (ExpiredSignedUriException) {
+        // the URI is signed but expired
+    }
+
+.. tip::
+
+    If ``symfony/clock`` is installed, it will be used to create and verify
+    expirations. This allows you to :ref:`mock the current time in your tests
+    <clock_writing-tests>`.
+
+Another way to validate incoming requests is to use the ``#[IsSignatureValid]`` attribute.
+
+In the following example, all incoming requests to this controller action will be verified for
+a valid signature. If the signature is missing or invalid,
+a ``SignedUriException`` will be thrown::
+
+    // src/Controller/SomeController.php
+    // ...
+
+    use App\Security\Attribute\IsSignatureValid;
+
+    #[IsSignatureValid]
+    public function someAction(): Response
+    {
+        // ...
+    }
+
+To restrict signature validation to specific HTTP methods,
+use the ``methods`` argument. This can be a string or an array of methods::
+
+    // Only validate POST requests
+    #[IsSignatureValid(methods: 'POST')]
+    public function createItem(): Response
+    {
+        // ...
+    }
+
+    // Validate both POST and PUT requests
+    #[IsSignatureValid(methods: ['POST', 'PUT'])]
+    public function updateItem(): Response
+    {
+        // ...
+    }
+
+You can also apply ``#[IsSignatureValid]`` at the controller class level.
+This way, all actions within the controller will automatically
+be protected by signature validation::
+
+    // src/Controller/SecureController.php
+    // ...
+
+    use App\Security\Attribute\IsSignatureValid;
+
+    #[IsSignatureValid]
+    class SecureController extends AbstractController
+    {
+        public function index(): Response
+        {
+            // ...
+        }
+
+        public function submit(): Response
+        {
+            // ...
+        }
+    }
+
+
+This attribute provides a declarative way to enforce request signature validation directly
+at the controller level, helping to keep your security logic consistent and maintainable.
 
 Troubleshooting
 ---------------

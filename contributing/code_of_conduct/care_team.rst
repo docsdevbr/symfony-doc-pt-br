@@ -54,7 +54,7 @@ also contact all of them at once by emailing ** care@symfony.com **.
 About the CARE Team
 -------------------
 
-The :doc:`Symfony project leader </contributing/code/core_team>` appoints the CARE
+The :doc:`Symfony project leader </contributing/core_team>` appoints the CARE
 team with candidates they see fit. The CARE team will consist of at least
 3 people. The team should be representing as many demographics as possible,
 ideally from different employers.

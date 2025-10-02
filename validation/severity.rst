@@ -105,15 +105,15 @@ Use the ``payload`` option to configure the error level for each constraint:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('username', new Assert\NotBlank([
-                    'payload' => ['severity' => 'error'],
-                ]));
-                $metadata->addPropertyConstraint('password', new Assert\NotBlank([
-                    'payload' => ['severity' => 'error'],
-                ]));
-                $metadata->addPropertyConstraint('bankAccountNumber', new Assert\Iban([
-                    'payload' => ['severity' => 'warning'],
-                ]));
+                $metadata->addPropertyConstraint('username', new Assert\NotBlank(
+                    payload: ['severity' => 'error'],
+                ));
+                $metadata->addPropertyConstraint('password', new Assert\NotBlank(
+                    payload: ['severity' => 'error'],
+                ));
+                $metadata->addPropertyConstraint('bankAccountNumber', new Assert\Iban(
+                    payload: ['severity' => 'warning'],
+                ));
             }
         }
 

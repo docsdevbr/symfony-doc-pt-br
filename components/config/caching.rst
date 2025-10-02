@@ -3,7 +3,7 @@ Caching based on Resources
 
 When all configuration resources are loaded, you may want to process the
 configuration values and combine them all in one file. This file acts
-like a cache. Its contents don’t have to be regenerated every time the
+like a cache. Its contents don't have to be regenerated every time the
 application runs – only when the configuration resources are modified.
 
 For example, the Symfony Routing component allows you to load all routes,
@@ -65,7 +65,3 @@ You can explicitly define the absolute path to the meta file::
 
     // the third optional argument indicates the absolute path to the meta file
     $userMatcherCache = new ConfigCache($cachePath, true, '/my/absolute/path/to/cache.meta');
-
-.. versionadded:: 7.1
-
-    The argument to customize the meta file path was introduced in Symfony 7.1.

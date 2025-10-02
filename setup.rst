@@ -4,7 +4,7 @@ Installing & Setting up the Symfony Framework
 .. admonition:: Screencast
     :class: screencast
 
-    Do you prefer video tutorials? Check out the `Harmonious Development with Symfony`_
+    Do you prefer video tutorials? Check out the `Cosmic Coding with Symfony`_
     screencast series.
 
 .. _symfony-tech-requirements:
@@ -14,7 +14,7 @@ Technical Requirements
 
 Before creating your first Symfony application you must:
 
-* Install PHP 8.2 or higher and these PHP extensions (which are installed and
+* Install PHP 8.4 or higher and these PHP extensions (which are installed and
   enabled by default in most PHP 8 installations): `Ctype`_, `iconv`_,
   `PCRE`_, `Session`_, `SimpleXML`_, and `Tokenizer`_;
 * `Install Composer`_, which is used to install PHP packages.
@@ -48,10 +48,10 @@ application:
 .. code-block:: terminal
 
     # run this if you are building a traditional web application
-    $ symfony new my_project_directory --version="7.2.x" --webapp
+    $ symfony new my_project_directory --version="8.0.x-dev" --webapp
 
     # run this if you are building a microservice, console application or API
-    $ symfony new my_project_directory --version="7.2.x"
+    $ symfony new my_project_directory --version="8.0.x-dev"
 
 The only difference between these two commands is the number of packages
 installed by default. The ``--webapp`` option installs extra packages to give
@@ -63,12 +63,12 @@ Symfony application using Composer:
 .. code-block:: terminal
 
     # run this if you are building a traditional web application
-    $ composer create-project symfony/skeleton:"7.2.x" my_project_directory
+    $ composer create-project symfony/skeleton:"8.0.x-dev" my_project_directory
     $ cd my_project_directory
     $ composer require webapp
 
     # run this if you are building a microservice, console application or API
-    $ composer create-project symfony/skeleton:"7.2.x" my_project_directory
+    $ composer create-project symfony/skeleton:"8.0.x-dev" my_project_directory
 
 No matter which command you run to create the Symfony application. All of them
 will create a new ``my_project_directory/`` directory, download some dependencies
@@ -103,7 +103,7 @@ Git, setup your project with the following commands:
 
 You'll probably also need to customize your :ref:`.env file <config-dot-env>`
 and do a few other project-specific tasks (e.g. creating a database). When
-working on a existing Symfony application for the first time, it may be useful
+working on an existing Symfony application for the first time, it may be useful
 to run this command which displays information about the project:
 
 .. code-block:: terminal
@@ -121,8 +121,8 @@ development.
 .. _symfony-binary-web-server:
 
 However for local development, the most convenient way of running Symfony is by
-using the :doc:`local web server </setup/symfony_server>` provided by the
-``symfony`` binary. This local server provides among other things support for
+using the :ref:`local web server <symfony-cli-server>` provided by the
+Symfony CLI tool. This local server provides among other things support for
 HTTP/2, concurrent requests, TLS/SSL and automatic generation of security
 certificates.
 
@@ -249,9 +249,9 @@ workflows to make them fail when there are vulnerabilities.
 .. tip::
 
     In continuous integration services you can check security vulnerabilities
-    using a different stand-alone project called `Local PHP Security Checker`_.
-    This is the same project used internally by ``check:security`` but much
-    smaller in size than the entire Symfony CLI.
+    by running the ``composer audit`` command. This uses the same data internally
+    as ``check:security`` but does not require installing the entire Symfony CLI
+    during CI or on CI workers.
 
 Symfony LTS Versions
 --------------------
@@ -311,14 +311,13 @@ Learn More
     setup/web_server_configuration
     setup/*
 
-.. _`Harmonious Development with Symfony`: https://symfonycasts.com/screencast/symfony
+.. _`Cosmic Coding with Symfony`: https://symfonycasts.com/screencast/symfony
 .. _`Install Composer`: https://getcomposer.org/download/
 .. _`install the Symfony CLI`: https://symfony.com/download
 .. _`symfony-cli/symfony-cli GitHub repository`: https://github.com/symfony-cli/symfony-cli
 .. _`The Symfony Demo Application`: https://github.com/symfony/demo
 .. _`Symfony Flex`: https://github.com/symfony/flex
 .. _`PHP security advisories database`: https://github.com/FriendsOfPHP/security-advisories
-.. _`Local PHP Security Checker`: https://github.com/fabpot/local-php-security-checker
 .. _`Symfony releases`: https://symfony.com/releases
 .. _`Main recipe repository`: https://github.com/symfony/recipes
 .. _`Contrib recipe repository`: https://github.com/symfony/recipes-contrib

@@ -314,6 +314,8 @@ attributes from the `W3C Standard Proposal`_ are allowed.
                             img: 'src'
                             # allow the <h1> element with all safe attributes
                             h1: '*'
+                            # allow the <div> element with no attributes
+                            div: []
 
     .. code-block:: xml
 
@@ -343,9 +345,12 @@ attributes from the `W3C Standard Proposal`_ are allowed.
                         </framework:allow-element>
 
                         <!-- allow the <h1> element with all safe attributes -->
-                        <framework:allow-element name="img">
+                        <framework:allow-element name="h1">
                             <framework:attribute>*</framework:attribute>
                         </framework:allow-element>
+
+                        <!-- allow the <div> element with no attributes -->
+                        <framework:allow-element name="div"/>
                     </framework:sanitizer>
                 </framework:html-sanitizer>
             </framework:config>
@@ -367,6 +372,9 @@ attributes from the `W3C Standard Proposal`_ are allowed.
 
                     // allow the <h1> element with all safe attributes
                     ->allowElement('h1', '*')
+
+                    // allow the <div> element with no attributes
+                    ->allowElement('div', [])
             ;
         };
 
@@ -385,6 +393,9 @@ attributes from the `W3C Standard Proposal`_ are allowed.
 
                 // allow the <h1> element with all safe attributes
                 ->allowElement('h1')
+
+                // allow the <div> element with no attributes
+                ->allowElement('div', [])
         );
 
 Block and Drop Elements
@@ -804,16 +815,16 @@ URLs of ``<a>`` elements:
             (new HtmlSanitizerConfig())
                 // if `true`, all URLs using the `http://` scheme will be converted to
                 // use the `https://` scheme instead. `http` still needs to be
-                // allowed in `allowedLinkSchemes`
+                // allowed in `allowLinkSchemes`
                 ->forceHttpsUrls()
 
                 // specifies the allowed URL schemes. If the URL has a different scheme, the
                 // attribute will be dropped
-                ->allowedLinkSchemes(['http', 'https', 'mailto'])
+                ->allowLinkSchemes(['http', 'https', 'mailto'])
 
                 // specifies the allowed hosts, the attribute will be dropped if the
                 // URL contains a different host which is not a subdomain of the allowed host
-                ->allowedLinkHosts(['symfony.com']) // Also allows any subdomain (i.e. www.symfony.com)
+                ->allowLinkHosts(['symfony.com']) // Also allows any subdomain (i.e. www.symfony.com)
 
                 // whether to allow relative links (i.e. URLs without scheme and host)
                 ->allowRelativeLinks()
@@ -923,16 +934,16 @@ the HTML sanitizer: ``src``, ``href``, ``lowsrc``, ``background`` and ``ping``.
             (new HtmlSanitizerConfig())
                 // if `true`, all URLs using the `http://` scheme will be converted to
                 // use the `https://` scheme instead. `http` still needs to be
-                // allowed in `allowedMediaSchemes`
+                // allowed in `allowMediaSchemes`
                 ->forceHttpsUrls()
 
                 // specifies the allowed URL schemes. If the URL has a different scheme, the
                 // attribute will be dropped
-                ->allowedMediaSchemes(['http', 'https', 'mailto'])
+                ->allowMediaSchemes(['http', 'https', 'mailto'])
 
                 // specifies the allowed hosts, the attribute will be dropped if the URL
                 // contains a different host which is not a subdomain of the allowed host
-                ->allowedMediaHosts(['symfony.com']) // Also allows any subdomain (i.e. www.symfony.com)
+                ->allowMediaHosts(['symfony.com']) // Also allows any subdomain (i.e. www.symfony.com)
 
                 // whether to allow relative URLs (i.e. URLs without scheme and host)
                 ->allowRelativeMedias()

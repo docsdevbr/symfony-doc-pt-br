@@ -107,7 +107,7 @@ the dev-server. To fix this, set the ``allowedHosts`` option:
         // ...
 
         .configureDevServerOptions(options => {
-            options.allowedHosts = all;
+            options.allowedHosts = 'all';
         })
 
 .. warning::

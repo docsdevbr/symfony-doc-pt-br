@@ -77,12 +77,12 @@ on an object that will contain a credit card number.
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('cardNumber', new Assert\CardScheme([
-                    'schemes' => [
+                $metadata->addPropertyConstraint('cardNumber', new Assert\CardScheme(
+                    schemes: [
                         Assert\CardScheme::VISA,
                     ],
-                    'message' => 'Your credit card number is invalid.',
-                ]));
+                    message: 'Your credit card number is invalid.',
+                ));
             }
         }
 
@@ -114,7 +114,7 @@ Parameter        Description
 ``schemes``
 ~~~~~~~~~~~
 
-**type**: ``mixed`` [:ref:`default option <validation-default-option>`]
+**type**: ``mixed``
 
 This option is required and represents the name of the number scheme used
 to validate the credit card number, it can either be a string or an array.

@@ -116,12 +116,12 @@ that it is between a certain size, add the following:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('headshot', new Assert\Image([
-                    'minWidth' => 200,
-                    'maxWidth' => 400,
-                    'minHeight' => 200,
-                    'maxHeight' => 400,
-                ]));
+                $metadata->addPropertyConstraint('headshot', new Assert\Image(
+                    minWidth: 200,
+                    maxWidth: 400,
+                    minHeight: 200,
+                    maxHeight: 400,
+                ));
             }
         }
 
@@ -187,10 +187,10 @@ following code:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('headshot', new Assert\Image([
-                    'allowLandscape' => false,
-                    'allowPortrait' => false,
-                ]));
+                $metadata->addPropertyConstraint('headshot', new Assert\Image(
+                    allowLandscape: false,
+                    allowPortrait: false,
+                ));
             }
         }
 
@@ -209,11 +209,6 @@ add several other options.
 **type**: ``Boolean`` **default**: ``true``
 
 If this option is false, the image cannot be landscape oriented.
-
-.. note::
-
-    This option does not apply to SVG files. If you use it with SVG files,
-    you'll see the error message defined in the ``sizeNotDetectedMessage`` option.
 
 ``allowLandscapeMessage``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -238,11 +233,6 @@ Parameter         Description
 **type**: ``Boolean`` **default**: ``true``
 
 If this option is false, the image cannot be portrait oriented.
-
-.. note::
-
-    This option does not apply to SVG files. If you use it with SVG files,
-    you'll see the error message defined in the ``sizeNotDetectedMessage`` option.
 
 ``allowPortraitMessage``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -269,11 +259,6 @@ Parameter         Description
 If this option is false, the image cannot be a square. If you want to force
 a square image, then leave this option as its default ``true`` value
 and set `allowLandscape`_ and `allowPortrait`_ both to ``false``.
-
-.. note::
-
-    This option does not apply to SVG files. If you use it with SVG files,
-    you'll see the error message defined in the ``sizeNotDetectedMessage`` option.
 
 ``allowSquareMessage``
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -372,11 +357,6 @@ Parameter             Description
 
 If set, the aspect ratio (``width / height``) of the image file must be less
 than or equal to this value.
-
-.. note::
-
-    This option does not apply to SVG files. If you use it with SVG files,
-    you'll see the error message defined in the ``sizeNotDetectedMessage`` option.
 
 ``maxRatioMessage``
 ~~~~~~~~~~~~~~~~~~~
@@ -497,11 +477,6 @@ Parameter             Description
 If set, the aspect ratio (``width / height``) of the image file must be greater
 than or equal to this value.
 
-.. note::
-
-    This option does not apply to SVG files. If you use it with SVG files,
-    you'll see the error message defined in the ``sizeNotDetectedMessage`` option.
-
 ``minRatioMessage``
 ~~~~~~~~~~~~~~~~~~~
 
@@ -554,12 +529,6 @@ be displayed. This will only occur when at least one of the size constraint
 options has been set.
 
 This message has no parameters.
-
-.. note::
-
-    Detecting the size of SVG images is not supported. This error message will
-    be displayed if you use any of the following options: ``allowLandscape``,
-    ``allowPortrait``, ``allowSquare``, ``maxRatio``, and ``minRatio``.
 
 .. _`IANA website`: https://www.iana.org/assignments/media-types/media-types.xhtml
 .. _`PHP GD extension`: https://www.php.net/manual/en/book.image.php

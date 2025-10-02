@@ -2,22 +2,23 @@ Documentation Standards
 =======================
 
 Contributions must follow these standards to match the style and tone of the
-rest of the Symfony documentation.
+rest of the Symfony documentation:
 
-Sphinx
-------
+.. _sphinx:
 
-* The following characters are chosen for different heading levels: level 1
-  is ``=`` (equal sign), level 2 ``-`` (dash), level 3 ``~`` (tilde), level 4
-  ``.`` (dot) and level 5 ``"`` (double quote);
-* Each line should break approximately after the first word that crosses the
-  72nd character (so most lines end up being 72-78 characters);
-* The ``::`` shorthand is *preferred* over ``.. code-block:: php`` to begin a PHP
-  code block unless it results in the marker being on its own line (read
-  `the Sphinx documentation`_ to see when you should use the shorthand);
-* Inline hyperlinks are **not** used. Separate the link and their target
-  definition, which you add on the bottom of the page;
-* Inline markup should be closed on the same line as the open-string;
+* Use the following characters for each heading level:
+  * level 1: ``=`` (equal sign),
+  * level 2: ``-`` (dash),
+  * level 3: ``~`` (tilde),
+  * level 4: ``.`` (dot),
+  * level 5: ``"`` (double quote);
+* Break each line at the 80th character whenever possible (e.g. you can ignore
+  this rule for tables);
+* Use the ``::`` shorthand marker instead of ``.. code-block:: php`` to begin a
+  PHP code block, unless this results in the marker being the only content on its own line;
+* Don't use inline hyperlinks. Separate the link and their target definition,
+  which you add at the bottom of the page;
+* Don't extend inline markup formatting (e.g., bold text) across multiple lines.
 
 Example
 ~~~~~~~
@@ -223,7 +224,6 @@ In addition, documentation follows these rules:
 * **Contractions** are allowed: e.g. you can write ``you would`` as well as ``you'd``,
   ``it is`` as well as ``it's``, etc.
 
-.. _`the Sphinx documentation`: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks
 .. _`Twig Coding Standards`: https://twig.symfony.com/doc/3.x/coding_standards.html
 .. _`reserved by the IANA`: https://tools.ietf.org/html/rfc2606#section-3
 .. _`American English`: https://en.wikipedia.org/wiki/American_English

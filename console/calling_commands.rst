@@ -14,20 +14,19 @@ arguments and options you want to pass to the command. The command name must be
 the first argument.
 
 Eventually, calling the ``doRun()`` method actually runs the command and returns
-the returned code from the command (return value from command ``execute()``
+the returned code from the command (return value from command ``__invoke()``
 method)::
 
     // ...
-    use Symfony\Component\Console\Command;
+    use Symfony\Component\Console\Application;
+    use Symfony\Component\Console\Attribute\AsCommand;
     use Symfony\Component\Console\Input\ArrayInput;
-    use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
 
-    class CreateUserCommand extends Command
+    #[AsCommand(name: 'app:create-user')]
+    class CreateUserCommand
     {
-        // ...
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(OutputInterface $output, Application $application): int
         {
             $greetInput = new ArrayInput([
                 // the command name is passed as first argument
@@ -39,7 +38,7 @@ method)::
             // disable interactive behavior for the greet command
             $greetInput->setInteractive(false);
 
-            $returnCode = $this->getApplication()->doRun($greetInput, $output);
+            $returnCode = $application->doRun($greetInput, $output);
 
             // ...
         }
@@ -56,8 +55,8 @@ method)::
     Using ``doRun()`` instead of ``run()`` prevents autoexiting and allows to
     return the exit code instead.
 
-    Also, using ``$this->getApplication()->doRun()`` instead of
-    ``$this->getApplication()->find('demo:greet')->run()`` will allow proper
+    Also, using ``$application->doRun()`` instead of
+    ``$application->find('demo:greet')->run()`` will allow proper
     events to be dispatched for that inner command as well.
 
 .. warning::

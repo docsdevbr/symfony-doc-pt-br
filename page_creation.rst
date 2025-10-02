@@ -18,7 +18,7 @@ two-step process:
 .. admonition:: Screencast
     :class: screencast
 
-    Do you prefer video tutorials? Check out the `Harmonious Development with Symfony`_
+    Do you prefer video tutorials? Check out the `Cosmic Coding with Symfony`_
     screencast series.
 
 .. seealso::
@@ -36,7 +36,7 @@ Creating a Page: Route and Controller
 
 Suppose you want to create a page - ``/lucky/number`` - that generates a lucky (well,
 random) number and prints it. To do that, create a "Controller" class and a
-"controller" method inside of it::
+"number" method inside of it::
 
     <?php
     // src/Controller/LuckyController.php
@@ -80,7 +80,7 @@ metadata to code):
           }
       }
 
-That's it! If you are using :doc:`the Symfony web server </setup/symfony_server>`,
+That's it! If you are using :ref:`the Symfony web server <symfony-cli-server>`,
 try it out by going to: http://localhost:8000/lucky/number
 
 .. tip::
@@ -125,11 +125,11 @@ You should see your ``app_lucky_number`` route in the list:
 
 .. code-block:: terminal
 
-    ----------------  -------  -------  -----  --------------
-    Name              Method   Scheme   Host   Path
-    ----------------  -------  -------  -----  --------------
-    app_lucky_number  ANY      ANY      ANY    /lucky/number
-    ----------------  -------  -------  -----  --------------
+    ----------------  -------  --------------
+    Name              Method   Path
+    ----------------  -------  --------------
+    app_lucky_number  ANY      /lucky/number
+    ----------------  -------  --------------
 
 You will also see debugging routes besides ``app_lucky_number`` -- more on
 the debugging routes in the next section.
@@ -273,10 +273,10 @@ when needed.
 What's Next?
 ------------
 
-Congrats! You're already starting to master Symfony and learn a whole new
+Congrats! You're already starting to learn Symfony and discover a whole new
 way of building beautiful, functional, fast and maintainable applications.
 
-OK, time to finish mastering the fundamentals by reading these articles:
+OK, time to finish learning the fundamentals by reading these articles:
 
 * :doc:`/routing`
 * :doc:`/controller`
@@ -302,5 +302,5 @@ Go Deeper with HTTP & Framework Fundamentals
 
 .. _`Twig`: https://twig.symfony.com
 .. _`Composer`: https://getcomposer.org
-.. _`Harmonious Development with Symfony`: https://symfonycasts.com/screencast/symfony/setup
+.. _`Cosmic Coding with Symfony`: https://symfonycasts.com/screencast/symfony/setup
 .. _`attributes`: https://www.php.net/manual/en/language.attributes.overview.php

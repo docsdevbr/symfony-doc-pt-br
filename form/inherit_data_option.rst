@@ -29,7 +29,7 @@ entities, a ``Company`` and a ``Customer``::
         private string $firstName;
         private string $lastName;
 
-        private string  $address;
+        private string $address;
         private string $zipcode;
         private string $city;
         private string $country;

@@ -361,5 +361,5 @@ Learn more
     /messenger
     /messenger/*
 
-.. _`blog posts about command buses`: https://matthiasnoback.nl/tags/command%20bus/
+.. _`blog posts about command buses`: https://matthiasnoback.nl/tags/command-bus/
 .. _`SimpleBus project`: https://docs.simplebus.io/en/latest/

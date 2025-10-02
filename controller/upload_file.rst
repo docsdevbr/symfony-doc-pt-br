@@ -75,14 +75,11 @@ so Symfony doesn't try to get/set its value from the related entity::
                     // unmapped fields can't define their validation using attributes
                     // in the associated entity, so you can use the PHP constraint classes
                     'constraints' => [
-                        new File([
-                            'maxSize' => '1024k',
-                            'mimeTypes' => [
-                                'application/pdf',
-                                'application/x-pdf',
-                            ],
-                            'mimeTypesMessage' => 'Please upload a valid PDF document',
-                        ])
+                        new File(
+                            maxSize: '1024k',
+                            extensions: ['pdf'],
+                            extensionsMessage: 'Please upload a valid PDF document',
+                        )
                     ],
                 ])
                 // ...
@@ -198,10 +195,6 @@ There are some important things to consider in the code of the above controller:
     If a directory was uploaded, ``getClientOriginalPath()`` will contain
     the **webkitRelativePath** as provided by the browser. Otherwise this
     value will be identical to ``getClientOriginalName()``.
-
-.. versionadded:: 7.1
-
-    The ``getClientOriginalPath()`` method was introduced in Symfony 7.1.
 
 You can use the following code to link to the PDF brochure of a product:
 

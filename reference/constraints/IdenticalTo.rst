@@ -94,9 +94,9 @@ The following constraints ensure that:
             {
                 $metadata->addPropertyConstraint('firstName', new Assert\IdenticalTo('Mary'));
 
-                $metadata->addPropertyConstraint('age', new Assert\IdenticalTo([
-                    'value' => 20,
-                ]));
+                $metadata->addPropertyConstraint('age', new Assert\IdenticalTo(
+                    value: 20,
+                ));
             }
         }
 

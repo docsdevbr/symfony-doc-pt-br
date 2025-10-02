@@ -9,7 +9,7 @@ Diversity in Open Source
 `Sage Sharp - What makes a good community? <https://sage.thesharps.us/2015/10/06/what-makes-a-good-community>`_
 `Ashe Dryden - The Ethics of Unpaid Labor and the OSS Community <https://www.ashedryden.com/blog/the-ethics-of-unpaid-labor-and-the-oss-community>`_
 `Model View Culture - The Dehumanizing Myth of the Meritocracy <https://modelviewculture.com/pieces/the-dehumanizing-myth-of-the-meritocracy>`_
-`Annalee - How “Good Intent” Undermines Diversity and Inclusion <https://thebias.com/2017/09/26/how-good-intent-undermines-diversity-and-inclusion>`_
+`Annalee - How "Good Intent" Undermines Diversity and Inclusion <https://thebias.com/2017/09/26/how-good-intent-undermines-diversity-and-inclusion>`_
 `Karolina Szczur - Building Inclusive Communities <https://speakerdeck.com/fox/building-inclusive-communities>`_
 
 Code of Conduct
@@ -22,7 +22,7 @@ Code of Conduct
 Inclusive language
 ------------------
 
-`Jenée Desmond-Harris - Why I’m finally convinced it's time to stop saying "you guys" <https://www.vox.com/2015/6/11/8761227/you-guys-sexism-language>`_
+`Jenée Desmond-Harris - Why I'm finally convinced it's time to stop saying "you guys" <https://www.vox.com/2015/6/11/8761227/you-guys-sexism-language>`_
 `inclusive language presentations <https://github.com/hcorona/diversity-inclusion/blob/master/inclusive-language-presentations.md>`_
 
 Other talks and Blog Posts
@@ -30,7 +30,7 @@ Other talks and Blog Posts
 
 `Lena Reinhard – A Talk About Nothing <https://www.youtube.com/watch?v=D3e3V66TH2Y>`_
 `Lena Reinhard - A Talk about Everything <https://www.youtube.com/watch?v=CZx7rYoq1Uw>`_
-`Sage Sharp - SCALE: Improving Diversity with Maslow’s hierarchy <https://sage.thesharps.us/2016/01/24/scale-improving-diversity-with-maslows-hierarchy>`_
+`Sage Sharp - SCALE: Improving Diversity with Maslow's hierarchy <https://sage.thesharps.us/2016/01/24/scale-improving-diversity-with-maslows-hierarchy>`_
 `UCSF - Unconscious Bias <https://diversity.ucsf.edu/resources/unconscious-bias>`_
 `Responding to harassment reports <http://geekfeminism.wikia.com/wiki/Conference_anti-harassment/Responding_to_reports>`_
 `Unconscious bias at work <https://rework.withgoogle.com/guides/unbiasing-raise-awareness/steps/watch-unconscious-bias-at-work>`_

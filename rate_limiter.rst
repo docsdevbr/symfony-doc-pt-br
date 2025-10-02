@@ -222,18 +222,66 @@ prevents that number from being higher than 5,000).
     find them with a :doc:`tagged iterator </service_container/tags>` or
     :doc:`locator </service_container/service_subscribers_locators>`.
 
-    .. versionadded:: 7.1
-
-        The automatic addition of the ``rate_limiter`` tag was introduced
-        in Symfony 7.1.
-
 Rate Limiting in Action
 -----------------------
 
-After having installed and configured the rate limiter, inject it in any service
-or controller and call the ``consume()`` method to try to consume a given number
-of tokens. For example, this controller uses the previous rate limiter to control
-the number of requests to the API::
+Injecting the Rate Limiter Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After having configured one or more rate limiters, you have two ways of injecting
+them in any service or controller:
+
+**(1) Use a specific argument name**
+
+Type-hint your construtor/method argument with ``RateLimiterFactoryInterface`` and name
+the argument using this pattern: "rate limiter name in camelCase" + ``Limiter`` suffix.
+For example, to inject the ``anonymous_api`` limiter defined earlier, use an
+argument named ``$anonymousApiLimiter``::
+
+    // src/Controller/ApiController.php
+    namespace App\Controller;
+
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+
+    class ApiController extends AbstractController
+    {
+        public function index(RateLimiterFactoryInterface $anonymousApiLimiter): Response
+        {
+            // ...
+        }
+    }
+
+**(2) Use the ``#[Target]`` attribute**
+
+When :ref:`dealing with multiple implementations of the same type <autowiring-multiple-implementations-same-type>`
+the ``#[Target]`` attribute helps you select which one to inject. Symfony creates
+a target with the same name as the rate limiter.
+
+For example, to select the ``anonymous_api`` limiter defined earlier, use
+``anonymous_api.limiter`` as the target::
+
+    // ...
+    use Symfony\Component\DependencyInjection\Attribute\Target;
+
+    class ApiController extends AbstractController
+    {
+        public function index(
+            #[Target('anonymous_api')] RateLimiterFactoryInterface $rateLimiter
+        ): Response
+        {
+            // ...
+        }
+    }
+
+Using the Rate Limiter Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After having injected the rate limiter in any service or controller, call the
+``consume()`` method to try to consume a given number of tokens. For example,
+this controller uses the previous rate limiter to control the number of requests
+to the API::
 
     // src/Controller/ApiController.php
     namespace App\Controller;
@@ -242,13 +290,13 @@ the number of requests to the API::
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
-    use Symfony\Component\RateLimiter\RateLimiterFactory;
+    use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
     class ApiController extends AbstractController
     {
-        // if you're using service autowiring, the variable name must be:
-        // "rate limiter name" (in camelCase) + "Limiter" suffix
-        public function index(Request $request, RateLimiterFactory $anonymousApiLimiter): Response
+        // the argument name here is important; read the previous section about
+        // how to inject a specific rate limiter service
+        public function index(Request $request, RateLimiterFactoryInterface $anonymousApiLimiter): Response
         {
             // create a limiter based on a unique identifier of the client
             // (e.g. the client's IP address, a username/email, an API key, etc.)
@@ -291,11 +339,11 @@ using the ``reserve()`` method::
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\RateLimiter\RateLimiterFactory;
+    use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
     class ApiController extends AbstractController
     {
-        public function registerUser(Request $request, RateLimiterFactory $authenticatedApiLimiter): Response
+        public function registerUser(Request $request, RateLimiterFactoryInterface $authenticatedApiLimiter): Response
         {
             $apiKey = $request->headers->get('apikey');
             $limiter = $authenticatedApiLimiter->create($apiKey);
@@ -350,11 +398,11 @@ the :class:`Symfony\\Component\\RateLimiter\\Reservation` object returned by the
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\RateLimiter\RateLimiterFactory;
+    use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
     class ApiController extends AbstractController
     {
-        public function index(Request $request, RateLimiterFactory $anonymousApiLimiter): Response
+        public function index(Request $request, RateLimiterFactoryInterface $anonymousApiLimiter): Response
         {
             $limiter = $anonymousApiLimiter->create($request->getClientIp());
             $limit = $limiter->consume();
@@ -461,9 +509,10 @@ simultaneous requests (e.g. three servers of a company hitting your API at the
 same time). Rate limiters use :doc:`locks </lock>` to protect their operations
 against these race conditions.
 
-By default, Symfony uses the global lock configured by ``framework.lock``, but
-you can use a specific :ref:`named lock <lock-named-locks>` via the
-``lock_factory`` option (or none at all):
+By default, if the :doc:`lock </lock>` component is installed, Symfony uses the
+global lock configured by ``framework.lock``, but you can use a specific
+:ref:`named lock <lock-named-locks>` via the ``lock_factory`` option (or none
+at all):
 
 .. configuration-block::
 
@@ -533,6 +582,119 @@ you can use a specific :ref:`named lock <lock-named-locks>` via the
                     ->lockFactory(null)
                 ;
         };
+
+Compound Rate Limiter
+---------------------
+
+You can configure multiple rate limiters to work together:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/rate_limiter.yaml
+        framework:
+            rate_limiter:
+                two_per_minute:
+                    policy: 'fixed_window'
+                    limit: 2
+                    interval: '1 minute'
+                five_per_hour:
+                    policy: 'fixed_window'
+                    limit: 5
+                    interval: '1 hour'
+                contact_form:
+                    policy: 'compound'
+                    limiters: [two_per_minute, five_per_hour]
+
+    .. code-block:: xml
+
+        <!-- config/packages/rate_limiter.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:framework="http://symfony.com/schema/dic/symfony"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+            <framework:config>
+                <framework:rate-limiter>
+                    <framework:limiter name="two_per_minute"
+                        policy="fixed_window"
+                        limit="2"
+                        interval="1 minute"
+                    />
+
+                    <framework:limiter name="five_per_hour"
+                        policy="fixed_window"
+                        limit="5"
+                        interval="1 hour"
+                    />
+
+                    <framework:limiter name="contact_form"
+                        policy="compound"
+                    >
+                        <limiter>two_per_minute</limiter>
+                        <limiter>five_per_hour</limiter>
+                    </framework:limiter>
+                </framework:rate-limiter>
+            </framework:config>
+        </container>
+
+    .. code-block:: php
+
+        // config/packages/rate_limiter.php
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework): void {
+            $framework->rateLimiter()
+                ->limiter('two_per_minute')
+                    ->policy('fixed_window')
+                    ->limit(2)
+                    ->interval('1 minute')
+                ;
+
+            $framework->rateLimiter()
+                ->limiter('two_per_minute')
+                    ->policy('fixed_window')
+                    ->limit(5)
+                    ->interval('1 hour')
+                ;
+
+            $framework->rateLimiter()
+                ->limiter('contact_form')
+                    ->policy('compound')
+                    ->limiters(['two_per_minute', 'five_per_hour'])
+                ;
+        };
+
+Then, inject and use as normal::
+
+    // src/Controller/ContactController.php
+    namespace App\Controller;
+
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+
+    class ContactController extends AbstractController
+    {
+        public function registerUser(Request $request, RateLimiterFactoryInterface $contactFormLimiter): Response
+        {
+            $limiter = $contactFormLimiter->create($request->getClientIp());
+
+            if (false === $limiter->consume(1)->isAccepted()) {
+                // either of the two limiters has been reached
+            }
+
+            // ...
+        }
+
+        // ...
+    }
 
 .. _`DoS attacks`: https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html
 .. _`Apache mod_ratelimit`: https://httpd.apache.org/docs/current/mod/mod_ratelimit.html

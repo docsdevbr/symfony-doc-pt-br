@@ -28,7 +28,7 @@ constructive, respectful and helpful reviews and replies.
     welcoming place for everyone. **You are free to disagree with
     someone's opinions, but don't be disrespectful.**
 
-It’s important to accept that many programming decisions are opinions.
+It's important to accept that many programming decisions are opinions.
 Discuss trade-offs, which you prefer, and reach a resolution quickly.
 It's not about being right or wrong, but using what works.
 

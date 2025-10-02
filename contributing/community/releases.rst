@@ -113,7 +113,7 @@ PHP Compatibility
 -----------------
 
 The **minimum** PHP version is decided for each **major** Symfony version by consensus
-amongst the :doc:`core team </contributing/code/core_team>` and documented as
+amongst the :doc:`core team </contributing/core_team>` and documented as
 part of the :ref:`technical requirements for running Symfony applications
 <symfony-tech-requirements>`.
 

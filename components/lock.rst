@@ -399,17 +399,15 @@ Store                                                       Scope   Blocking  Ex
 :ref:`RedisStore <lock-store-redis>`                        remote  no        yes      yes     yes
 :ref:`SemaphoreStore <lock-store-semaphore>`                local   yes       no       no      no
 :ref:`ZookeeperStore <lock-store-zookeeper>`                remote  no        no       no      no
+:ref:`DynamoDbStore <lock-store-dynamodb>`                  remote  no        yes      no      yes
 ==========================================================  ======  ========  ======== ======= =============
 
 .. tip::
 
     Symfony includes two other special stores that are mostly useful for testing:
-    ``InMemoryStore``, which saves locks in memory during a process, and ``NullStore``,
-    which doesn't persist anything.
 
-.. versionadded:: 7.2
-
-    The :class:`Symfony\\Component\\Lock\\Store\\NullStore` was introduced in Symfony 7.2.
+    * ``InMemoryStore`` (``LOCK_DSN=in-memory``), which saves locks in memory during a process;
+    * ``NullStore`` (``LOCK_DSN=null``) which doesn't persist anything.
 
 .. _lock-store-flock:
 
@@ -612,9 +610,9 @@ RedisStore
 ~~~~~~~~~~
 
 The RedisStore saves locks on a Redis server, it requires a Redis connection
-implementing the ``\Redis``, ``\RedisArray``, ``\RedisCluster``, ``\Relay\Relay`` or
-``\Predis`` classes. This store does not support blocking, and expects a TTL to
-avoid stalled locks::
+implementing the ``\Redis``, ``\RedisArray``, ``\RedisCluster``, ``\Relay\Relay``,
+``\Relay\Cluster`` or ``\Predis`` classes. This store does not support blocking,
+and expects a TTL to avoid stalled locks::
 
     use Symfony\Component\Lock\Store\RedisStore;
 
@@ -697,6 +695,32 @@ PHP process is terminated::
 
     Zookeeper does not require a TTL as the nodes used for locking are ephemeral
     and die when the PHP process is terminated.
+
+.. _lock-store-dynamodb:
+
+DynamoDbStore
+~~~~~~~~~~~~~
+
+The DynamoDbStore saves locks on a Amazon DynamoDB table. Install it by running:
+
+.. code-block:: terminal
+
+    $ composer require symfony/amazon-dynamo-db-lock
+
+It requires a `DynamoDbClient`_ instance or a `Data Source Name (DSN)`_.
+This store does not support blocking, and expects a TTL to avoid stalled locks::
+
+    use Symfony\Component\Lock\Bridge\DynamoDb\Store\DynamoDbStore;
+
+    // a DynamoDbClient instance or DSN
+    $dynamoDbClientOrDSN = 'dynamodb://default/lock';
+    $store = new DynamoDbStore($dynamoDbClientOrDSN);
+
+The table where values are stored is created automatically on the first call to
+the :method:`Symfony\\Component\\Lock\\Bridge\\DynamoDb\\DynamoDbStore::save` method.
+You can also create this table explicitly by calling the
+:method:`Symfony\\Component\\Lock\\Bridge\\DynamoDb\\DynamoDbStore::createTable` method in
+your code.
 
 Reliability
 -----------
@@ -1049,3 +1073,4 @@ are still running.
 .. _`readers-writer lock`: https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock
 .. _`priority policy`: https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock#Priority_policies
 .. _`PCNTL`: https://www.php.net/manual/book.pcntl.php
+.. _`DynamoDbClient`: https://async-aws.com/clients/dynamodb.html

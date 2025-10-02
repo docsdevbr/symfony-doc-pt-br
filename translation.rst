@@ -52,6 +52,12 @@ First, run this command to install the translator before using it:
 
     $ composer require symfony/translation
 
+Symfony includes several internationalization polyfills (``symfony/polyfill-intl-icu``,
+``symfony/polyfill-intl-messageformatter``, etc.) that allow you to use translation
+features even without the `PHP intl extension`_. However, these polyfills only
+support English translations, so you must install the PHP ``intl`` extension
+when translating into other languages.
+
 .. _translation-configuration:
 
 Configuration
@@ -337,6 +343,20 @@ Templates are now much simpler because you can pass translatable objects to the
     There's also a :ref:`function called t() <reference-twig-function-t>`,
     available both in Twig and PHP, as a shortcut to create translatable objects.
 
+Non-Translatable Messages
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In some cases, you may want to explicitly prevent a message from being
+translated. You can ensure this behavior by using the
+:class:`Symfony\\Component\\Translation\\StaticMessage` class::
+
+    use Symfony\Component\Translation\StaticMessage;
+
+    $message = new StaticMessage('This message will never be translated.');
+
+This can be useful when rendering user-defined content or other strings
+that must remain exactly as given.
+
 .. _translation-in-templates:
 
 Translations in Templates
@@ -416,6 +436,80 @@ You can also specify the message domain and pass some additional variables:
     major difference: automatic output escaping is **not** applied to translations
     using a tag.
 
+Global Translation Parameters
+-----------------------------
+
+If the content of a translation parameter is repeated across multiple
+translation messages (e.g. a company name, or a version number), you can define
+it as a global translation parameter. This helps you avoid repeating the same
+values manually in each message.
+
+You can configure these global parameters in the ``translations.globals`` option
+of your main configuration file using either ``%...%`` or ``{...}`` syntax:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/translator.yaml
+        translator:
+            # ...
+            globals:
+                # when using the '%' wrapping characters, you must escape them
+                '%%app_name%%': 'My application'
+                '{app_version}': '1.2.3'
+                '{url}': { message: 'url', parameters: { scheme: 'https://' }, domain: 'global' }
+
+    .. code-block:: xml
+
+           <!-- config/packages/translation.xml -->
+           <?xml version="1.0" encoding="UTF-8" ?>
+           <container xmlns="http://symfony.com/schema/dic/services"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xmlns:framework="http://symfony.com/schema/dic/symfony"
+               xsi:schemaLocation="http://symfony.com/schema/dic/services
+                   https://symfony.com/schema/dic/services/services-1.0.xsd
+                   http://symfony.com/schema/dic/symfony
+                   https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+               <framework:config>
+                   <framework:translator>
+                       <!-- ... -->
+                        <!-- when using the '%' wrapping characters, you must escape them -->
+                       <framework:global name="%%app_name%%">My application</framework:global>
+                       <framework:global name="{app_version}" value="1.2.3"/>
+                       <framework:global name="{url}" message="url" domain="global">
+                            <framework:parameter name="scheme">https://</framework:parameter>
+                        </framework:global>
+                   </framework:translator>
+               </framework:config>
+           </container>
+
+    .. code-block:: php
+
+        // config/packages/translator.php
+        use Symfony\Config\TwigConfig;
+
+        return static function (TwigConfig $translator): void {
+            // ...
+            // when using the '%' wrapping characters, you must escape them
+            $translator->globals('%%app_name%%')->value('My application');
+            $translator->globals('{app_version}')->value('1.2.3');
+            $translator->globals('{url}')->value(['message' => 'url', 'parameters' => ['scheme' => 'https://']]);
+        };
+
+Once defined, you can use these parameters in translation messages anywhere in
+your application:
+
+.. code-block:: twig
+
+    {{ 'Application version: {app_version}'|trans }}
+    {# output: "Application version: 1.2.3" #}
+
+    {# parameters passed to the message override global parameters #}
+    {{ 'Package version: {app_version}'|trans({'{app_version}': '2.3.4'}) }}
+    # Displays "Package version: 2.3.4"
+
 Forcing the Translator Locale
 -----------------------------
 
@@ -486,10 +580,6 @@ to spot untranslated strings:
     # when using the --no-fill option, the --prefix option is ignored
     $ php bin/console translation:extract --force --no-fill fr
 
-.. versionadded:: 7.2
-
-    The ``--no-fill`` option was introduced in Symfony 7.2.
-
 .. _translation-resource-locations:
 
 Translation Resource/File Names and Locations
@@ -502,7 +592,9 @@ Symfony looks for message files (i.e. translations) in the following default loc
   ``Resources/translations/`` directory, which is no longer recommended for bundles).
 
 The locations are listed here with the highest priority first. That is, you can
-override the translation messages of a bundle in the first directory.
+override the translation messages of a bundle in the first directory. Bundles are
+processed in the order in which they are listed in the ``config/bundles.php`` file,
+so bundles appearing earlier have higher priority.
 
 The override mechanism works at a key level: only the overridden keys need
 to be listed in a higher priority message file. When a key is not found
@@ -597,8 +689,7 @@ Translations of Doctrine Entities
 
 Unlike the contents of templates, it's not practical to translate the contents
 stored in Doctrine Entities using translation catalogs. Instead, use the
-Doctrine `Translatable Extension`_ or the `Translatable Behavior`_. For more
-information, read the documentation of those libraries.
+Doctrine `Translatable Extension`_.
 
 Custom Translation Resources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -654,7 +745,7 @@ You'll now have a new line in your ``.env`` file that you can uncomment:
 
 The ``LOCO_DSN`` isn't a *real* address: it's a convenient format that offloads
 most of the configuration work to Symfony. The ``loco`` scheme activates the
-Loco provider that you just installed, which knows all about how to push and
+Loco provider that you installed, which knows all about how to push and
 pull translations via Loco. The *only* part you need to change is the
 ``API_KEY`` placeholder.
 
@@ -1017,10 +1108,6 @@ match between them, Symfony will try to find a partial match based on the langua
 If there's no perfect or partial match, this method returns the first locale passed
 as argument (that's why the order of the passed locales is important).
 
-.. versionadded:: 7.1
-
-    The feature to match locales partially was introduced in Symfony 7.1.
-
 .. _translation-fallback:
 
 Fallback Translation Locales
@@ -1097,18 +1184,11 @@ checks translation resources for several locales:
 Switch Locale Programmatically
 ------------------------------
 
-Sometimes you need to change the locale of the application dynamically
-just to run some code. Imagine a console command that renders Twig templates
-of emails in different languages. You need to change the locale only to
-render those templates.
+Sometimes you need to change the application's locale dynamically while running
+some code. For example, a console command that renders email templates in
+different languages. In such cases, you only need to switch the locale temporarily.
 
-The ``LocaleSwitcher`` class allows you to change at once the locale
-of:
-
-* All the services that are tagged with ``kernel.locale_aware``;
-* ``\Locale::setDefault()``;
-* If the ``RequestContext`` service is available, the ``_locale``
-  parameter (so urls are generated with the new locale)::
+The ``LocaleSwitcher`` class allows you to do that::
 
     use Symfony\Component\Translation\LocaleSwitcher;
 
@@ -1121,28 +1201,23 @@ of:
 
         public function someMethod(): void
         {
-            // you can get the current application locale like this:
             $currentLocale = $this->localeSwitcher->getLocale();
 
-            // you can set the locale for the entire application like this:
-            // (from now on, the application will use 'fr' (French) as the
-            // locale; including the default locale used to translate Twig templates)
+            // set the application locale programmatically to 'fr' (French):
+            // this affects translation, URL generation, etc.
             $this->localeSwitcher->setLocale('fr');
 
-            // reset the current locale of your application to the configured default locale
-            // in config/packages/translation.yaml, by option 'default_locale'
+            // reset the locale to the default one configured via the
+            // 'default_locale' option in config/packages/translation.yaml
             $this->localeSwitcher->reset();
 
-            // you can also run some code with a certain locale, without
+            // run some code with a specific locale, temporarily, without
             // changing the locale for the rest of the application
             $this->localeSwitcher->runWithLocale('es', function() {
-
-                // e.g. render here some Twig templates using 'es' (Spanish) locale
-
+                // e.g. render templates, send emails, etc. using the 'es' (Spanish) locale
             });
 
-            // you can optionally declare an argument in your callback to receive the
-            // injected locale
+            // optionally, receive the current locale as an argument:
             $this->localeSwitcher->runWithLocale('es', function(string $locale) {
 
                 // here, the $locale argument will be set to 'es'
@@ -1152,6 +1227,20 @@ of:
             // ...
         }
     }
+
+The ``LocaleSwitcher`` class changes the locale of:
+
+* All services tagged with ``kernel.locale_aware``;
+* The default locale set via ``\Locale::setDefault()``;
+* The ``_locale`` parameter of the ``RequestContext`` service (if available),
+  so generated URLs reflect the new locale.
+
+.. note::
+
+    The LocaleSwitcher applies the new locale only for the current request,
+    and its effect is lost on subsequent requests, such as after a redirect.
+
+    See :ref:`how to make the locale persist across requests <locale-sticky-session>`.
 
 When using :ref:`autowiring <services-autowire>`, type-hint any controller or
 service argument with the :class:`Symfony\\Component\\Translation\\LocaleSwitcher`
@@ -1430,10 +1519,6 @@ to check that the translation contents are also correct:
         # checks the contents of the translation catalogues for Italian (it) and Japanese (ja) locales
         $ php bin/console lint:translations --locale=it --locale=ja
 
-.. versionadded:: 7.2
-
-    The ``lint:translations`` command was introduced in Symfony 7.2.
-
 Pseudo-localization translator
 ------------------------------
 
@@ -1594,8 +1679,8 @@ Learn more
 .. _`ICU MessageFormat`: https://unicode-org.github.io/icu/userguide/format_parse/messages/
 .. _`ISO 3166-1 alpha-2`: https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes
 .. _`ISO 639-1`: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+.. _`PHP intl extension`: https://php.net/book.intl
 .. _`Translatable Extension`: https://github.com/doctrine-extensions/DoctrineExtensions/blob/main/doc/translatable.md
-.. _`Translatable Behavior`: https://github.com/KnpLabs/DoctrineBehaviors
 .. _`Custom Language Name setting`: https://docs.lokalise.com/en/articles/1400492-uploading-files#custom-language-codes
 .. _`ICU resource bundle`: https://github.com/unicode-org/icu-docs/blob/main/design/bnf_rb.txt
 .. _`Portable object format`: https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html

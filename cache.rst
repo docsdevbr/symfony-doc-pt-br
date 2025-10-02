@@ -32,12 +32,11 @@ You can read more about these at the :doc:`component documentation </components/
 Configuring Cache with FrameworkBundle
 --------------------------------------
 
-When configuring the cache component there are a few concepts you should know
-of:
+When configuring the cache component there are a few concepts you should know:
 
 **Pool**
     This is a service that you will interact with. Each pool will always have
-    its own namespace and cache items. There is never a conflict between pools.
+    its own namespace and cache items. There are never conflicts between pools.
 **Adapter**
     An adapter is a *template* that you use to create pools.
 **Provider**
@@ -176,10 +175,6 @@ Some of these adapters could be configured via shortcuts.
                 ->defaultPdoProvider('pgsql:host=localhost')
             ;
         };
-
-.. versionadded:: 7.1
-
-    Using a DSN as the provider for the PDO adapter was introduced in Symfony 7.1.
 
 .. _cache-create-pools:
 
@@ -539,6 +534,8 @@ Symfony stores the item automatically in all the missing pools.
             ;
         };
 
+.. _cache-using-cache-tags:
+
 Using Cache Tags
 ----------------
 
@@ -590,6 +587,7 @@ to enable this feature. This could be added by using the following configuration
                 pools:
                     my_cache_pool:
                         adapter: cache.adapter.redis_tag_aware
+                        tags: true
 
     .. code-block:: xml
 
@@ -606,7 +604,7 @@ to enable this feature. This could be added by using the following configuration
             <framework:config>
                 <framework:cache>
                     <framework:pool name="my_cache_pool"
-                        adapter="cache.adapter.redis"
+                        adapter="cache.adapter.redis_tag_aware"
                         tags="true"
                     />
                 </framework:cache>
@@ -622,7 +620,7 @@ to enable this feature. This could be added by using the following configuration
             $framework->cache()
                 ->pool('my_cache_pool')
                     ->tags(true)
-                    ->adapters(['cache.adapter.redis'])
+                    ->adapters(['cache.adapter.redis_tag_aware'])
             ;
         };
 
@@ -949,9 +947,9 @@ a message bus to compute values in a worker:
     .. code-block:: php
 
         // config/framework/framework.php
-        use function Symfony\Component\DependencyInjection\Loader\Configurator\env;
         use Symfony\Component\Cache\Messenger\EarlyExpirationMessage;
         use Symfony\Config\FrameworkConfig;
+        use function Symfony\Component\DependencyInjection\Loader\Configurator\env;
 
         return static function (FrameworkConfig $framework): void {
             $framework->cache()

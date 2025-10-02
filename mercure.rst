@@ -11,7 +11,7 @@ notifying the user when :doc:`an asynchronous job </messenger>` has been
 completed or creating chat applications are among the typical use cases
 requiring "push" capabilities.
 
-Symfony provides a straightforward component, built on top of
+Symfony provides a simple component, built on top of
 `the Mercure protocol`_, specifically designed for this class of use cases.
 
 Mercure is an open protocol designed from the ground up to publish updates from
@@ -72,8 +72,9 @@ Thanks to :doc:`the Docker integration of Symfony </setup/docker>`,
 :ref:`Flex <symfony-flex>` proposes to install a Mercure hub for development.
 Run ``docker-compose up`` to start the hub if you have chosen this option.
 
-If you use the :doc:`Symfony Local Web Server </setup/symfony_server>`,
-you must start it with the ``--no-tls`` option.
+If you use the :ref:`Symfony local web server <symfony-cli-server>`,
+you must start it with the ``--no-tls`` option to prevent mixed content and
+invalid TLS certificate issues:
 
 .. code-block:: terminal
 
@@ -282,6 +283,11 @@ URL in a dedicated HTML element:
     {{ mercure('https://example.com/books/1')|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_HEX_TAG'))|raw }}
     </script>
 
+    <!-- with Stimulus -->
+    <div {{ stimulus_controller('my-controller', {
+        mercureUrl: mercure('https://example.com/books/1'),
+    }) }}>
+
 Then retrieve it from your JS file:
 
 .. code-block:: javascript
@@ -289,6 +295,9 @@ Then retrieve it from your JS file:
     const url = JSON.parse(document.getElementById("mercure-url").textContent);
     const eventSource = new EventSource(url);
     // ...
+
+    // with Stimulus
+    this.eventSource = new EventSource(this.mercureUrlValue);
 
 Mercure also allows subscribing to several topics,
 and to use URI Templates or the special value ``*`` (matched by all topics)
@@ -703,6 +712,9 @@ enable it::
 .. image:: /_images/mercure/panel.png
     :alt: The Mercure panel of the Symfony Profiler, showing information like time, memory, topics and data of each message sent by Mercure.
     :class: with-browser
+
+The Mercure hub itself provides a debug tool that can be enabled and it's
+available on ``/.well-known/mercure/ui/``
 
 Async dispatching
 -----------------

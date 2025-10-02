@@ -157,10 +157,6 @@ The ``debug:asset-map`` command provides several options to filter results:
     # you can also combine all filters (e.g. find bold web fonts in your own asset dirs)
     $ php bin/console debug:asset-map bold --no-vendor --ext=woff2
 
-.. versionadded:: 7.2
-
-    The options to filter ``debug:asset-map`` results were introduced in Symfony 7.2.
-
 .. _importmaps-javascript:
 
 Importmaps & Writing JavaScript
@@ -215,6 +211,11 @@ to add any `npm package`_:
 
     $ php bin/console importmap:require bootstrap
 
+.. tip::
+
+    Add the ``--dry-run`` option to simulate package installation without actually
+    making any changes (e.g. ``php bin/console importmap:require bootstrap --dry-run``)
+
 This adds the ``bootstrap`` package to your ``importmap.php`` file::
 
     // importmap.php
@@ -242,6 +243,26 @@ This adds the ``bootstrap`` package to your ``importmap.php`` file::
     package might be missing properties like ``main`` or ``module`` in its
     `package.json configuration file`_. Try to contact the package maintainer to
     ask them to fix those issues.
+
+.. tip::
+
+    If you see a network error like *Connection was reset for "https://cdn.jsdelivr.net/npm/..."*,
+    it may be caused by a proxy or firewall restriction. In that case, you can
+    temporarily configure a proxy to connect to the ``jsDelivr`` CDN:
+
+    .. code-block:: yaml
+
+        # config/packages/framework.yaml
+        framework:
+            # ...
+            http_client:
+                default_options:
+                    proxy: '185.250.180.238:8080'
+                    # if you use CURL, add extra options:
+                    extra:
+                        curl:
+                            # 61 is value of constant CURLOPT_HTTPPROXYTUNNEL
+                            '61': true
 
 Now you can import the ``bootstrap`` package like usual:
 
@@ -271,6 +292,33 @@ You can update your third-party packages to their current versions by running:
     # you can also run the commands only for the given list of packages
     $ php bin/console importmap:update bootstrap lodash
     $ php bin/console importmap:outdated bootstrap lodash
+
+Removing JavaScript Packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you need to remove a JavaScript package that was previously added to your
+``importmap.php`` file, use the ``importmap:remove`` command. For example, to
+remove the ``lodash`` package:
+
+.. code-block:: terminal
+
+    $ php bin/console importmap:remove lodash
+
+This updates your ``importmap.php`` file and removes the specified package
+(along with any dependencies that were added with it).
+
+After running this command, it's recommended to also run the following to ensure
+that your ``assets/vendor/`` directory is in sync with the updated import map:
+
+.. code-block:: terminal
+
+    $ php bin/console importmap:install
+
+.. tip::
+
+    Removing a package from the import map does not automatically remove any
+    references to it in your JavaScript files. Make sure to update your code and
+    remove any ``import`` statements that reference the removed package.
 
 How does the importmap Work?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -656,7 +704,9 @@ which will automatically do most of these things for you:
 - **Compress your assets**: Your web server should compress (e.g. using gzip)
   your assets (JavaScript, CSS, images) before sending them to the browser. This
   is automatically enabled in Caddy and can be activated in Nginx and Apache.
-  In Cloudflare, assets are compressed by default.
+  In Cloudflare, assets are compressed by default. AssetMapper also supports
+  :ref:`precompressing your web assets <performance-precompressing>` to further
+  improve performance.
 
 - **Set long-lived cache expiry**: Your web server should set a long-lived
   ``Cache-Control`` HTTP header on your assets. Because the AssetMapper component includes a version
@@ -703,6 +753,81 @@ even though it hasn't yet seen the ``import`` statement for them.
 
 Additionally, if the :doc:`WebLink Component </web_link>` is available in your application,
 Symfony will add a ``Link`` header in the response to preload the CSS files.
+
+.. _performance-precompressing:
+
+Pre-Compressing Assets
+----------------------
+
+Although most web servers (Caddy, Nginx, Apache, FrankenPHP) and services like Cloudflare
+provide asset compression features, AssetMapper also allows you to compress all
+your assets before serving them.
+
+This improves performance because you can compress assets using the highest (and
+slowest) compression ratios beforehand and provide those compressed assets to the
+server, which then returns them to the client without wasting CPU resources on
+compression.
+
+AssetMapper supports  `Brotli`_, `Zstandard`_ and  `gzip`_ compression formats.
+Before using any of them, the machine that pre-compresses assets must have
+installed the following PHP extensions or CLI commands:
+
+* Brotli: ``brotli`` CLI command; `brotli PHP extension`_;
+* Zstandard: ``zstd`` CLI command; `zstd PHP extension`_;
+* gzip: ``zopfli`` (better) or ``gzip`` CLI command; `zlib PHP extension`_.
+
+Then, update your AssetMapper configuration to define which compression to use
+and which file extensions should be compressed:
+
+.. code-block:: yaml
+
+    # config/packages/asset_mapper.yaml
+    framework:
+        asset_mapper:
+            # ...
+
+            precompress:
+                # possible values: 'brotli', 'zstandard', 'gzip'
+                format: 'zstandard'
+
+                # you can also pass multiple values to generate files in several formats
+                # format: ['brotli', 'zstandard']
+
+                # if you don't define the following option, AssetMapper will compress all
+                # the extensions considered safe (css, js, json, svg, xml, ttf, otf, wasm, etc.)
+                extensions: ['css', 'js', 'json', 'svg', 'xml']
+
+Now, when running the ``asset-map:compile`` command, all matching files will be
+compressed in the configured format and at the highest compression level. The
+compressed files are created with the same name as the original but with the
+``.br``, ``.zst``, or ``.gz`` extension appended.
+
+Then, you need to configure your web server to serve the precompressed assets
+instead of the original ones:
+
+.. configuration-block::
+
+    .. code-block:: caddy
+
+        file_server {
+            precompressed br zstd gzip
+        }
+
+    .. code-block:: nginx
+
+        gzip_static on;
+
+        # Requires https://github.com/google/ngx_brotli
+        brotli_static on;
+
+        # Requires https://github.com/tokers/zstd-nginx-module
+        zstd_static on;
+
+.. tip::
+
+    AssetMapper provides an ``assets:compress`` CLI command and a service called
+    ``asset_mapper.compressor`` that you can use anywhere in your application to
+    compress any kind of files (e.g. files uploaded by users to your application).
 
 Frequently Asked Questions
 --------------------------
@@ -1065,14 +1190,19 @@ both ``app`` and ``checkout``:
         {{ importmap(['app', 'checkout']) }}
     {% endblock %}
 
-By passing both ``app`` and ``checkout``, the ``importmap()`` function will
-output the ``importmap`` and also add a ``<script type="module">`` tag that
-loads the ``app.js`` file *and* the ``checkout.js`` file. It's important
-to *not* call ``parent()`` in the ``importmap`` block. Each page can only
-have *one* importmap, so ``importmap()`` must be called exactly once.
+The ``importmap()`` function always includes the full import map to ensure all
+module definitions are available on the page. It also adds a ``<script type="module">``
+tag to load the specific JavaScript entry files you pass to it (in the example
+above, the ``app.js`` file *and* the ``checkout.js`` file).
 
-If, for some reason, you want to execute *only* ``checkout.js``
-and *not* ``app.js``, pass only ``checkout`` to ``importmap()``.
+.. warning::
+
+    Do not call ``parent()`` inside the ``{% block importmap %}`` Twig block. Each
+    page can include only one import map, so ``importmap()`` must be called exactly once.
+
+If you want to execute *only* ``checkout.js`` (and not ``app.js``), call
+``{{ importmap('checkout') }}``. In this case, the full import map will still be
+included in the page, but only the ``checkout.js`` file will actually be loaded.
 
 Using a Content Security Policy (CSP)
 -------------------------------------
@@ -1195,3 +1325,9 @@ command as part of your CI to be warned anytime a new vulnerability is found.
 .. _strict-dynamic: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#strict-dynamic
 .. _kocal/biome-js-bundle: https://github.com/Kocal/BiomeJsBundle
 .. _`SensioLabs Minify Bundle`: https://github.com/sensiolabs/minify-bundle
+.. _`Brotli`: https://en.wikipedia.org/wiki/Brotli
+.. _`Zstandard`: https://en.wikipedia.org/wiki/Zstd
+.. _`gzip`: https://en.wikipedia.org/wiki/Gzip
+.. _`brotli PHP extension`: https://pecl.php.net/package/brotli
+.. _`zstd PHP extension`: https://pecl.php.net/package/zstd
+.. _`zlib PHP extension`: https://www.php.net/manual/en/book.zlib.php

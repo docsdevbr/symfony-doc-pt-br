@@ -42,10 +42,10 @@ In this example, the validation metadata is retrieved executing the
         public static function loadValidatorMetadata(ClassMetadata $metadata): void
         {
             $metadata->addPropertyConstraint('name', new Assert\NotBlank());
-            $metadata->addPropertyConstraint('name', new Assert\Length([
-                'min' => 5,
-                'max' => 20,
-            ]));
+            $metadata->addPropertyConstraint('name', new Assert\Length(
+                min: 5,
+                max: 20,
+            ));
         }
     }
 

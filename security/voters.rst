@@ -40,23 +40,16 @@ or extend :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\Vote
 which makes creating a voter even easier::
 
     use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+    use Symfony\Component\Security\Core\Authorization\Voter\Vote;
     use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
     abstract class Voter implements VoterInterface
     {
         abstract protected function supports(string $attribute, mixed $subject): bool;
-        abstract protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool;
+        abstract protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool;
     }
 
 .. _how-to-use-the-voter-in-a-controller:
-
-.. tip::
-
-    Checking each voter several times can be time consuming for applications
-    that perform a lot of permission checks. To improve performance in those cases,
-    you can make your voters implement the :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\CacheableVoterInterface`.
-    This allows the access decision manager to remember the attribute and type
-    of subject supported by the voter, to only call the needed voters each time.
 
 Setup: Checking for Access in a Controller
 ------------------------------------------
@@ -126,6 +119,8 @@ calls out to the "voter" system. Right now, no voters will vote on whether or no
 the user can "view" or "edit" a ``Post``. But you can create your *own* voter that
 decides this using whatever logic you want.
 
+.. _creating-the-custom-voter:
+
 Creating the custom Voter
 -------------------------
 
@@ -140,6 +135,7 @@ would look like this::
     use App\Entity\Post;
     use App\Entity\User;
     use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+    use Symfony\Component\Security\Core\Authorization\Voter\Vote;
     use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
     class PostVoter extends Voter
@@ -163,12 +159,13 @@ would look like this::
             return true;
         }
 
-        protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+        protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
         {
             $user = $token->getUser();
 
             if (!$user instanceof User) {
                 // the user must be logged in; if not, deny access
+                $vote?->addReason('The user is not logged in.');
                 return false;
             }
 
@@ -178,7 +175,7 @@ would look like this::
 
             return match($attribute) {
                 self::VIEW => $this->canView($post, $user),
-                self::EDIT => $this->canEdit($post, $user),
+                self::EDIT => $this->canEdit($post, $user, $vote),
                 default => throw new \LogicException('This code should not be reached!')
             };
         }
@@ -194,10 +191,19 @@ would look like this::
             return !$post->isPrivate();
         }
 
-        private function canEdit(Post $post, User $user): bool
+        private function canEdit(Post $post, User $user, ?Vote $vote): bool
         {
-            // this assumes that the Post object has a `getOwner()` method
-            return $user === $post->getOwner();
+            // this assumes that the Post object has a `getAuthor()` method
+            if ($user === $post->getAuthor()) {
+                return true;
+            }
+
+            $vote?->addReason(sprintf(
+                'The logged in user (username: %s) is not the author of this post (id: %d).',
+                $user->getUsername(), $post->getId()
+            ));
+
+            return false;
         }
     }
 
@@ -215,11 +221,12 @@ To recap, here's what's expected from the two abstract methods:
     return ``true`` if the attribute is ``view`` or ``edit`` and if the object is
     a ``Post`` instance.
 
-``voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token)``
+``voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null)``
     If you return ``true`` from ``supports()``, then this method is called. Your
     job is to return ``true`` to allow access and ``false`` to deny access.
-    The ``$token`` can be used to find the current user object (if any). In this
-    example, all of the complex business logic is included to determine access.
+    The ``$token`` can be used to find the current user object (if any).
+    The ``$vote`` argument can be used to provide an explanation for the vote.
+    This explanation is included in log messages and on exception pages.
 
 .. _declaring-the-voter-as-a-service:
 
@@ -256,7 +263,7 @@ with ``ROLE_SUPER_ADMIN``::
         ) {
         }
 
-        protected function voteOnAttribute($attribute, mixed $subject, TokenInterface $token): bool
+        protected function voteOnAttribute($attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
         {
             // ...
 
@@ -291,6 +298,89 @@ with ``ROLE_SUPER_ADMIN``::
 If you're using the :ref:`default services.yaml configuration <service-container-services-load-example>`,
 you're done! Symfony will automatically pass the ``security.helper``
 service when instantiating your voter (thanks to autowiring).
+
+Improving Voter Performance
+---------------------------
+
+If your application defines many voters and checks permissions on many objects
+during a single request, this can impact performance. Most of the time, voters
+only care about specific permissions (attributes), such as ``EDIT_BLOG_POST``,
+or specific object types, such as ``User`` or ``Invoice``. That's why Symfony
+can cache the voter resolution (i.e. the decision to apply or skip a voter for
+a given attribute or object).
+
+To enable this optimization, make your voter implement
+:class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\CacheableVoterInterface`.
+This is already the case when extending the abstract ``Voter`` class shown above.
+Then, override one or both of the following methods::
+
+    use App\Entity\Post;
+    use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+    // ...
+
+    class PostVoter extends Voter
+    {
+        const VIEW = 'view';
+        const EDIT = 'edit';
+
+        protected function supports(string $attribute, mixed $subject): bool
+        {
+            // ...
+        }
+
+        protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+        {
+            // ...
+        }
+
+        // this method returns true if the voter applies to the given attribute;
+        // if it returns false, Symfony won't call it again for this attribute
+        public function supportsAttribute(string $attribute): bool
+        {
+            return in_array($attribute, [self::VIEW, self::EDIT], true);
+        }
+
+        // this method returns true if the voter applies to the given object class/type;
+        // if it returns false, Symfony won't call it again for that type of object
+        public function supportsType(string $subjectType): bool
+        {
+            // you can't use a simple Post::class === $subjectType comparison
+            // because the subject type might be a Doctrine proxy class
+            return is_a($subjectType, Post::class, true);
+        }
+    }
+
+.. _security-voters-change-message-and-status-code:
+
+Changing the message and status code returned
+---------------------------------------------
+
+By default, the ``#[IsGranted]`` attribute will throw a
+:class:`Symfony\\Component\\Security\\Core\\Exception\\AccessDeniedException`
+and return an http **403** status code with **Access Denied** as message.
+
+However, you can change this behavior by specifying the message and status code returned::
+
+    // src/Controller/PostController.php
+
+    // ...
+    use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+    class PostController extends AbstractController
+    {
+        #[Route('/posts/{id}', name: 'post_show')]
+        #[IsGranted('show', 'post', 'Post not found', 404)]
+        public function show(Post $post): Response
+        {
+            // ...
+        }
+    }
+
+.. tip::
+
+    If the status code is different than 403, an
+    :class:`Symfony\\Component\\HttpKernel\\Exception\\HttpException`
+    will be thrown instead.
 
 .. _security-voters-change-strategy:
 
@@ -463,35 +553,3 @@ must implement the :class:`Symfony\\Component\\Security\\Core\\Authorization\\Ac
                 // ...
             ;
         };
-
-.. _security-voters-change-message-and-status-code:
-
-Changing the message and status code returned
----------------------------------------------
-
-By default, the ``#[IsGranted]`` attribute will throw a
-:class:`Symfony\\Component\\Security\\Core\\Exception\\AccessDeniedException`
-and return an http **403** status code with **Access Denied** as message.
-
-However, you can change this behavior by specifying the message and status code returned::
-
-    // src/Controller/PostController.php
-
-    // ...
-    use Symfony\Component\Security\Http\Attribute\IsGranted;
-
-    class PostController extends AbstractController
-    {
-        #[Route('/posts/{id}', name: 'post_show')]
-        #[IsGranted('show', 'post', 'Post not found', 404)]
-        public function show(Post $post): Response
-        {
-            // ...
-        }
-    }
-
-.. tip::
-
-    If the status code is different than 403, an
-    :class:`Symfony\\Component\\HttpKernel\\Exception\\HttpException`
-    will be thrown instead.

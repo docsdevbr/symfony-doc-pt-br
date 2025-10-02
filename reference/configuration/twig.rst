@@ -19,9 +19,6 @@ under the ``twig`` key in your application configuration.
     namespace and the related XSD schema is available at:
     ``https://symfony.com/schema/dic/twig/twig-1.0.xsd``
 
-Configuration
--------------
-
 auto_reload
 ~~~~~~~~~~~
 
@@ -57,33 +54,24 @@ called to determine the default escaping applied to the template.
 If the service defined in ``autoescape_service`` is invocable (i.e. it defines
 the `__invoke() PHP magic method`_) you can omit this option.
 
-base_template_class
-~~~~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``Twig\Template``
-
-.. deprecated:: 7.1
-
-    The ``base_template_class`` option is deprecated since Symfony 7.1.
-
-Twig templates are compiled into PHP classes before using them to render
-contents. This option defines the base class from which all the template classes
-extend. Using a custom base template is discouraged because it will make your
-application harder to maintain.
-
 cache
 ~~~~~
 
-**type**: ``string`` | ``false`` **default**: ``%kernel.cache_dir%/twig``
+**type**: ``string`` | ``boolean`` **default**: ``true``
 
 Before using the Twig templates to render some contents, they are compiled into
 regular PHP code. Compilation is a costly process, so the result is cached in
 the directory defined by this configuration option.
 
+You can either specify a custom path where the cache should be stored (as a
+string) or use ``true`` to let Symfony decide the default path. When set to
+``true``, the cache is stored in ``%kernel.cache_dir%/twig`` by default. However,
+if ``auto_reload`` is disabled and ``%kernel.build_dir%`` differs from
+``%kernel.cache_dir%``, the cache will be stored in ``%kernel.build_dir%/twig`` instead.
+
 Set this option to ``false`` to disable Twig template compilation. However, this
-is not recommended; not even in the ``dev`` environment, because the
-``auto_reload`` option ensures that cached templates which have changed get
-compiled again.
+is not recommended, not even in the ``dev`` environment, because the ``auto_reload``
+option ensures that cached templates which have changed get compiled again.
 
 charset
 ~~~~~~~
@@ -282,7 +270,7 @@ mailer
 html_to_text_converter
 ......................
 
-**type**: ``string`` **default**: ````
+**type**: ``string`` **default**: ``null``
 
 The service implementing
 :class:`Symfony\\Component\\Mime\\HtmlToTextConverter\\HtmlToTextConverterInterface`

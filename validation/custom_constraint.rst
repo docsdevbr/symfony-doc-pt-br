@@ -176,6 +176,13 @@ message as its argument and returns an instance of
 :class:`Symfony\\Component\\Validator\\Violation\\ConstraintViolationBuilderInterface`.
 The ``addViolation()`` method call finally adds the violation to the context.
 
+.. tip::
+
+    Validation error messages are automatically translated to the current application
+    locale. If your application doesn't use translations, you can disable this behavior
+    by calling the ``disableTranslation()`` method of ``ConstraintViolationBuilderInterface``.
+    See also the :ref:`framework.validation.disable_translation option <reference-validation-disable_translation>`.
+
 Using the new Validator
 -----------------------
 
@@ -248,7 +255,7 @@ You can use custom validators like the ones provided by Symfony itself:
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
                 $metadata->addPropertyConstraint('name', new NotBlank());
-                $metadata->addPropertyConstraint('name', new ContainsAlphanumeric(['mode' => 'loose']));
+                $metadata->addPropertyConstraint('name', new ContainsAlphanumeric(mode: 'loose'));
             }
         }
 
@@ -273,6 +280,7 @@ define those options as public properties on the constraint class::
     // src/Validator/Foo.php
     namespace App\Validator;
 
+    use Symfony\Component\Validator\Attribute\HasNamedArguments;
     use Symfony\Component\Validator\Constraint;
 
     #[\Attribute]
@@ -282,6 +290,7 @@ define those options as public properties on the constraint class::
         public $message = 'This value is invalid';
         public $optionalBarOption = false;
 
+        #[HasNamedArguments]
         public function __construct(
             $mandatoryFooOption,
             ?string $message = null,
@@ -314,7 +323,7 @@ define those options as public properties on the constraint class::
     }
 
 Then, inside the validator class you can access these options directly via the
-constraint class passes to the ``validate()`` method::
+constraint class passed to the ``validate()`` method::
 
     class FooValidator extends ConstraintValidator
     {
@@ -402,10 +411,10 @@ the custom options like you pass any other option in built-in constraints:
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
                 $metadata->addPropertyConstraint('name', new NotBlank());
-                $metadata->addPropertyConstraint('name', new Foo([
-                    'mandatoryFooOption' => 'bar',
-                    'optionalBarOption' => true,
-                ]));
+                $metadata->addPropertyConstraint('name', new Foo(
+                    mandatoryFooOption: 'bar',
+                    optionalBarOption: true,
+                ));
             }
         }
 
@@ -656,7 +665,3 @@ class to check precisely which of the constraints failed to pass::
         }
     }
 
-.. versionadded:: 7.2
-
-    The :class:`Symfony\\Component\\Validator\\Test\\CompoundConstraintTestCase`
-    class was introduced in Symfony 7.2.

@@ -809,7 +809,7 @@ They are called in registration order.
 Casters are responsible for returning the properties of the object or resource
 being cloned in an array. They are callables that accept five arguments:
 
-* the object or resource being casted;
+* the object or resource being cast;
 * an array modeled for objects after PHP's native ``(array)`` cast operator;
 * a :class:`Symfony\\Component\\VarDumper\\Cloner\\Stub` object
   representing the main properties of the object (class, type, etc.);

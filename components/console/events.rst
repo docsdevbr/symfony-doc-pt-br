@@ -209,36 +209,32 @@ method::
     for these constants to be available.
 
 If you use the Console component inside a Symfony application, commands can
-handle signals themselves. To do so, implement the
-:class:`Symfony\\Component\\Console\\Command\\SignalableCommandInterface` and subscribe to one or more signals::
+handle signals themselves by subscribing to the :class:`Symfony\\Component\\Console\\Event\\ConsoleSignalEvent` event::
 
-    // src/Command/SomeCommand.php
+    // src/Command/MyCommand.php
     namespace App\Command;
 
-    use Symfony\Component\Console\Command\Command;
-    use Symfony\Component\Console\Command\SignalableCommandInterface;
+    use Symfony\Component\Console\Attribute\AsCommand;
+    use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
-    class SomeCommand extends Command implements SignalableCommandInterface
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
         // ...
 
-        public function getSubscribedSignals(): array
+        #[AsEventListener(ConsoleSignalEvent::class)]
+        public function handleSignal(ConsoleSignalEvent $event): void
         {
-            // return here any of the constants defined by PCNTL extension
-            return [\SIGINT, \SIGTERM];
-        }
-
-        public function handleSignal(int $signal): int|false
-        {
-            if (\SIGINT === $signal) {
+            // set here any of the constants defined by PCNTL extension
+            if (in_array($event->getHandlingSignal(), [\SIGINT, \SIGTERM], true)) {
                 // ...
             }
 
             // ...
 
-            // return an integer to set the exit code, or
+            // set an integer exit code, or
             // false to continue normal execution
-            return 0;
+            $event->setExitCode(0);
         }
     }
 

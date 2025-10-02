@@ -128,11 +128,6 @@ This is how you can use these flags::
     // does not throw a SyntaxError because the unknown variables and functions are ignored
     $expressionLanguage->lint('unknown_var + unknown_function()', [], Parser::IGNORE_UNKNOWN_VARIABLES | Parser::IGNORE_UNKNOWN_FUNCTIONS);
 
-.. versionadded:: 7.1
-
-    The support for flags in the ``parse()`` and ``lint()`` methods
-    was introduced in Symfony 7.1.
-
 Passing in Variables
 --------------------
 

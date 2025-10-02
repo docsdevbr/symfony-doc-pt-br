@@ -96,6 +96,11 @@ Returns an instance of ``ControllerReference`` to be used with functions
 like :ref:`render() <reference-twig-function-render>` and
 :ref:`render_esi() <reference-twig-function-render-esi>`.
 
+.. code-block:: twig
+
+    {{ render(controller('App\\Controller\\BlogController:latest', {max: 3})) }}
+    {# output: the content returned by the controller method; e.g. a rendered Twig template #}
+
 .. _reference-twig-function-asset:
 
 asset
@@ -109,6 +114,22 @@ asset
     **type**: ``string``
 ``packageName`` *(optional)*
     **type**: ``string`` | ``null`` **default**: ``null``
+
+.. code-block:: yaml
+
+    # config/packages/framework.yaml
+    framework:
+        # ...
+        assets:
+            packages:
+                foo_package:
+                    base_path: /avatars
+
+.. code-block:: twig
+
+    {# the image lives at "public/avatars/avatar.png" #}
+    {{ asset(path = 'avatar.png', packageName = 'foo_package') }}
+    {# output: /avatars/avatar.png #}
 
 Returns the public path of the given asset path (which can be a CSS file, a
 JavaScript file, an image path, etc.). This function takes into account where
@@ -155,21 +176,44 @@ csrf_token
 Renders a CSRF token. Use this function if you want :doc:`CSRF protection </security/csrf>`
 in a regular HTML form not managed by the Symfony Form component.
 
+.. code-block:: twig
+
+    {{ csrf_token('my_form') }}
+    {# output: a random alphanumeric string like:
+       a.YOosAd0fhT7BEuUCFbROzrvgkW8kpEmBDQ_DKRMUi2o.Va8ZQKt5_2qoa7dLW-02_PLYwDBx9nnWOluUHUFCwC5Zo0VuuVfQCqtngg #}
+
 is_granted
 ~~~~~~~~~~
 
 .. code-block:: twig
 
-    {{ is_granted(role, object = null, field = null) }}
+    {{ is_granted(role, object = null) }}
 
 ``role``
     **type**: ``string``
 ``object`` *(optional)*
     **type**: ``object``
-``field`` *(optional)*
-    **type**: ``string``
 
 Returns ``true`` if the current user has the given role.
+
+Optionally, an object can be passed to be used by the voter. More information
+can be found in :ref:`security-template`.
+
+is_granted_for_user
+~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: twig
+
+    {{ is_granted_for_user(user, attribute, subject = null) }}
+
+``user``
+    **type**: ``object``
+``attribute``
+    **type**: ``string``
+``subject`` *(optional)*
+    **type**: ``object``
+
+Returns ``true`` if the user is authorized for the specified attribute.
 
 Optionally, an object can be passed to be used by the voter. More information
 can be found in :ref:`security-template`.
@@ -187,6 +231,30 @@ logout_path
 Generates a relative logout URL for the given firewall. If no key is provided,
 the URL is generated for the current firewall the user is logged into.
 
+.. code-block:: yaml
+
+    # config/packages/security.yaml
+    security:
+        # ...
+
+        firewalls:
+            main:
+                # ...
+                logout:
+                    path: '/logout'
+            othername:
+                # ...
+                logout:
+                    path: '/other/logout'
+
+.. code-block:: twig
+
+    {{ logout_path(key = 'main') }}
+    {# output: /logout #}
+
+    {{ logout_path(key = 'othername') }}
+    {# output: /other/logout #}
+
 logout_url
 ~~~~~~~~~~
 
@@ -199,6 +267,30 @@ logout_url
 
 Equal to the `logout_path`_ function, but it'll generate an absolute URL
 instead of a relative one.
+
+.. code-block:: yaml
+
+    # config/packages/security.yaml
+    security:
+        # ...
+
+        firewalls:
+            main:
+                # ...
+                logout:
+                    path: '/logout'
+            othername:
+                # ...
+                logout:
+                    path: '/other/logout'
+
+.. code-block:: twig
+
+    {{ logout_url(key = 'main') }}
+    {# output: http://example.org/logout #}
+
+    {{ logout_url(key = 'othername') }}
+    {# output: http://example.org/other/logout #}
 
 path
 ~~~~
@@ -216,6 +308,16 @@ path
 
 Returns the relative URL (without the scheme and host) for the given route.
 If ``relative`` is enabled, it'll create a path relative to the current path.
+
+.. code-block:: twig
+
+    {# consider that the app defines an 'app_blog' route with the path '/blog/{page}' #}
+
+    {{ path(name = 'app_blog', parameters = {page: 3}, relative = false) }}
+    {# output: /blog/3 #}
+
+    {{ path(name = 'app_blog', parameters = {page: 3}, relative = true) }}
+    {# output: blog/3 #}
 
 .. seealso::
 
@@ -238,6 +340,16 @@ url
 
 Returns the absolute URL (with scheme and host) for the given route. If
 ``schemeRelative`` is enabled, it'll create a scheme-relative URL.
+
+.. code-block:: twig
+
+    {# consider that the app defines an 'app_blog' route with the path '/blog/{page}' #}
+
+    {{ url(name = 'app_blog', parameters = {page: 3}, schemeRelative = false) }}
+    {# output: http://example.org/blog/3 #}
+
+    {{ url(name = 'app_blog', parameters = {page: 3}, schemeRelative = true) }}
+    {# output: //example.org/blog/3 #}
 
 .. seealso::
 
@@ -289,6 +401,11 @@ expression
 
 Creates an :class:`Symfony\\Component\\ExpressionLanguage\\Expression` related
 to the :doc:`ExpressionLanguage component </components/expression_language>`.
+
+.. code-block:: twig
+
+    {{ expression(1 + 2) }}
+    {# output: 3 #}
 
 impersonation_path
 ~~~~~~~~~~~~~~~~~~
@@ -365,6 +482,42 @@ t
 Creates a ``Translatable`` object that can be passed to the
 :ref:`trans filter <reference-twig-filter-trans>`.
 
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # translations/blog.en.yaml
+        message: Hello %name%
+
+    .. code-block:: xml
+
+        <!-- translations/blog.en.xlf -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+            <file source-language="en" datatype="plaintext" original="file.ext">
+                <body>
+                    <trans-unit id="message">
+                        <source>message</source>
+                        <target>Hello %name%</target>
+                    </trans-unit>
+                </body>
+            </file>
+        </xliff>
+
+    .. code-block:: php
+
+        // translations/blog.en.php
+        return [
+            'message' => "Hello %name%",
+        ];
+
+Using the filter will be rendered as:
+
+.. code-block:: twig
+
+    {{ t(message = 'message', parameters = {'%name%': 'John'}, domain = 'blog')|trans }}
+    {# output: Hello John #}
+
 importmap
 ~~~~~~~~~
 
@@ -387,6 +540,7 @@ explained in the article about :doc:`customizing form rendering </form/form_cust
 * :ref:`form_row() <reference-forms-twig-row>`
 * :ref:`form_rest() <reference-forms-twig-rest>`
 * :ref:`field_name() <reference-forms-twig-field-helpers>`
+* :ref:`field_id() <reference-forms-twig-field-helpers>`
 * :ref:`field_value() <reference-forms-twig-field-helpers>`
 * :ref:`field_label() <reference-forms-twig-field-helpers>`
 * :ref:`field_help() <reference-forms-twig-field-helpers>`
@@ -443,6 +597,42 @@ trans
 
 Translates the text into the current language. More information in
 :ref:`Translation Filters <translation-filters>`.
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # translations/messages.en.yaml
+        message: Hello %name%
+
+    .. code-block:: xml
+
+        <!-- translations/messages.en.xlf -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+            <file source-language="en" datatype="plaintext" original="file.ext">
+                <body>
+                    <trans-unit id="message">
+                        <source>message</source>
+                        <target>Hello %name%</target>
+                    </trans-unit>
+                </body>
+            </file>
+        </xliff>
+
+    .. code-block:: php
+
+        // translations/messages.en.php
+        return [
+            'message' => "Hello %name%",
+        ];
+
+Using the filter will be rendered as:
+
+.. code-block:: twig
+
+    {{ 'message'|trans(arguments = {'%name%': 'John'}, domain = 'messages', locale = 'en') }}
+    {# output: Hello John #}
 
 sanitize_html
 ~~~~~~~~~~~~~
@@ -581,6 +771,16 @@ abbr_class
 Generates an ``<abbr>`` element with the short name of a PHP class (the
 FQCN will be shown in a tooltip when a user hovers over the element).
 
+.. code-block:: twig
+
+    {{ 'App\\Entity\\Product'|abbr_class }}
+
+The above example will be rendered as:
+
+.. code-block:: html
+
+    <abbr title="App\Entity\Product">Product</abbr>
+
 abbr_method
 ~~~~~~~~~~~
 
@@ -594,6 +794,16 @@ abbr_method
 Generates an ``<abbr>`` element using the ``FQCN::method()`` syntax. If
 ``method`` is ``Closure``, ``Closure`` will be used instead and if ``method``
 doesn't have a class name, it's shown as a function (``method()``).
+
+.. code-block:: twig
+
+    {{ 'App\\Controller\\ProductController::list'|abbr_method }}
+
+The above example will be rendered as:
+
+.. code-block:: html
+
+    <abbr title="App\Controller\ProductController">ProductController</abbr>::list()
 
 format_args
 ~~~~~~~~~~~
@@ -637,6 +847,32 @@ Generates an excerpt of a code file around the given ``line`` number. The
 ``srcContext`` argument defines the total number of lines to display around the
 given line number (use ``-1`` to display the whole file).
 
+Consider the following as the content of ``file.txt``:
+
+.. code-block:: text
+
+    a
+    b
+    c
+    d
+    e
+
+.. code-block:: html+twig
+
+    {{ '/path/to/file.txt'|file_excerpt(line = 4, srcContext = 1) }}
+    {# output: #}
+    <ol start="3">
+        <li><a class="anchor" id="line3"></a><code>c</code></li>
+        <li class="selected"><a class="anchor" id="line4"></a><code>d</code></li>
+        <li><a class="anchor" id="line5"></a><code>e</code></li>
+    </ol>
+
+    {{ '/path/to/file.txt'|file_excerpt(line = 1, srcContext = 0) }}
+    {# output: #}
+    <ol start="1">
+        <li class="selected"><a class="anchor" id="line1"></a><code>a</code></li>
+    </ol>
+
 format_file
 ~~~~~~~~~~~
 
@@ -654,6 +890,27 @@ format_file
 Generates the file path inside an ``<a>`` element. If the path is inside
 the kernel root directory, the kernel root directory path is replaced by
 ``kernel.project_dir`` (showing the full path in a tooltip on hover).
+
+.. code-block:: html+twig
+
+    {{ '/path/to/file.txt'|format_file(line = 1, text = "my_text") }}
+    {# output: #}
+    <a href="/path/to/file.txt#L1"
+        title="Click to open this file" class="file_link">my_text at line 1
+    </a>
+
+    {{ "/path/to/file.txt"|format_file(line = 3) }}
+    {# output: #}
+    <a href="/path/to/file.txt&amp;line=3"
+        title="Click to open this file" class="file_link">/path/to/file.txt at line 3
+    </a>
+
+.. tip::
+
+    If you set the :ref:`framework.ide <reference-framework-ide>` option, the
+    generated links will change to open the file in that IDE/editor. For example,
+    when using PhpStorm, the ``<a href="/path/to/file.txt&amp;line=3"`` link will
+    become ``<a href="phpstorm://open?file=/path/to/file.txt&amp;line=3"``.
 
 format_file_from_text
 ~~~~~~~~~~~~~~~~~~~~~
@@ -681,6 +938,11 @@ file_link
 
 Generates a link to the provided file and line number using
 a preconfigured scheme.
+
+.. code-block:: twig
+
+    {{ 'path/to/file/file.txt'|file_link(line = 3) }}
+    {# output: file://path/to/file/file.txt#L3 #}
 
 file_relative
 ~~~~~~~~~~~~~
@@ -724,14 +986,25 @@ serialize
 Accepts any data that can be serialized by the :doc:`Serializer component </serializer>`
 and returns a serialized string in the specified ``format``.
 
+For example::
+
+    $object = new \stdClass();
+    $object->foo = 'bar';
+    $object->content = [];
+    $object->createdAt = new \DateTime('2024-11-30');
+
+.. code-block:: twig
+
+    {{ object|serialize(format = 'json', context = {
+        'datetime_format': 'D, Y-m-d',
+        'empty_array_as_object': true,
+    }) }}
+    {# output: {"foo":"bar","content":{},"createdAt":"Sat, 2024-11-30"} #}
+
 .. _reference-twig-filter-emojify:
 
 emojify
 ~~~~~~~
-
-.. versionadded:: 7.1
-
-    The ``emojify`` filter was introduced in Symfony 7.1.
 
 .. code-block:: twig
 

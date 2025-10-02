@@ -42,8 +42,8 @@ Symfony application:
 Can we already load the project in a browser? Yes! You can set up
 :doc:`Nginx or Apache </setup/web_server_configuration>` and configure their
 document root to be the ``public/`` directory. But, for development, it's better
-to :doc:`install the Symfony local web server </setup/symfony_server>` and run
-it as follows:
+to install the :doc:`Symfony CLI </setup/symfony_cli>` tool and run its
+:ref:`local web server <symfony-cli-server>` as follows:
 
 .. code-block:: terminal
 

@@ -2,7 +2,7 @@ Configuring a Web Server
 ========================
 
 The preferred way to develop your Symfony application is to use
-:doc:`Symfony Local Web Server </setup/symfony_server>`.
+:ref:`Symfony local web server <symfony-cli-server>`.
 
 However, when running the application in the production environment, you'll need
 to use a fully-featured web server. This article describes how to use Symfony
@@ -178,17 +178,28 @@ directive to pass requests for PHP files to PHP FPM:
         #     Options FollowSymlinks
         # </Directory>
 
+        # optionally disable the fallback resource for the asset directories
+        # which will allow Apache to return a 404 error when files are
+        # not found instead of passing the request to Symfony
+        # <Directory /var/www/project/public/bundles>
+        #     DirectoryIndex disabled
+        #     FallbackResource disabled
+        # </Directory>
+
         ErrorLog /var/log/apache2/project_error.log
         CustomLog /var/log/apache2/project_access.log combined
     </VirtualHost>
 
 .. note::
 
-    If you are doing some quick tests with Apache, you can also run
-    ``composer require symfony/apache-pack``. This package creates an ``.htaccess``
-    file in the ``public/`` directory with the necessary rewrite rules needed to serve
-    the Symfony application. However, in production, it's recommended to move these
-    rules to the main Apache configuration file (as shown above) to improve performance.
+    If you're running some quick tests with Apache, you can run
+    ``composer require symfony/apache-pack`` to create an ``.htaccess`` file in
+    the ``public/`` directory with the rewrite rules needed to serve the Symfony
+    application. Make sure Apache's ``AllowOverride`` setting is set to ``All``
+    for that directory; otherwise, the ``.htaccess`` file will be ignored.
+
+    In production, however, it's recommended to move these rules to the main
+    Apache configuration file (as shown above) to improve performance.
 
 Caddy
 -----

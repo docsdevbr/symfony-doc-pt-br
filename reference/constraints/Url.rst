@@ -152,9 +152,9 @@ Parameter        Description
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('bioUrl', new Assert\Url([
-                    'message' => 'The url "{{ value }}" is not a valid url.',
-                ]));
+                $metadata->addPropertyConstraint('bioUrl', new Assert\Url(
+                    message: 'The url "{{ value }}" is not a valid url.',
+                ));
             }
         }
 
@@ -165,7 +165,7 @@ Parameter        Description
 ``protocols``
 ~~~~~~~~~~~~~
 
-**type**: ``array`` **default**: ``['http', 'https']``
+**type**: ``array|string`` **default**: ``['http', 'https']``
 
 The protocols considered to be valid for the URL. For example, if you also consider
 the ``ftp://`` type URLs to be valid, redefine the ``protocols`` array, listing
@@ -231,11 +231,17 @@ the ``ftp://`` type URLs to be valid, redefine the ``protocols`` array, listing
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('bioUrl', new Assert\Url([
-                    'protocols' => ['http', 'https', 'ftp'],
-                ]));
+                $metadata->addPropertyConstraint('bioUrl', new Assert\Url(
+                    protocols: ['http', 'https', 'ftp'],
+                ));
             }
         }
+
+The value of this option can also be an asterisk (``*``) to allow all protocols::
+
+    // allows all protocols whose names are RFC 3986 compliant
+    // (e.g. 'https://', 'git+ssh://', 'file://', 'custom://')
+    protocols: '*'
 
 ``relativeProtocol``
 ~~~~~~~~~~~~~~~~~~~~
@@ -302,28 +308,19 @@ also relative URLs that contain no protocol (e.g. ``//example.com``).
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('bioUrl', new Assert\Url([
-                    'relativeProtocol' => true,
-                ]));
+                $metadata->addPropertyConstraint('bioUrl', new Assert\Url(
+                    relativeProtocol: true,
+                ));
             }
         }
 
 ``requireTld``
 ~~~~~~~~~~~~~~
 
-**type**: ``boolean`` **default**: ``false``
-
-.. versionadded:: 7.1
-
-    The ``requireTld`` option was introduced in Symfony 7.1.
-
-.. deprecated:: 7.1
-
-    Not setting the ``requireTld`` option is deprecated since Symfony 7.1
-    and will default to ``true`` in Symfony 8.0.
+**type**: ``boolean`` **default**: ``true``
 
 By default, URLs like ``https://aaa`` or ``https://foobar`` are considered valid
-because they are tecnically correct according to the `URL spec`_. If you set this option
+because they are technically correct according to the `URL spec`_. If you set this option
 to ``true``, the host part of the URL will have to include a TLD (top-level domain
 name): e.g. ``https://example.com`` will be valid but ``https://example`` won't.
 
@@ -337,10 +334,6 @@ name): e.g. ``https://example.com`` will be valid but ``https://example`` won't.
 ~~~~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``This URL does not contain a TLD.``
-
-.. versionadded:: 7.1
-
-    The ``tldMessage`` option was introduced in Symfony 7.1.
 
 This message is shown if the ``requireTld`` option is set to ``true`` and the URL
 does not contain at least one TLD.
@@ -414,10 +407,10 @@ Parameter        Description
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('homepageUrl', new Assert\Url([
-                    'requireTld' => true,
-                    'tldMessage' => 'Add at least one TLD to the {{ value }} URL.',
-                ]));
+                $metadata->addPropertyConstraint('homepageUrl', new Assert\Url(
+                    requireTld: true,
+                    tldMessage: 'Add at least one TLD to the {{ value }} URL.',
+                ));
             }
         }
 

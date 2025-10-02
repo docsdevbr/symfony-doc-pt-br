@@ -90,9 +90,9 @@ The following constraints ensure that:
             {
                 $metadata->addPropertyConstraint('promotion', new Assert\ExpressionSyntax());
 
-                $metadata->addPropertyConstraint('shippingOptions', new Assert\ExpressionSyntax([
-                    'allowedVariables' => ['user', 'shipping_centers'],
-                ]));
+                $metadata->addPropertyConstraint('shippingOptions', new Assert\ExpressionSyntax(
+                    allowedVariables: ['user', 'shipping_centers'],
+                ));
             }
         }
 

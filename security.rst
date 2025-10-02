@@ -43,7 +43,7 @@ creates a ``security.yaml`` configuration file for you:
                 # https://symfony.com/doc/current/security/impersonating_user.html
                 # switch_user: true
 
-        # Easy way to control access for large sections of your site
+        # An easy way to control access for large sections of your site
         # Note: Only the *first* access control that matches will be used
         access_control:
             # - { path: ^/admin, roles: ROLE_ADMIN }
@@ -193,14 +193,7 @@ from the `MakerBundle`_:
             return $this;
         }
 
-        /**
-         * @see UserInterface
-         */
-        public function eraseCredentials(): void
-        {
-            // If you store any temporary, sensitive data on the user, clear it here
-            // $this->plainPassword = null;
-        }
+        // [...]
     }
 
 .. tip::
@@ -468,8 +461,8 @@ You can also manually hash a password by running:
 
     $ php bin/console security:hash-password
 
-Read more about all available hashers and password migration in
-:doc:`security/passwords`.
+Read more about all available hashers (including specific hashers) and password
+migration in :doc:`security/passwords`.
 
 .. _firewalls-authentication:
 .. _a-authentication-firewalls:
@@ -622,13 +615,10 @@ don't accidentally block Symfony's dev tools - which live under URLs like
 
     This feature is not supported by the XML configuration format.
 
-All *real* URLs are handled by the ``main`` firewall (no ``pattern`` key means
-it matches *all* URLs). A firewall can have many modes of authentication,
-in other words, it enables many ways to ask the question "Who are you?".
-
-Often, the user is unknown (i.e. not logged in) when they first visit your
-website. If you visit your homepage right now, you *will* have access and
-you'll see that you're visiting a page behind the firewall in the toolbar:
+A firewall can have many modes of authentication, in other words, it enables many
+ways to ask the question "Who are you?". Often, the user is unknown (i.e. not logged in)
+when they first visit your website. If you visit your homepage right now, you *will*
+have access and you'll see that you're visiting a page behind the firewall in the toolbar:
 
 .. image:: /_images/security/anonymous_wdt.png
    :alt: The Symfony profiler toolbar where the Security information shows "Authenticated: no" and "Firewall name: main"
@@ -1784,12 +1774,6 @@ You can log in a user programmatically using the ``login()`` method of the
         }
     }
 
-.. versionadded:: 7.2
-
-    The support for passport attributes in the
-    :method:`Symfony\\Bundle\\SecurityBundle\\Security::login` method was
-    introduced in Symfony 7.2.
-
 .. _security-logging-out:
 
 Logging Out
@@ -2533,6 +2517,40 @@ that is thrown with the ``exceptionCode`` argument::
         // ...
     }
 
+You can also extend the ``IsGranted`` attribute to create meaningful shortcuts::
+
+    // src/Security/Attribute/IsAdmin.php
+    // ...
+
+    use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+    class IsAdmin extends IsGranted
+    {
+        public function __construct()
+        {
+            return parent::__construct('ROLE_ADMIN');
+        }
+    }
+
+You can restrict access validation to specific HTTP methods
+by using the ``methods`` argument::
+
+    // src/Controller/AdminController.php
+    // ...
+
+    use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+    #[IsGranted('ROLE_ADMIN', methods: 'POST')]
+    class AdminController extends AbstractController
+    {
+        // You can also specify an array of methods
+        #[IsGranted('ROLE_SUPER_ADMIN', methods: ['GET', 'PUT'])]
+        public function adminDashboard(): Response
+        {
+            // ...
+        }
+    }
+
 .. _security-template:
 
 Access Control in Templates
@@ -2548,6 +2566,40 @@ the built-in ``is_granted()`` helper function in any Twig template:
     {% endif %}
 
 .. _security-isgranted:
+
+Similarly, if you want to check if a specific user has a certain role, you can use
+the built-in ``is_granted_for_user()`` helper function:
+
+.. code-block:: html+twig
+
+    {% if is_granted_for_user(user, 'ROLE_ADMIN') %}
+        <a href="...">Delete</a>
+    {% endif %}
+
+Symfony also provides the ``access_decision()`` and ``access_decision_for_user()``
+Twig functions to check authorization and to retrieve the reasons for denying
+permission in :ref:`your custom security voters <creating-the-custom-voter>`:
+
+.. code-block:: html+twig
+
+    {% set voter_decision = access_decision('post_edit', post) %}
+    {% if voter_decision.isGranted() %}
+        {# ... #}
+    {% else %}
+        {# before showing voter messages to end users, make sure it's safe to do so #}
+        <p>{{ voter_decision.message }}</p>
+    {% endif %}
+
+    {% set voter_decision = access_decision('post_edit', post, anotherUser) %}
+    {% if voter_decision.isGranted() %}
+        {# ... #}
+    {% else %}
+        <p>The {{ anotherUser.name }} user doesn't have sufficient permission:</p>
+        {# before showing voter messages to end users, make sure it's safe to do so #}
+        <p>{{ voter_decision.message }}</p>
+    {% endif %}
+
+.. _security-isgrantedforuser:
 
 Securing other Services
 .......................
@@ -2584,6 +2636,45 @@ want to include extra details only for users that have a ``ROLE_SALES_ADMIN`` ro
 
           // ...
       }
+
+
+.. tip::
+
+    The ``isGranted()`` method checks authorization for the currently logged-in user.
+    If you need to check authorization for a different user or when the user session
+    is unavailable (e.g., in a CLI context such as a message queue or cron job), you
+    can use the ``isGrantedForUser()`` method to explicitly set the target user.
+
+You can also use the ``getAccessDecision()`` and ``getAccessDecisionForUser()``
+methods to check authorization and get to retrieve the reasons for denying
+permission in :ref:`your custom security voters <creating-the-custom-voter>`::
+
+    // src/SalesReport/SalesReportManager.php
+
+    // ...
+    use Symfony\Bundle\SecurityBundle\Security;
+
+    class SalesReportManager
+    {
+        public function __construct(
+            private Security $security,
+        ) {
+        }
+
+        public function generateReport(): void
+        {
+            $voterDecision = $this->security->getAccessDecision('ROLE_SALES_ADMIN');
+            if ($voterDecision->isGranted('ROLE_SALES_ADMIN')) {
+                // ...
+            } else {
+                // do something with $voterDecision->getMessage()
+            }
+
+            // ...
+        }
+
+        // ...
+    }
 
 If you're using the :ref:`default services.yaml configuration <service-container-services-load-example>`,
 Symfony will automatically pass the ``security.helper`` to your service
@@ -2680,13 +2771,14 @@ anonymous users access by checking if there is no user set on the token::
     // ...
     use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
     use Symfony\Component\Security\Core\Authentication\User\UserInterface;
+    use Symfony\Component\Security\Core\Authorization\Voter\Vote;
     use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
     class PostVoter extends Voter
     {
         // ...
 
-        protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
+        protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token, ?Vote $vote = null): bool
         {
             // ...
 
@@ -2765,7 +2857,30 @@ object) are "compared" to see if they are "equal". By default, the core
 your user will be logged out. This is a security measure to make sure that malicious
 users can be de-authenticated if core user data changes.
 
-However, in some cases, this process can cause unexpected authentication problems.
+Storing the (plain or hashed) password in the session can be a security risk.
+To mitigate this, implement the ``__serialize()`` magic method in your user class
+to exclude or transform the password before storing the serialized user object
+in the session.
+
+Two strategies are supported:
+
+#. Remove the password completely. After unserialization, ``getPassword()`` returns
+   ``null`` and Symfony refreshes the user without checking the password. Use this
+   only if you store plaintext passwords (not recommended).
+#. Hash the password using the ``crc32c`` algorithm. Symfony will hash the password
+   of the refreshed user and compare it to the session value. This approach avoids
+   storing the real hash and lets you invalidate sessions on password change.
+
+   Example (assuming the password is stored in a private property called ``password``)::
+
+       public function __serialize(): array
+       {
+           $data = (array) $this;
+           $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
+
+           return $data;
+       }
+
 If you're having problems authenticating, it could be that you *are* authenticating
 successfully, but you immediately lose authentication after the first redirect.
 

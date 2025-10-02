@@ -127,14 +127,14 @@ The following example checks if ``emailAddress`` is an instance of ``Symfony\Com
 
                 $metadata->addPropertyConstraint('firstName', new Assert\Type('string'));
 
-                $metadata->addPropertyConstraint('age', new Assert\Type([
-                    'type' => 'integer',
-                    'message' => 'The value {{ value }} is not a valid {{ type }}.',
-                ]));
+                $metadata->addPropertyConstraint('age', new Assert\Type(
+                    type: 'integer',
+                    message: 'The value {{ value }} is not a valid {{ type }}.',
+                ));
 
-                $metadata->addPropertyConstraint('accessCode', new Assert\Type([
-                    'type' => ['alpha', 'digit'],
-                ]));
+                $metadata->addPropertyConstraint('accessCode', new Assert\Type(
+                    type: ['alpha', 'digit'],
+                ));
             }
         }
 
@@ -169,7 +169,7 @@ Parameter        Description
 ``type``
 ~~~~~~~~
 
-**type**: ``string`` or ``array`` [:ref:`default option <validation-default-option>`]
+**type**: ``string`` or ``array``
 
 This required option defines the type or collection of types allowed for the
 given value. Each type is either the FQCN (fully qualified class name) of some
@@ -216,11 +216,6 @@ Also, you can use ``ctype_*()`` functions from corresponding
 
 Make sure that the proper :phpfunction:`locale <setlocale>` is set before
 using one of these.
-
-.. versionadded:: 7.1
-
-    The ``list`` and ``associative_array`` types were introduced in Symfony
-    7.1.
 
 Finally, you can use aggregated functions:
 

@@ -7,11 +7,60 @@ and your controllers extend the `AbstractController`_ class, they *are* automati
 registered as services. This means you can use dependency injection like any
 other normal service.
 
-If your controllers don't extend the `AbstractController`_ class, you must
-explicitly mark your controller services as ``public``. Alternatively, you can
-apply the ``controller.service_arguments`` tag to your controller services. This
-will make the tagged services ``public`` and will allow you to inject services
-in method parameters:
+If you prefer to not extend the ``AbstractController`` class, you can register
+your controllers as services in several ways:
+
+#. Using the ``#[Route]`` attribute;
+#. Using the ``#[AsController]`` attribute;
+#. Using the ``controller.service_arguments`` service tag.
+
+Using the ``#[Route]`` Attribute
+--------------------------------
+
+When using :ref:`the #[Route] attribute <routing-route-attributes>` to define
+routes on any PHP class, Symfony treats that class as a controller. It registers
+it as a public, non-lazy service and enables service argument injection in all
+its methods.
+
+This is the simplest and recommended way to register controllers as services
+when not extending the base controller class.
+
+Using the ``#[AsController]`` Attribute
+---------------------------------------
+
+If you prefer, you can use the ``#[AsController]`` PHP attribute to automatically
+apply the ``controller.service_arguments`` tag to your controller services::
+
+    // src/Controller/HelloController.php
+    namespace App\Controller;
+
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\HttpKernel\Attribute\AsController;
+    use Symfony\Component\Routing\Attribute\Route;
+
+    #[AsController]
+    class HelloController
+    {
+        #[Route('/hello', name: 'hello', methods: ['GET'])]
+        public function index(): Response
+        {
+            // ...
+        }
+    }
+
+.. tip::
+
+    When using the ``#[Route]`` attribute, Symfony already registers the controller
+    class as a service, so using the ``#[AsController]`` attribute is redundant.
+
+Using the ``controller.service_arguments`` Service Tag
+------------------------------------------------------
+
+If your controllers don't extend the `AbstractController`_ class and you don't
+use the ``#[AsController]`` or ``#[Route]`` attributes, you must register the
+controllers as public services manually and apply the ``controller.service_arguments``
+:doc:`service tag </service_container/tags>` to enable service injection in
+controller actions:
 
 .. configuration-block::
 
@@ -57,26 +106,6 @@ in method parameters:
             tags: ['controller.service_arguments']
             calls:
                 - [setContainer, ['@abstract_controller.locator']]
-
-If you prefer, you can use the ``#[AsController]`` PHP attribute to automatically
-apply the ``controller.service_arguments`` tag to your controller services::
-
-    // src/Controller/HelloController.php
-    namespace App\Controller;
-
-    use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\HttpKernel\Attribute\AsController;
-    use Symfony\Component\Routing\Attribute\Route;
-
-    #[AsController]
-    class HelloController
-    {
-        #[Route('/hello', name: 'hello', methods: ['GET'])]
-        public function index(): Response
-        {
-            // ...
-        }
-    }
 
 Registering your controller as a service is the first step, but you also need to
 update your routing config to reference the service properly, so that Symfony

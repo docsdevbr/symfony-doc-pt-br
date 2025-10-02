@@ -347,23 +347,23 @@ providers until the user is found:
         return static function (SecurityConfig $security): void {
             // ...
 
-            $backendProvider = $security->provider('backend_users')
+            $security->provider('backend_users')
                 ->ldap()
                 // ...
             ;
 
-            $legacyProvider = $security->provider('legacy_users')
+            $security->provider('legacy_users')
                 ->entity()
                 // ...
             ;
 
-            $userProvider = $security->provider('users')
+            $security->provider('users')
                 ->entity()
                 // ...
             ;
 
-            $allProviders = $security->provider('all_users')->chain()
-                ->providers([$backendProvider, $legacyProvider, $userProvider])
+            $security->provider('all_users')->chain()
+                ->providers(['backend_users', 'legacy_users', 'users'])
             ;
         };
 
@@ -425,7 +425,7 @@ command will generate a nice skeleton to get you started::
         public function refreshUser(UserInterface $user): UserInterface
         {
             if (!$user instanceof User) {
-                throw new UnsupportedUserException(sprintf('Invalid user class "%s".', get_class($user)));
+                throw new UnsupportedUserException(sprintf('Invalid user class "%s".', $user::class));
             }
 
             // Return a User object after making sure its data is "fresh".

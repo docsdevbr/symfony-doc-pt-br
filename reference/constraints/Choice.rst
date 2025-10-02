@@ -34,7 +34,7 @@ If your valid choice list is simple, you can pass them in directly via the
         {
             public const GENRES = ['fiction', 'non-fiction'];
 
-            #[Assert\Choice(['New York', 'Berlin', 'Tokyo'])]
+            #[Assert\Choice(choices: ['New York', 'Berlin', 'Tokyo'])]
             protected string $city;
 
             #[Assert\Choice(choices: Author::GENRES, message: 'Choose a valid genre.')]
@@ -47,7 +47,8 @@ If your valid choice list is simple, you can pass them in directly via the
         App\Entity\Author:
             properties:
                 city:
-                    - Choice: [New York, Berlin, Tokyo]
+                    - Choice:
+                        choices: [New York, Berlin, Tokyo]
                 genre:
                     - Choice:
                         choices:  [fiction, non-fiction]
@@ -64,9 +65,11 @@ If your valid choice list is simple, you can pass them in directly via the
             <class name="App\Entity\Author">
                 <property name="city">
                     <constraint name="Choice">
-                        <value>New York</value>
-                        <value>Berlin</value>
-                        <value>Tokyo</value>
+                        <option name="choices">
+                            <value>New York</value>
+                            <value>Berlin</value>
+                            <value>Tokyo</value>
+                        </option>
                     </constraint>
                 </property>
                 <property name="genre">
@@ -97,13 +100,13 @@ If your valid choice list is simple, you can pass them in directly via the
             {
                 $metadata->addPropertyConstraint(
                     'city',
-                    new Assert\Choice(['New York', 'Berlin', 'Tokyo'])
+                    new Assert\Choice(choices: ['New York', 'Berlin', 'Tokyo'])
                 );
 
-                $metadata->addPropertyConstraint('genre', new Assert\Choice([
-                    'choices' => ['fiction', 'non-fiction'],
-                    'message' => 'Choose a valid genre.',
-                ]));
+                $metadata->addPropertyConstraint('genre', new Assert\Choice(
+                    choices: ['fiction', 'non-fiction'],
+                    message: 'Choose a valid genre.',
+                ));
             }
         }
 
@@ -182,9 +185,9 @@ constraint.
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('genre', new Assert\Choice([
-                    'callback' => 'getGenres',
-                ]));
+                $metadata->addPropertyConstraint('genre', new Assert\Choice(
+                    callback: 'getGenres',
+                ));
             }
         }
 
@@ -250,9 +253,9 @@ you can pass the class name and the method as an array.
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('genre', new Assert\Choice([
-                    'callback' => [Genre::class, 'getGenres'],
-                ]));
+                $metadata->addPropertyConstraint('genre', new Assert\Choice(
+                    callback: [Genre::class, 'getGenres'],
+                ));
             }
         }
 
@@ -271,7 +274,7 @@ to return the choices array. See
 ``choices``
 ~~~~~~~~~~~
 
-**type**: ``array`` [:ref:`default option <validation-default-option>`]
+**type**: ``array``
 
 A required option (unless `callback`_ is specified) - this is the array
 of options that should be considered in the valid set. The input value
@@ -304,6 +307,7 @@ Parameter          Description
 =================  ============================================================
 ``{{ choices }}``  A comma-separated list of available choices
 ``{{ value }}``    The current (invalid) value
+``{{ limit }}``    The maximum number of selectable choices
 =================  ============================================================
 
 match
@@ -358,6 +362,7 @@ Parameter          Description
 =================  ============================================================
 ``{{ choices }}``  A comma-separated list of available choices
 ``{{ value }}``    The current (invalid) value
+``{{ limit }}``    The minimum number of selectable choices
 =================  ============================================================
 
 ``multiple``
@@ -381,11 +386,11 @@ is not in the array of valid choices.
 
 You can use the following parameters in this message:
 
-===============  ==============================================================
-Parameter        Description
-===============  ==============================================================
-``{{ value }}``  The current (invalid) value
-``{{ label }}``  Corresponding form field label
-===============  ==============================================================
+=================  ============================================================
+Parameter          Description
+=================  ============================================================
+``{{ choices }}``  A comma-separated list of available choices
+``{{ value }}``    The current (invalid) value
+=================  ============================================================
 
 .. include:: /reference/constraints/_payload-option.rst.inc

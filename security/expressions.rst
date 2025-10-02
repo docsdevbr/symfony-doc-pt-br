@@ -201,6 +201,33 @@ Inside the subject's expression, you have access to two variables:
 ``args``
     An array of controller arguments that are passed to the controller.
 
+Additionally to expressions, the ``#[IsGranted]`` attribute also accepts
+closures that return a boolean value. The subject can also be a closure that
+returns an array of values that will be injected into the closure::
+
+    // src/Controller/MyController.php
+    namespace App\Controller;
+
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\Security\Http\Attribute\IsGranted;
+    use Symfony\Component\Security\Http\Attribute\IsGrantedContext;
+
+    class MyController extends AbstractController
+    {
+        #[IsGranted(static function (IsGrantedContext $context, mixed $subject) {
+            return $context->user === $subject['post']->getAuthor();
+        }, subject: static function (array $args) {
+            return [
+                'post' => $args['post'],
+            ];
+        })]
+        public function index($post): Response
+        {
+            // ...
+        }
+    }
+
 Learn more
 ----------
 

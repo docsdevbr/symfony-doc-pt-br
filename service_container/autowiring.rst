@@ -408,8 +408,8 @@ Suppose you create a second class - ``UppercaseTransformer`` that implements
 If you register this as a service, you now have *two* services that implement the
 ``App\Util\TransformerInterface`` type. Autowiring subsystem can not decide
 which one to use. Remember, autowiring isn't magic; it looks for a service
-whose id matches the type-hint. So you need to choose one by creating an alias
-from the type to the correct service id (see :ref:`autowiring-interface-alias`).
+whose id matches the type-hint. So you need to choose one by :ref:`creating an alias
+<autowiring-interface-alias>` from the type to the correct service id.
 Additionally, you can define several named autowiring aliases if you want to use
 one implementation in some cases, and another implementation in some
 other cases.
@@ -794,11 +794,6 @@ by using the property name as method name::
         }
     }
 
-.. versionadded:: 7.1
-
-    The :class:`Symfony\Component\DependencyInjection\Attribute\\AutowireMethodOf`
-    attribute was introduced in Symfony 7.1.
-
 .. _autowiring-calls:
 
 Autowiring other Methods (e.g. Setters and Public Typed Properties)
@@ -861,6 +856,36 @@ typed properties:
                 // ...
             }
         }
+
+Autowiring Anonymous Services Inline
+------------------------------------
+
+Similar to how anonymous services can be defined inline in configuration files,
+the :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireInline`
+attribute allows you to declare anonymous services inline, directly next to their
+corresponding arguments::
+
+    public function __construct(
+        #[AutowireInline(
+            factory: [ScopingHttpClient::class, 'forBaseUri'],
+            arguments: [
+                '$baseUri' => 'https://api.example.com',
+                '$defaultOptions' => [
+                    'auth_bearer' => '%env(EXAMPLE_TOKEN)%',
+                ],
+            ]
+        )]
+        private HttpClientInterface $client,
+    ) {
+    }
+
+This example tells Symfony to inject an object created by calling the
+``ScopingHttpClient::forBaseUri()`` factory with the specified base URI and
+default options. This is just one example: you can use the ``#[AutowireInline]``
+attribute to define any kind of anonymous service.
+
+While this approach is convenient for simple service definitions, consider moving
+complex or heavily configured services to a configuration file to ease maintenance.
 
 Autowiring Controller Action Methods
 ------------------------------------

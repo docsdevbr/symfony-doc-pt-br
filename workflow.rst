@@ -1,7 +1,7 @@
 Workflow
 ========
 
-Using the Workflow component inside a Symfony application requires knowing first
+Using the Workflow component inside a Symfony application requires first knowing
 some basic theory and concepts about workflows and state machines.
 :doc:`Read this article </workflow/workflow-and-state-machine>` for a quick overview.
 
@@ -178,11 +178,6 @@ follows:
     that are used in the workflow. Symfony will automatically extract the places
     from the transitions.
 
-    .. versionadded:: 7.1
-
-        The support for omitting the ``places`` option was introduced in
-        Symfony 7.1.
-
 The configured property will be used via its implemented getter/setter methods by the marking store::
 
     // src/Entity/BlogPost.php
@@ -294,6 +289,209 @@ what actions are allowed on a blog post::
     // See a specific available transition for the post in the current state
     $transition = $workflow->getEnabledTransition($post, 'publish');
 
+Using Enums as Workflow Places
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using a state machine, you can use PHP backend enums as places in your
+workflows. First, define your enum with backed values::
+
+    // src/Enumeration/BlogPostStatus.php
+    namespace App\Enumeration;
+
+    enum BlogPostStatus: string
+    {
+        case Draft = 'draft';
+        case Reviewed = 'reviewed';
+        case Published = 'published';
+        case Rejected = 'rejected';
+    }
+
+Then configure the workflow using the enum cases as places, initial marking,
+and transitions:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/workflow.yaml
+        framework:
+            workflows:
+                blog_publishing:
+                    type: 'workflow'
+                    marking_store:
+                        type: 'method'
+                        property: 'status'
+                    supports:
+                        - App\Entity\BlogPost
+                    initial_marking: !php/enum App\Enumeration\BlogPostStatus::Draft
+                    places: !php/enum App\Enumeration\BlogPostStatus
+                    transitions:
+                        to_review:
+                            from: !php/enum App\Enumeration\BlogPostStatus::Draft
+                            to:   !php/enum App\Enumeration\BlogPostStatus::Reviewed
+                        publish:
+                            from: !php/enum App\Enumeration\BlogPostStatus::Reviewed
+                            to:   !php/enum App\Enumeration\BlogPostStatus::Published
+                        reject:
+                            from: !php/enum App\Enumeration\BlogPostStatus::Reviewed
+                            to:   !php/enum App\Enumeration\BlogPostStatus::Rejected
+
+    .. code-block:: xml
+
+        <!-- config/packages/workflow.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:framework="http://symfony.com/schema/dic/symfony"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+            https://symfony.com/schema/dic/services/services-1.0.xsd
+            http://symfony.com/schema/dic/symfony
+            https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+            <framework:config>
+                <!-- or type="state_machine" -->
+                <framework:workflow name="blog_publishing" type="workflow" places="App\Enumeration\BlogPostStatus::*">
+                    <framework:marking-store type="single_state">
+                        <framework:argument>status</framework:argument>
+                    </framework:marking-store>
+                    <framework:support>App\Entity\BlogPost</framework:support>
+                    <framework:initial-marking>draft</framework:initial-marking>
+
+                    <framework:transition name="to_review">
+                        <framework:from>draft</framework:from>
+                        <framework:to>reviewed</framework:to>
+                    </framework:transition>
+                    <framework:transition name="publish">
+                        <framework:from>reviewed</framework:from>
+                        <framework:to>published</framework:to>
+                    </framework:transition>
+                    <framework:transition name="reject">
+                        <framework:from>reviewed</framework:from>
+                        <framework:to>rejected</framework:to>
+                    </framework:transition>
+                </framework:workflow>
+            </framework:config>
+        </container>
+
+    .. code-block:: php
+
+        // config/packages/workflow.php
+        use App\Entity\BlogPost;
+        use App\Enumeration\BlogPostStatus;
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework): void {
+            $blogPublishing = $framework->workflows()->workflows('blog_publishing');
+            $blogPublishing
+                ->type('workflow')
+                ->supports([BlogPost::class])
+                ->initialMarking([BlogPostStatus::Draft]);
+
+            $blogPublishing->markingStore()
+                ->type('method')
+                ->property('status');
+
+            $blogPublishing->places(BlogPostStatus::cases());
+
+            $blogPublishing->transition()
+                ->name('to_review')
+                    ->from(BlogPostStatus::Draft)
+                    ->to([BlogPostStatus::Reviewed]);
+
+            $blogPublishing->transition()
+                ->name('publish')
+                    ->from([BlogPostStatus::Reviewed])
+                    ->to([BlogPostStatus::Published]);
+
+            $blogPublishing->transition()
+                ->name('reject')
+                    ->from([BlogPostStatus::Reviewed])
+                    ->to([BlogPostStatus::Rejected]);
+        };
+
+The component will now transparently cast the enum to its backing value
+when needed and vice-versa when working with your objects::
+
+    // src/Entity/BlogPost.php
+    namespace App\Entity;
+
+    class BlogPost
+    {
+        private BlogPostStatus $status;
+
+        public function getStatus(): BlogPostStatus
+        {
+            return $this->status;
+        }
+
+        public function setStatus(BlogPostStatus $status): void
+        {
+            $this->status = $status;
+        }
+    }
+
+.. tip::
+
+    You can also use `glob patterns`_ of PHP constants and enums to list the places:
+
+    .. configuration-block::
+
+        .. code-block:: yaml
+
+            # config/packages/workflow.yaml
+            framework:
+                workflows:
+                    my_workflow_name:
+                        # with constants:
+                        places: 'App\Workflow\MyWorkflow::PLACE_*'
+
+                        # with enums:
+                        places: !php/enum App\Workflow\Places
+
+                        # ...
+
+        .. code-block:: xml
+
+            <!-- config/packages/workflow.xml -->
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <container xmlns="http://symfony.com/schema/dic/services"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns:framework="http://symfony.com/schema/dic/symfony"
+                xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+                <framework:config>
+                    <framework:workflow name="my_workflow_name" type="..."
+                        <!-- with constants: -->
+                        places="App\Workflow\MyWorkflow::PLACE_*"
+                        <!-- with enums:  -->
+                        places="App\Enumeration\BlogPostStatus::*">
+                        <!-- ... -->
+                    </framework:workflow>
+                </framework:config>
+            </container>
+
+        .. code-block:: php
+
+            // config/packages/workflow.php
+            use App\Entity\BlogPost;
+            use App\Enumeration\BlogPostStatus;
+            use Symfony\Config\FrameworkConfig;
+
+            return static function (FrameworkConfig $framework): void {
+                $blogPublishing = $framework->workflows()->workflows('my_workflow_name');
+
+                // with constants:
+                $blogPublishing->places('App\Workflow\MyWorkflow::PLACE_*');
+
+                // with enums:
+                $blogPublishing->places(BlogPostStatus::cases());
+
+                // ...
+            };
+
 Using a multiple state marking store
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -332,10 +530,16 @@ if you are using Doctrine, the matching column definition should use the type ``
 Accessing the Workflow in a Class
 ---------------------------------
 
-You can use the workflow inside a class by using
-:doc:`service autowiring </service_container/autowiring>` and using
-``camelCased workflow name + Workflow`` as parameter name. If it is a state
-machine type, use ``camelCased workflow name + StateMachine``::
+Symfony creates a service for each workflow you define. You have two ways of
+injecting each workflow in any service or controller:
+
+**(1) Use a specific argument name**
+
+Type-hint your construtor/method argument with ``WorkflowInterface`` and name the
+argument using this pattern: "workflow name in camelCase" + ``Workflow`` suffix.
+If it is a state machine type, use the ``StateMachine`` suffix.
+
+For example, to inject the ``blog_publishing`` workflow defined earlier::
 
     use App\Entity\BlogPost;
     use Symfony\Component\Workflow\WorkflowInterface;
@@ -343,15 +547,14 @@ machine type, use ``camelCased workflow name + StateMachine``::
     class MyClass
     {
         public function __construct(
-            // Symfony will inject the 'blog_publishing' workflow configured before
             private WorkflowInterface $blogPublishingWorkflow,
         ) {
         }
 
         public function toReview(BlogPost $post): void
         {
-            // Update the currentState on the post
             try {
+                // update the currentState on the post
                 $this->blogPublishingWorkflow->apply($post, 'to_review');
             } catch (LogicException $exception) {
                 // ...
@@ -360,36 +563,30 @@ machine type, use ``camelCased workflow name + StateMachine``::
         }
     }
 
-To get the enabled transition of a Workflow, you can use
-:method:`Symfony\\Component\\Workflow\\WorkflowInterface::getEnabledTransition`
-method.
+**(2) Use the ``#[Target]`` attribute**
 
-.. versionadded:: 7.1
+When :ref:`dealing with multiple implementations of the same type <autowiring-multiple-implementations-same-type>`
+the ``#[Target]`` attribute helps you select which one to inject. Symfony creates
+a target with the same name as each workflow.
 
-    The :method:`Symfony\\Component\\Workflow\\WorkflowInterface::getEnabledTransition`
-    method was introduced in Symfony 7.1.
+For example, to select the ``blog_publishing`` workflow defined earlier::
 
-Workflows can also be injected thanks to their name and the
-:class:`Symfony\\Component\\DependencyInjection\\Attribute\\Target`
-attribute::
-
-    use App\Entity\BlogPost;
     use Symfony\Component\DependencyInjection\Attribute\Target;
     use Symfony\Component\Workflow\WorkflowInterface;
 
     class MyClass
     {
         public function __construct(
-            #[Target('blog_publishing')]
-            private WorkflowInterface $workflow
+            #[Target('blog_publishing')] private WorkflowInterface $workflow,
         ) {
         }
 
         // ...
     }
 
-This allows you to decorrelate the argument name of any implementation
-name.
+To get the enabled transition of a Workflow, you can use
+:method:`Symfony\\Component\\Workflow\\WorkflowInterface::getEnabledTransition`
+method.
 
 .. tip::
 
@@ -406,14 +603,52 @@ name.
     Learn more about :ref:`tag attributes <tags_additional-attributes>` and
     :ref:`storing workflow metadata <workflow_storing-metadata>`.
 
-    .. versionadded:: 7.1
-
-        The attached configuration to the tag was introduced in Symfony 7.1.
-
 .. tip::
 
     You can find the list of available workflow services with the
     ``php bin/console debug:autowiring workflow`` command.
+
+Injecting Multiple Workflows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the :ref:`AutowireLocator <service-locator_autowire-locator>` attribute to
+lazy-load all workflows and get the one you need::
+
+    use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
+    use Symfony\Component\DependencyInjection\ServiceLocator;
+
+    class MyClass
+    {
+        public function __construct(
+            // 'workflow' is the service tag name and injects both workflows and state machines;
+            // 'name' tells Symfony to index services using that tag property
+            #[AutowireLocator('workflow', 'name')]
+            private ServiceLocator $workflows,
+        ) {
+        }
+
+        public function someMethod(): void
+        {
+            // if you use the 'name' tag property to index services (see constructor above),
+            // you can get workflows by their name; otherwise, you must use the full
+            // service name with the 'workflow.' prefix (e.g. 'workflow.user_registration')
+            $workflow = $this->workflows->get('user_registration');
+
+            // ...
+        }
+    }
+
+.. tip::
+
+    You can also inject only workflows or only state machines::
+
+        public function __construct(
+            #[AutowireLocator('workflow.workflow', 'name')]
+            private ServiceLocator $workflows,
+            #[AutowireLocator('workflow.state_machine', 'name')]
+            private ServiceLocator $stateMachines,
+        ) {
+        }
 
 .. _workflow_using-events:
 
@@ -567,10 +802,6 @@ workflow leaves a place::
     method to build the full event name without having to deal with strings.
     You can also use this method in your custom events via the
     :class:`Symfony\\Component\\Workflow\\Event\\EventNameTrait`.
-
-    .. versionadded:: 7.1
-
-        The ``getName()`` method was introduced in Symfony 7.1.
 
 If some listeners update the context during a transition, you can retrieve
 it via the marking::
@@ -826,7 +1057,7 @@ transition. The value of this option is any valid expression created with the
                             from: draft
                             to:   reviewed
                         publish:
-                            # or "is_anonymous", "is_remember_me", "is_fully_authenticated", "is_granted", "is_valid"
+                            # or "is_remember_me", "is_fully_authenticated", "is_granted", "is_valid"
                             guard: "is_authenticated"
                             from: reviewed
                             to:   published
@@ -861,7 +1092,7 @@ transition. The value of this option is any valid expression created with the
                     </framework:transition>
 
                     <framework:transition name="publish">
-                        <!-- or "is_anonymous", "is_remember_me", "is_fully_authenticated", "is_granted" -->
+                        <!-- or "is_remember_me", "is_fully_authenticated", "is_granted" -->
                         <framework:guard>is_authenticated</framework:guard>
                         <framework:from>reviewed</framework:from>
                         <framework:to>published</framework:to>
@@ -897,7 +1128,7 @@ transition. The value of this option is any valid expression created with the
 
             $blogPublishing->transition()
                 ->name('publish')
-                    // or "is_anonymous", "is_remember_me", "is_fully_authenticated", "is_granted"
+                    // or "is_remember_me", "is_fully_authenticated", "is_granted"
                     ->guard('is_authenticated')
                     ->from(['reviewed'])
                     ->to(['published']);
@@ -1306,6 +1537,83 @@ In Twig templates, metadata is available via the ``workflow_metadata()`` functio
         </ul>
     </p>
 
+Validating Workflow Definitions
+-------------------------------
+
+Symfony allows you to validate workflow definitions using your own custom logic.
+To do so, create a class that implements the
+:class:`Symfony\\Component\\Workflow\\Validator\\DefinitionValidatorInterface`::
+
+    namespace App\Workflow\Validator;
+
+    use Symfony\Component\Workflow\Definition;
+    use Symfony\Component\Workflow\Exception\InvalidDefinitionException;
+    use Symfony\Component\Workflow\Validator\DefinitionValidatorInterface;
+
+    final class BlogPublishingValidator implements DefinitionValidatorInterface
+    {
+        public function validate(Definition $definition, string $name): void
+        {
+            if (!$definition->getMetadataStore()->getMetadata('title')) {
+                throw new InvalidDefinitionException(sprintf('The workflow metadata title is missing in Workflow "%s".', $name));
+            }
+
+            // ...
+        }
+    }
+
+After implementing your validator, configure your workflow to use it:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/workflow.yaml
+        framework:
+            workflows:
+                blog_publishing:
+                    # ...
+
+                    definition_validators:
+                        - App\Workflow\Validator\BlogPublishingValidator
+
+    .. code-block:: xml
+
+        <!-- config/packages/workflow.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:framework="http://symfony.com/schema/dic/symfony"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd"
+        >
+            <framework:config>
+                <framework:workflow name="blog_publishing">
+                    <!-- ... -->
+                    <framework:definition-validators>App\Workflow\Validator\BlogPublishingValidator</framework:definition-validators>
+                </framework:workflow>
+            </framework:config>
+        </container>
+
+    .. code-block:: php
+
+        // config/packages/workflow.php
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework): void {
+            $blogPublishing = $framework->workflows()->workflows('blog_publishing');
+            // ...
+
+            $blogPublishing->definitionValidators([
+                App\Workflow\Validator\BlogPublishingValidator::class
+            ]);
+
+            // ...
+        };
+
+The ``BlogPublishingValidator`` will be executed during container compilation
+to validate the workflow definition.
+
 Learn more
 ----------
 
@@ -1314,3 +1622,5 @@ Learn more
 
    /workflow/workflow-and-state-machine
    /workflow/dumping-workflows
+
+.. _`glob patterns`: https://php.net/glob

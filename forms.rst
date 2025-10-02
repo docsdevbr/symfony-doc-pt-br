@@ -995,8 +995,6 @@ Validation:
     :maxdepth: 1
 
     /form/validation_groups
-    /form/validation_group_service_resolver
-    /form/button_based_validation
     /form/disabling_validation
 
 Misc.:

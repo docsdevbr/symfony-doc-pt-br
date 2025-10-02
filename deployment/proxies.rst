@@ -92,16 +92,6 @@ using the following configuration options:
             ;
         };
 
-.. versionadded:: 7.1
-
-    ``private_ranges`` as a shortcut for private IP address ranges for the
-    ``trusted_proxies`` option was introduced in Symfony 7.1.
-
-.. versionadded:: 7.2
-
-    Support for the ``SYMFONY_TRUSTED_PROXIES`` and ``SYMFONY_TRUSTED_HEADERS``
-    environment variables was introduced in Symfony 7.2.
-
 .. danger::
 
     Enabling the ``Request::HEADER_X_FORWARDED_HOST`` option exposes the
@@ -158,10 +148,6 @@ In this case, you'll need to - *very carefully* - trust *all* proxies.
            # you can also use the 'PRIVATE_SUBNETS' string, which is replaced at
            # runtime by the IpUtils::PRIVATE_SUBNETS constant
            # trusted_proxies: '127.0.0.1,PRIVATE_SUBNETS'
-
-.. versionadded:: 7.2
-
-    The support for the ``'PRIVATE_SUBNETS'`` string was introduced in Symfony 7.2.
 
 That's it! It's critical that you prevent traffic from all non-trusted sources.
 If you allow outside traffic, they could "spoof" their true IP address and

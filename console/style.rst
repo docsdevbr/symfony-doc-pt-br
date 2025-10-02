@@ -7,18 +7,18 @@ questions to the user involves a lot of repetitive code.
 
 Consider for example the code used to display the title of the following command::
 
-    // src/Command/GreetCommand.php
+    // src/Command/MyCommand.php
     namespace App\Command;
 
+    use Symfony\Component\Console\Attribute\AsCommand;
     use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
 
-    class GreetCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
-        // ...
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(InputInterface $input, OutputInterface $output): int
         {
             $output->writeln([
                 '<info>Lorem Ipsum Dolor Sit Amet</>',
@@ -42,26 +42,22 @@ which allow to create *semantic* commands and forget about their styling.
 Basic Usage
 -----------
 
-In your command, instantiate the :class:`Symfony\\Component\\Console\\Style\\SymfonyStyle`
-class and pass the ``$input`` and ``$output`` variables as its arguments. Then,
-you can start using any of its helpers, such as ``title()``, which displays the
-title of the command::
+In your ``__invoke()`` method, add an argument of type :class:`Symfony\\Component\\Console\\Style\\SymfonyStyle`.
+Then, you can start using any of its helpers, such as ``title()``, which
+displays the title of the command::
 
-    // src/Command/GreetCommand.php
+    // src/Command/MyCommand.php
     namespace App\Command;
 
+    use Symfony\Component\Console\Attribute\AsCommand;
     use Symfony\Component\Console\Command\Command;
-    use Symfony\Component\Console\Input\InputInterface;
-    use Symfony\Component\Console\Output\OutputInterface;
     use Symfony\Component\Console\Style\SymfonyStyle;
 
-    class GreetCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
-        // ...
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(SymfonyStyle $io): int
         {
-            $io = new SymfonyStyle($input, $output);
             $io->title('Lorem Ipsum Dolor Sit Amet');
 
             // ...
@@ -168,6 +164,27 @@ Content Methods
     Creates an instance of :class:`Symfony\\Component\\Console\\Helper\\Table`
     styled according to the Symfony Style Guide, which allows you to use
     features such as dynamically appending rows.
+
+:method:`Symfony\\Component\\Console\\Style\\SymfonyStyle::tree`
+    It displays the given nested array as a formatted directory/file tree
+    structure in the console output::
+
+        $io->tree([
+            'src' =>  [
+                'Controller' => [
+                    'DefaultController.php',
+                ],
+                'Kernel.php',
+            ],
+            'templates' => [
+                'base.html.twig',
+            ],
+        ]);
+
+:method:`Symfony\\Component\\Console\\Style\\SymfonyStyle::createTree`
+    Creates an instance of :class:`Symfony\\Component\\Console\\Helper\\TreeHelper`
+    styled according to the Symfony Style Guide, which allows you to use
+    features such as dynamically nesting nodes.
 
 :method:`Symfony\\Component\\Console\\Style\\SymfonyStyle::newLine`
     It displays a blank line in the command output. Although it may seem useful,
@@ -327,6 +344,12 @@ User Input Methods
 
         $io->choice('Select the queue to analyze', ['queue1', 'queue2', 'queue3'], 'queue1');
 
+    Choice questions display both the choice value and a numeric index, which
+    starts from ``0`` by default. To use custom indices, pass an array with
+    custom numeric keys as the choice values::
+
+        $io->choice('Select the queue to analyze', [5 => 'queue1', 6 => 'queue2', 7 => 'queue3']);
+
     Finally, you can allow users to select multiple choices. To do so, users must
     separate each choice with a comma (e.g. typing ``1, 2`` will select choice 1
     and 2)::
@@ -422,19 +445,17 @@ long they are. This is done to enable clickable URLs in terminals that support t
 
 If you prefer to wrap all contents, including URLs, use this method::
 
-    // src/Command/GreetCommand.php
+    // src/Command/MyCommand.php
     namespace App\Command;
 
     // ...
     use Symfony\Component\Console\Style\SymfonyStyle;
 
-    class GreetCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
-        // ...
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(SymfonyStyle $io): int
         {
-            $io = new SymfonyStyle($input, $output);
             $io->getOutputWrapper()->setAllowCutUrls(true);
 
             // ...
@@ -461,7 +482,7 @@ Then, instantiate this custom class instead of the default ``SymfonyStyle`` in
 your commands. Thanks to the ``StyleInterface`` you won't need to change the code
 of your commands to change their appearance::
 
-    // src/Command/GreetCommand.php
+    // src/Command/MyCommand.php
     namespace App\Console;
 
     use App\Console\CustomStyle;
@@ -469,16 +490,11 @@ of your commands to change their appearance::
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
 
-    class GreetCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
-        // ...
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(InputInterface $input, OutputInterface $output): int
         {
-            // Before
-            $io = new SymfonyStyle($input, $output);
-
-            // After
             $io = new CustomStyle($input, $output);
 
             // ...

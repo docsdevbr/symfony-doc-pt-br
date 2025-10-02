@@ -131,7 +131,7 @@ class exposes public methods to extract several types of information:
         $propertyInfo->getProperties($awesomeObject);
 
         // Good!
-        $propertyInfo->getProperties(get_class($awesomeObject));
+        $propertyInfo->getProperties($awesomeObject::class);
         $propertyInfo->getProperties('Example\Namespace\YourAwesomeClass');
         $propertyInfo->getProperties(YourAwesomeClass::class);
 
@@ -197,11 +197,6 @@ can provide the full documentation block for a property as a string::
             This is the subsequent paragraph in the DocComment.
             It can span multiple lines.
     */
-
-.. versionadded:: 7.1
-
-    The :class:`Symfony\\Component\\PropertyInfo\\PropertyDocBlockExtractorInterface`
-    interface was introduced in Symfony 7.1.
 
 .. _property-info-description:
 
@@ -435,11 +430,6 @@ library is present::
     $phpDocExtractor->getLongDescription($class, $property);
     $phpDocExtractor->getDocBlock($class, $property);
 
-.. versionadded:: 7.1
-
-    The :method:`Symfony\\Component\\PropertyInfo\\Extractor\\PhpDocExtractor::getDocBlock`
-    method was introduced in Symfony 7.1.
-
 PhpStanExtractor
 ~~~~~~~~~~~~~~~~
 
@@ -469,7 +459,12 @@ information from annotations of properties and methods, such as ``@var``,
     use App\Domain\Foo;
 
     $phpStanExtractor = new PhpStanExtractor();
+
+    // Type information.
     $phpStanExtractor->getTypesFromConstructor(Foo::class, 'bar');
+    // Description information.
+    $phpStanExtractor->getShortDescription($class, 'bar');
+    $phpStanExtractor->getLongDescription($class, 'bar');
 
 SerializerExtractor
 ~~~~~~~~~~~~~~~~~~~
@@ -527,6 +522,8 @@ with the ``property_info`` service in the Symfony Framework::
     // Type information.
     $doctrineExtractor->getTypes($class, $property);
 
+.. _components-property-information-constructor-extractor:
+
 ConstructorExtractor
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -559,6 +556,7 @@ Creating Your Own Extractors
 
 You can create your own property information extractors by creating a
 class that implements one or more of the following interfaces:
+:class:`Symfony\\Component\\PropertyInfo\\Extractor\\ConstructorArgumentTypeExtractorInterface`,
 :class:`Symfony\\Component\\PropertyInfo\\PropertyAccessExtractorInterface`,
 :class:`Symfony\\Component\\PropertyInfo\\PropertyDescriptionExtractorInterface`,
 :class:`Symfony\\Component\\PropertyInfo\\PropertyListExtractorInterface`,
@@ -576,6 +574,7 @@ service by defining it as a service with one or more of the following
 * ``property_info.access_extractor`` if it provides access information.
 * ``property_info.initializable_extractor`` if it provides initializable information
   (it checks if a property can be initialized through the constructor).
+* ``property_info.constructor_extractor`` if it provides type information from the constructor argument.
 
 .. _`PSR-1`: https://www.php-fig.org/psr/psr-1/
 .. _`phpDocumentor Reflection`: https://github.com/phpDocumentor/ReflectionDocBlock

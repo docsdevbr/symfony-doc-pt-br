@@ -32,13 +32,13 @@ to create each type of UUID:
 **UUID v1** (time-based)
 
 Generates the UUID using a timestamp and the MAC address of your device
-(`read UUIDv1 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-1>`__).
+(`read the UUIDv1 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-1>`__).
 Both are obtained automatically, so you don't have to pass any constructor argument::
 
     use Symfony\Component\Uid\Uuid;
 
-    // $uuid is an instance of Symfony\Component\Uid\UuidV1
     $uuid = Uuid::v1();
+    // $uuid is an instance of Symfony\Component\Uid\UuidV1
 
 .. tip::
 
@@ -48,7 +48,7 @@ Both are obtained automatically, so you don't have to pass any constructor argum
 **UUID v2** (DCE security)
 
 Similar to UUIDv1 but with a very high likelihood of ID collision
-(`read UUIDv2 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-2>`__).
+(`read the UUIDv2 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-2>`__).
 It's part of the authentication mechanism of DCE (Distributed Computing Environment)
 and the UUID includes the POSIX UIDs (user/group ID) of the user who generated it.
 This UUID variant is **not implemented** by the Uid component.
@@ -56,7 +56,7 @@ This UUID variant is **not implemented** by the Uid component.
 **UUID v3** (name-based, MD5)
 
 Generates UUIDs from names that belong, and are unique within, some given namespace
-(`read UUIDv3 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-3>`__).
+(`read the UUIDv3 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-3>`__).
 This variant is useful to generate deterministic UUIDs from arbitrary strings.
 It works by populating the UUID contents with the``md5`` hash of concatenating
 the namespace and the name::
@@ -69,8 +69,8 @@ the namespace and the name::
     // $namespace = Uuid::v4();
 
     // $name can be any arbitrary string
-    // $uuid is an instance of Symfony\Component\Uid\UuidV3
     $uuid = Uuid::v3($namespace, $name);
+    // $uuid is an instance of Symfony\Component\Uid\UuidV3
 
 These are the default namespaces defined by the standard:
 
@@ -81,20 +81,20 @@ These are the default namespaces defined by the standard:
 
 **UUID v4** (random)
 
-Generates a random UUID (`read UUIDv4 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-4>`__).
+Generates a random UUID (`read the UUIDv4 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-4>`__).
 Because of its randomness, it ensures uniqueness across distributed systems
 without the need for a central coordinating entity. It's privacy-friendly
 because it doesn't contain any information about where and when it was generated::
 
     use Symfony\Component\Uid\Uuid;
 
-    // $uuid is an instance of Symfony\Component\Uid\UuidV4
     $uuid = Uuid::v4();
+    // $uuid is an instance of Symfony\Component\Uid\UuidV4
 
 **UUID v5** (name-based, SHA-1)
 
 It's the same as UUIDv3 (explained above) but it uses ``sha1`` instead of
-``md5`` to hash the given namespace and name (`read UUIDv5 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-5>`__).
+``md5`` to hash the given namespace and name (`read the UUIDv5 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-5>`__).
 This makes it more secure and less prone to hash collisions.
 
 .. _uid-uuid-v6:
@@ -103,12 +103,12 @@ This makes it more secure and less prone to hash collisions.
 
 It rearranges the time-based fields of the UUIDv1 to make it lexicographically
 sortable (like :ref:`ULIDs <ulid>`). It's more efficient for database indexing
-(`read UUIDv6 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-6>`__)::
+(`read the UUIDv6 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-6>`__)::
 
     use Symfony\Component\Uid\Uuid;
 
-    // $uuid is an instance of Symfony\Component\Uid\UuidV6
     $uuid = Uuid::v6();
+    // $uuid is an instance of Symfony\Component\Uid\UuidV6
 
 .. tip::
 
@@ -120,27 +120,29 @@ sortable (like :ref:`ULIDs <ulid>`). It's more efficient for database indexing
 **UUID v7** (UNIX timestamp)
 
 Generates time-ordered UUIDs based on a high-resolution Unix Epoch timestamp
-source (the number of milliseconds since midnight 1 Jan 1970 UTC, leap seconds excluded)
-(`read UUIDv7 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-7>`__).
+source (the number of microseconds since midnight 1 Jan 1970 UTC, leap seconds excluded)
+(`read the UUIDv7 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-7>`__).
 It's recommended to use this version over UUIDv1 and UUIDv6 because it provides
 better entropy (and a more strict chronological order of UUID generation)::
 
     use Symfony\Component\Uid\Uuid;
 
-    // $uuid is an instance of Symfony\Component\Uid\UuidV7
     $uuid = Uuid::v7();
+    // $uuid is an instance of Symfony\Component\Uid\UuidV7
 
 **UUID v8** (custom)
 
-Provides an RFC-compatible format for experimental or vendor-specific use cases
-(`read UUIDv8 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-8>`__).
-The only requirement is to set the variant and version bits of the UUID. The rest
-of the UUID value is specific to each implementation and no format should be assumed::
+Provides an RFC-compatible format intended for experimental or vendor-specific use cases
+(`read the UUIDv8 spec <https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-8>`__).
+You must generate the UUID value yourself. The only requirement is to set the
+variant and version bits of the UUID correctly. The rest of the UUID content is
+implementation-specific, and no particular format should be assumed::
 
     use Symfony\Component\Uid\Uuid;
 
+    // pass your custom UUID value as the argument
+    $uuid = Uuid::v8('d9e7a184-5d5b-11ea-a62a-3499710062d0');
     // $uuid is an instance of Symfony\Component\Uid\UuidV8
-    $uuid = Uuid::v8();
 
 If your UUID value is already generated in another format, use any of the
 following methods to create a ``Uuid`` object from it::
@@ -152,8 +154,42 @@ following methods to create a ``Uuid`` object from it::
     $uuid = Uuid::fromBase58('TuetYWNHhmuSQ3xPoVLv9M');
     $uuid = Uuid::fromRfc4122('d9e7a184-5d5b-11ea-a62a-3499710062d0');
 
-You can also use the ``UuidFactory`` to generate UUIDs. First, you may
-configure the behavior of the factory using configuration files::
+You can also use the ``UuidFactory`` to generate UUIDs. Inject the factory in
+your services and use it as follows:
+
+    namespace App\Service;
+
+    use Symfony\Component\Uid\Factory\UuidFactory;
+
+    class FooService
+    {
+        public function __construct(
+            private UuidFactory $uuidFactory,
+        ) {
+        }
+
+        public function generate(): void
+        {
+            $uuid = $this->uuidFactory->create();
+
+            $randomBasedUuid = $this->uuidFactory->randomBased()->create();
+            // $namespace can be omitted if a default namespace is configured in the factory (see below)
+            $nameBasedUuid = $this->uuidFactory->nameBased($namespace)->create($name);
+            // $node can be omitted if a default node is configured in the factory (see below)
+            $timestampBased = $this->uuidFactory->timeBased($node)->create();
+
+            // ...
+        }
+    }
+
+By default, this factory generates the folllowing UUIDs:
+
+* Default and time-based UUIDs: UUIDv7
+* Name-based UUIDs: UUIDv5
+* Random-based UUIDs: UUIDv4
+* Time-based node and UUID namespace: ``null``
+
+You can configure these default values::
 
 .. configuration-block::
 
@@ -162,10 +198,10 @@ configure the behavior of the factory using configuration files::
         # config/packages/uid.yaml
         framework:
             uid:
-                default_uuid_version: 7
-                name_based_uuid_version: 5
+                default_uuid_version: 6
+                name_based_uuid_version: 3
                 name_based_uuid_namespace: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
-                time_based_uuid_version: 7
+                time_based_uuid_version: 6
                 time_based_uuid_node: 121212121212
 
     .. code-block:: xml
@@ -181,10 +217,10 @@ configure the behavior of the factory using configuration files::
 
             <framework:config>
                 <framework:uid
-                    default_uuid_version="7"
-                    name_based_uuid_version="5"
+                    default_uuid_version="6"
+                    name_based_uuid_version="6"
                     name_based_uuid_namespace="6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-                    time_based_uuid_version="7"
+                    time_based_uuid_version="6"
                     time_based_uuid_node="121212121212"
                 />
             </framework:config>
@@ -203,41 +239,14 @@ configure the behavior of the factory using configuration files::
 
             $container->extension('framework', [
                 'uid' => [
-                    'default_uuid_version' => 7,
-                    'name_based_uuid_version' => 5,
+                    'default_uuid_version' => 6,
+                    'name_based_uuid_version' => 3,
                     'name_based_uuid_namespace' => '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
-                    'time_based_uuid_version' => 7,
+                    'time_based_uuid_version' => 6,
                     'time_based_uuid_node' => 121212121212,
                 ],
             ]);
         };
-
-Then, you can inject the factory in your services and use it to generate UUIDs based
-on the configuration you defined::
-
-    namespace App\Service;
-
-    use Symfony\Component\Uid\Factory\UuidFactory;
-
-    class FooService
-    {
-        public function __construct(
-            private UuidFactory $uuidFactory,
-        ) {
-        }
-
-        public function generate(): void
-        {
-            // This creates a UUID of the version given in the configuration file (v7 by default)
-            $uuid = $this->uuidFactory->create();
-
-            $nameBasedUuid = $this->uuidFactory->nameBased(/** ... */);
-            $randomBasedUuid = $this->uuidFactory->randomBased();
-            $timestampBased = $this->uuidFactory->timeBased();
-
-            // ...
-        }
-    }
 
 Converting UUIDs
 ~~~~~~~~~~~~~~~~
@@ -253,10 +262,6 @@ Use these methods to transform the UUID object into different bases::
     $uuid->toHex();     // string(34) "0xd9e7a1845d5b11eaa62a3499710062d0"
     $uuid->toString();  // string(36) "d9e7a184-5d5b-11ea-a62a-3499710062d0"
 
-.. versionadded:: 7.1
-
-    The ``toString()`` method was introduced in Symfony 7.1.
-
 You can also convert some UUID versions to others::
 
     // convert V1 to V6 or V7
@@ -269,13 +274,6 @@ You can also convert some UUID versions to others::
     $uuid = Uuid::v6();
 
     $uuid->toV7(); // returns a Symfony\Component\Uid\UuidV7 instance
-
-.. versionadded:: 7.1
-
-    The :method:`Symfony\\Component\\Uid\\UuidV1::toV6`,
-    :method:`Symfony\\Component\\Uid\\UuidV1::toV7` and
-    :method:`Symfony\\Component\\Uid\\UuidV6::toV7`
-    methods were introduced in Symfony 7.1.
 
 Working with UUIDs
 ~~~~~~~~~~~~~~~~~~
@@ -334,11 +332,6 @@ The following constants are available:
 You can also use the ``Uuid::FORMAT_ALL`` constant to accept any UUID format.
 By default, only the RFC 4122 format is accepted.
 
-.. versionadded:: 7.2
-
-    The ``$format`` parameter of the :method:`Symfony\\Component\\Uid\\Uuid::isValid`
-    method and the related constants were introduced in Symfony 7.2.
-
 Storing UUIDs in Databases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -367,6 +360,7 @@ entity primary keys::
     namespace App\Entity;
 
     use Doctrine\ORM\Mapping as ORM;
+    use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
     use Symfony\Bridge\Doctrine\Types\UuidType;
     use Symfony\Component\Uid\Uuid;
 
@@ -375,7 +369,7 @@ entity primary keys::
         #[ORM\Id]
         #[ORM\Column(type: UuidType::NAME, unique: true)]
         #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-        #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+        #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
         private ?Uuid $id;
 
         public function getId(): ?Uuid
@@ -425,6 +419,66 @@ of the UUID parameters::
             // ...
         }
     }
+
+MockUuidFactory
+===============
+
+.. versionadded:: 7.4
+
+    The :class:`Symfony\\Component\\Uid\\Factory\\MockUuidFactory` class was introduced in Symfony 7.4.
+
+The :class:`Symfony\\Component\\Uid\\Factory\\MockUuidFactory` class allows you to
+control the UUIDs generated during your tests, making them predictable and reproducible.
+
+Suppose you have a service that generates a UUID for each new user::
+
+    use Symfony\Component\Uid\Factory\UuidFactory;
+    use Symfony\Component\Uid\Uuid;
+
+    class UserService
+    {
+        public function __construct(
+            private UuidFactory $uuidFactory
+        ){
+        }
+
+        public function createUserId(): string
+        {
+            return $this->uuidFactory->create()->toRfc4122();
+        }
+    }
+
+In your tests, you can use ``MockUuidFactory`` to inject predictable UUIDs and verify the expected behavior::
+
+    use PHPUnit\Framework\TestCase;
+    use Symfony\Component\Uid\Factory\MockUuidFactory;
+    use Symfony\Component\Uid\UuidV4;
+
+    class UserServiceTest extends TestCase
+    {
+        public function testCreateUserIdReturnsExpectedUuid()
+        {
+            $factory = new MockUuidFactory([
+                UuidV4::fromString('11111111-1111-4111-8111-111111111111'),
+                UuidV4::fromString('22222222-2222-4222-8222-222222222222'),
+            ]);
+
+            $service = new UserService($factory);
+
+            $this->assertSame('11111111-1111-4111-8111-111111111111', $service->createUserId());
+            $this->assertSame('22222222-2222-4222-8222-222222222222', $service->createUserId());
+        }
+    }
+
+.. warning::
+
+    ``MockUuidFactory`` is intended for use in tests only and should never be used in production.
+
+.. note::
+
+    - Supports the :method:`Symfony\\Component\\Uid\\Factory\\MockUuidFactory::create`, :method:`Symfony\\Component\\Uid\\Factory\\MockUuidFactory::randomBased`, :method:`Symfony\\Component\\Uid\\Factory\\MockUuidFactory::timeBased`, and :method:`Symfony\\Component\\Uid\\Factory\\MockUuidFactory::nameBased` methods.
+    - You can mix different UUID versions in the same sequence.
+    - Throws an exception if the sequence is exhausted or the type does not match.
 
 .. _ulid:
 
@@ -555,6 +609,7 @@ entity primary keys::
     namespace App\Entity;
 
     use Doctrine\ORM\Mapping as ORM;
+    use Symfony\Bridge\Doctrine\IdGenerator\UlidGenerator;
     use Symfony\Bridge\Doctrine\Types\UlidType;
     use Symfony\Component\Uid\Ulid;
 
@@ -563,7 +618,7 @@ entity primary keys::
         #[ORM\Id]
         #[ORM\Column(type: UlidType::NAME, unique: true)]
         #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-        #[ORM\CustomIdGenerator(class: 'doctrine.ulid_generator')]
+        #[ORM\CustomIdGenerator(class: UlidGenerator::class)]
         private ?Ulid $id;
 
         public function getId(): ?Ulid

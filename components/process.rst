@@ -114,6 +114,8 @@ You can configure the options passed to the ``other_options`` argument of
     and ``suppress_errors``) are only supported on Windows operating systems.
     Check out the `PHP documentation for proc_open()`_ before using them.
 
+.. _process-using-features-from-the-os-shell:
+
 Using Features From the OS Shell
 --------------------------------
 
@@ -428,11 +430,14 @@ However, if you run the command via the Symfony ``Process`` class, PHP will use
 the settings defined in the ``php.ini`` file. You can solve this issue by using
 the :class:`Symfony\\Component\\Process\\PhpSubprocess` class to run the command::
 
+    use Symfony\Component\Console\Attribute\AsCommand;
+    use Symfony\Component\Console\Style\SymfonyStyle;
     use Symfony\Component\Process\Process;
 
-    class MyCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(SymfonyStyle $io): int
         {
             // the memory_limit (and any other config option) of this command is
             // the one defined in php.ini instead of the new values (optionally)
@@ -442,6 +447,8 @@ the :class:`Symfony\\Component\\Process\\PhpSubprocess` class to run the command
             // the memory_limit (and any other config option) of this command takes
             // into account the values (optionally) passed via the '-d' command option
             $childProcess = new PhpSubprocess(['bin/console', 'cache:pool:prune']);
+
+            return 0;
         }
     }
 
@@ -519,11 +526,6 @@ method. The given signals won't be propagated to the child process::
 
     $process = new Process(['find', '/', '-name', 'rabbit']);
     $process->setIgnoredSignals([SIGKILL, SIGUSR1]);
-
-.. versionadded:: 7.1
-
-    The :method:`Symfony\\Component\\Process\\Process::setIgnoredSignals`
-    method was introduced in Symfony 7.1.
 
 Process Pid
 -----------

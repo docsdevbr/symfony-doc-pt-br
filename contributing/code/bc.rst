@@ -176,6 +176,13 @@ covered by our backward compatibility promise:
 | Use a public, protected or private method     | Yes                         |
 +-----------------------------------------------+-----------------------------+
 
+Using our Translations
+~~~~~~~~~~~~~~~~~~~~~~
+
+All translations provided by Symfony for security and validation errors are
+intended for internal use only. They may be changed or removed at any time.
+Symfony's Backward Compatibility Promise does not apply to internal translations.
+
 Working on Symfony Code
 -----------------------
 
@@ -278,6 +285,7 @@ Make final                                                                No    
 Move to parent class                                                      Yes
 :ref:`Add argument without a default value <add-argument-public-method>`  No
 :ref:`Add argument with a default value <add-argument-public-method>`     No              :ref:`[7] <note-7>` :ref:`[8] <note-8>`
+Rename argument                                                           Yes             :ref:`[10] <note-10>`
 Remove argument                                                           No              :ref:`[3] <note-3>`
 Add default value to an argument                                          No              :ref:`[7] <note-7>` :ref:`[8] <note-8>`
 Remove default value of an argument                                       No
@@ -297,6 +305,7 @@ Make public                                                               No    
 Move to parent class                                                      Yes
 :ref:`Add argument without a default value <add-argument-public-method>`  No
 :ref:`Add argument with a default value <add-argument-public-method>`     No              :ref:`[7] <note-7>` :ref:`[8] <note-8>`
+Rename argument                                                           Yes             :ref:`[10] <note-10>`
 Remove argument                                                           No              :ref:`[3] <note-3>`
 Add default value to an argument                                          No              :ref:`[7] <note-7>` :ref:`[8] <note-8>`
 Remove default value of an argument                                       No              :ref:`[7] <note-7>`
@@ -313,6 +322,7 @@ Change name                                                               Yes
 Make public or protected                                                  Yes
 Add argument without a default value                                      Yes
 Add argument with a default value                                         Yes
+Rename argument                                                           Yes
 Remove argument                                                           Yes
 Add default value to an argument                                          Yes
 Remove default value of an argument                                       Yes

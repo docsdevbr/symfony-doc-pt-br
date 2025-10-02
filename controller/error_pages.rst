@@ -154,7 +154,8 @@ automatically when installing ``symfony/framework-bundle``):
         # config/routes/framework.yaml
         when@dev:
             _errors:
-                resource: '@FrameworkBundle/Resources/config/routing/errors.xml'
+                resource: '@FrameworkBundle/Resources/config/routing/errors.php'
+                type:     php
                 prefix:   /_error
 
     .. code-block:: xml
@@ -167,7 +168,7 @@ automatically when installing ``symfony/framework-bundle``):
                 https://symfony.com/schema/routing/routing-1.0.xsd">
 
             <when env="dev">
-                <import resource="@FrameworkBundle/Resources/config/routing/errors.xml" prefix="/_error"/>
+                <import resource="@FrameworkBundle/Resources/config/routing/errors.php" type="php" prefix="/_error"/>
             </when>
         </routes>
 
@@ -178,7 +179,7 @@ automatically when installing ``symfony/framework-bundle``):
 
         return function (RoutingConfigurator $routes): void {
             if ('dev' === $routes->env()) {
-                $routes->import('@FrameworkBundle/Resources/config/routing/errors.xml')
+                $routes->import('@FrameworkBundle/Resources/config/routing/errors.php', 'php')
                     ->prefix('/_error')
                 ;
             }
@@ -336,3 +337,46 @@ time and again, you can have just one (or several) listeners deal with them.
     your application (like :class:`Symfony\\Component\\Security\\Core\\Exception\\AccessDeniedException`)
     and takes measures like redirecting the user to the login page, logging them
     out and other things.
+
+Dumping Error Pages as Static HTML Files
+----------------------------------------
+
+If an error occurs before reaching your Symfony application, web servers display
+their own default error pages instead of your custom ones. Dumping your application's
+error pages to static HTML ensures users always see your defined pages and improves
+performance by allowing the server to deliver errors instantly without calling
+your application.
+
+Symfony provides the following command to turn your error pages into static HTML files:
+
+.. code-block:: terminal
+
+    # the first argument is the path where the HTML files are stored
+    $ APP_ENV=prod php bin/console error:dump var/cache/prod/error_pages/
+
+    # by default, it generates the pages of all 4xx and 5xx errors, but you can
+    # pass a list of HTTP status codes to only generate those
+    $ APP_ENV=prod php bin/console error:dump var/cache/prod/error_pages/ 401 403 404 500
+
+You must also configure your web server to use these generated pages. For example,
+if you use Nginx:
+
+.. code-block:: nginx
+
+    # /etc/nginx/conf.d/example.com.conf
+    server {
+        # Existing server configuration
+        # ...
+
+        # Serve static error pages
+        error_page 400 /error_pages/400.html;
+        error_page 401 /error_pages/401.html;
+        # ...
+        error_page 510 /error_pages/510.html;
+        error_page 511 /error_pages/511.html;
+
+        location ^~ /error_pages/ {
+            root /path/to/your/symfony/var/cache/error_pages;
+            internal; # prevent direct URL access
+        }
+    }

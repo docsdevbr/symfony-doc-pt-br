@@ -82,7 +82,6 @@ a relative or absolute path to the imported file:
 
             App\:
                 resource: '../src/*'
-                exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
 
             # ...
 
@@ -104,8 +103,98 @@ a relative or absolute path to the imported file:
             <services>
                 <defaults autowire="true" autoconfigure="true"/>
 
-                <prototype namespace="App\" resource="../src/*"
-                    exclude="../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}"/>
+                <prototype namespace="App\" resource="../src/*"/>
+
+                <!-- ... -->
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        return function(ContainerConfigurator $container): void {
+            $container->import('services/mailer.php');
+            // If you want to import a whole directory:
+            $container->import('services/');
+
+            $services = $container->services()
+                ->defaults()
+                    ->autowire()
+                    ->autoconfigure()
+            ;
+
+            $services->load('App\\', '../src/*');
+        };
+
+When loading a configuration file, Symfony first processes all imported files in
+the order they are listed under the ``imports`` key. After all imports are processed,
+it then processes the parameters and services defined directly in the current file.
+In practice, this means that **later definitions override earlier ones**.
+
+For example, if you use the :ref:`default services.yaml configuration <service-container-services-load-example>`
+as in the above example, your main ``config/services.yaml`` file uses the ``App\``
+namespace to auto-discover services and loads them after all imported files.
+If an imported file (e.g. ``config/services/mailer.yaml``) defines a service that
+is also auto-discovered, the definition from ``services.yaml`` will take precedence.
+
+To make sure your specific service definitions are not overridden by auto-discovery,
+consider one of the following strategies:
+
+#. :ref:`Exclude services from auto-discovery <import-exclude-services-from-auto-discovery>`
+#. :ref:`Override services in the same file <import-override-services-in-the-same-file>`
+#. :ref:`Control import order <import-control-import-order>`
+
+.. _import-exclude-services-from-auto-discovery:
+
+**Exclude services from auto-discovery**
+
+Adjust the ``App\`` definition to use the ``exclude`` option. This prevents Symfony
+from auto-registering classes that are defined manually elsewhere:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        imports:
+            - { resource: services/mailer.yaml }
+            # ... other imports
+
+        services:
+            _defaults:
+                autowire: true
+                autoconfigure: true
+
+            App\:
+                resource: '../src/*'
+                exclude:
+                    - '../src/Mailer/'
+                    - '../src/SpecificClass.php'
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <imports>
+                <import resource="services/mailer.xml"/>
+                <!-- If you want to import a whole directory: -->
+                <import resource="services/"/>
+            </imports>
+
+            <services>
+                <defaults autowire="true" autoconfigure="true"/>
+
+                <prototype namespace="App\" resource="../src/*">
+                    <exclude>../src/Mailer/</exclude>
+                    <exclude>../src/SpecificClass.php</exclude>
+                </prototype>
 
                 <!-- ... -->
             </services>
@@ -128,20 +217,209 @@ a relative or absolute path to the imported file:
             ;
 
             $services->load('App\\', '../src/*')
-                ->exclude('../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}');
+                ->exclude([
+                    '../src/Mailer/',
+                    '../src/SpecificClass.php',
+                ]);
         };
 
-When loading a configuration file, Symfony loads first the imported files and
-then it processes the parameters and services defined in the file. If you use the
-:ref:`default services.yaml configuration <service-container-services-load-example>`
-as in the above example, the ``App\`` definition creates services for classes
-found in ``../src/*``. If your imported file defines services for those classes
-too, they will be overridden.
+.. _import-override-services-in-the-same-file:
 
-A possible solution for this is to add the classes and/or directories of the
-imported files in the ``exclude`` option of the ``App\`` definition. Another
-solution is to not use imports and add the service definitions in the same file,
-but after the ``App\`` definition to override it.
+**Override services in the same file**
+
+You can define specific services after the ``App\`` auto-discovery block in the
+same file. These later definitions will override the auto-registered ones:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        services:
+            _defaults:
+                autowire: true
+                autoconfigure: true
+
+            App\:
+                resource: '../src/*'
+
+            App\Mailer\MyMailer:
+                arguments: ['%env(MAILER_DSN)%']
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <imports>
+                <import resource="services/mailer.xml"/>
+                <!-- If you want to import a whole directory: -->
+                <import resource="services/"/>
+            </imports>
+
+            <services>
+                <defaults autowire="true" autoconfigure="true"/>
+
+                <prototype namespace="App\" resource="../src/*"/>
+
+                <service id="App\Mailer\MyMailer">
+                    <argument>%env(MAILER_DSN)%</argument>
+                </service>
+
+                <!-- ... -->
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        return function(ContainerConfigurator $container): void {
+            $services = $container->services()
+                ->defaults()
+                    ->autowire()
+                    ->autoconfigure();
+
+            $services->load('App\\', '../src/*');
+
+            $services->set(App\Mailer\MyMailer::class)
+                ->arg(0, '%env(MAILER_DSN)%');
+        };
+
+.. _import-control-import-order:
+
+**Control import order**
+
+Move the ``App\`` auto-discovery config to a separate file and import it
+before more specific service files. This way, specific service definitions
+can override the auto-discovered ones.
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services/autodiscovery.yaml
+        services:
+            _defaults:
+                autowire: true
+                autoconfigure: true
+
+            App\:
+                resource: '../../src/*'
+                exclude:
+                    - '../../src/Mailer/'
+
+        # config/services/mailer.yaml
+        services:
+            App\Mailer\SpecificMailer:
+                # ... custom configuration
+
+        # config/services.yaml
+        imports:
+            - { resource: services/autodiscovery.yaml }
+            - { resource: services/mailer.yaml }
+            - { resource: services/ }
+
+        services:
+            # definitions here override anything from the imports above
+            # consider keeping most definitions inside imported files
+
+    .. code-block:: xml
+
+        <!-- config/services/autodiscovery.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://symfony.com/schema/dic/services
+                       https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <defaults autowire="true" autoconfigure="true"/>
+
+                <prototype namespace="App\" resource="../../src/*">
+                    <exclude>../../src/Mailer/</exclude>
+                </prototype>
+            </services>
+        </container>
+
+        <!-- config/services/mailer.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://symfony.com/schema/dic/services
+                       https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <service id="App\Mailer\SpecificMailer">
+                    <!-- ... custom configuration -->
+                </service>
+            </services>
+        </container>
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://symfony.com/schema/dic/services
+                       https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <imports>
+                <import resource="services/autodiscovery.xml"/>
+                <import resource="services/mailer.xml"/>
+                <import resource="services/"/>
+            </imports>
+
+            <services>
+                <!-- definitions here override anything from the imports above -->
+                <!-- consider keeping most definitions inside imported files -->
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services/autodiscovery.php
+        use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+        return function (ContainerConfigurator $container): void {
+            $services = $container->services()
+                ->defaults()
+                    ->autowire()
+                    ->autoconfigure();
+
+            $services->load('App\\', '../../src/*')
+                ->exclude([
+                    '../../src/Mailer/',
+                ]);
+        };
+
+        // config/services/mailer.php
+        use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+        return function (ContainerConfigurator $container): void {
+            $services = $container->services();
+
+            $services->set(App\Mailer\SpecificMailer::class);
+            // Add any custom configuration here if needed
+        };
+
+        // config/services.php
+        use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+        return function (ContainerConfigurator $container): void {
+            $container->import('services/autodiscovery.php');
+            $container->import('services/mailer.php');
+            $container->import('services/');
+
+            $services = $container->services();
+
+            // definitions here override anything from the imports above
+            // consider keeping most definitions inside imported files
+        };
 
 .. include:: /components/dependency_injection/_imports-parameters-note.rst.inc
 

@@ -1,6 +1,11 @@
 Scheduler
 =========
 
+.. admonition:: Screencast
+    :class: screencast
+
+    Like video tutorials? Check out this `Scheduler quick-start screencast`_.
+
 The scheduler component manages task scheduling within your PHP application, like
 running a task each night at 3 AM, every two weeks except for holidays or any
 other custom schedule you might need.
@@ -15,17 +20,16 @@ stack Symfony application.
 Installation
 ------------
 
-In applications using :ref:`Symfony Flex <symfony-flex>`, run this command to
-install the scheduler component:
+Run this command to install the scheduler component:
 
 .. code-block:: terminal
 
     $ composer require symfony/scheduler
 
-.. tip::
+.. note::
 
-    Starting in `MakerBundle`_ ``v1.58.0``, you can run ``php bin/console make:schedule``
-    to generate a basic schedule, that you can customize to create your own Scheduler.
+    In applications using :ref:`Symfony Flex <symfony-flex>`, installing the component
+    also creates an initial schedule that's ready to start adding your tasks.
 
 Symfony Scheduler Basics
 ------------------------
@@ -129,7 +133,7 @@ on a particular schedule::
 
 .. tip::
 
-    By default, the schedule name is ``default`` and the transport name follows
+    The schedule name must be unique and by default, it is ``default``. The transport name follows
     the syntax: ``scheduler_nameofyourschedule`` (e.g. ``scheduler_default``).
 
 .. tip::
@@ -223,7 +227,7 @@ this will create a very long running list of schedules at that exact time.
 This may cause an issue if a task has a memory leak.
 
 You can add a hash symbol (``#``) in expressions to generate random values.
-Athough the values are random, they are predictable and consistent because they
+Although the values are random, they are predictable and consistent because they
 are generated based on the message. A message with string representation ``my task``
 and a defined frequency of ``# # * * *`` will have an idempotent frequency
 of ``56 20 * * *`` (every day at 8:56pm).
@@ -272,13 +276,39 @@ defined by PHP datetime functions::
     RecurringMessage::every('3 weeks', new Message());
     RecurringMessage::every('first Monday of next month', new Message());
 
-    $from = new \DateTimeImmutable('13:47', new \DateTimeZone('Europe/Paris'));
-    $until = '2023-06-12';
-    RecurringMessage::every('first Monday of next month', new Message(), $from, $until);
+.. note::
+
+    Comma-separated weekdays (e.g., ``'Monday, Thursday, Saturday'``) are not supported
+    by the ``every()`` method. For multiple weekdays, use cron expressions instead:
+
+    .. code-block:: diff
+
+        - RecurringMessage::every('Monday, Thursday, Saturday', new Message());
+        + RecurringMessage::cron('5 12 * * 1,4,6', new Message());
 
 .. tip::
 
     You can also define periodic tasks using :ref:`the AsPeriodicTask attribute <scheduler-attributes-periodic-task>`.
+
+You can also define ``from`` and ``until`` times for your schedule::
+
+    // create a message every day at 13:00
+    $from = new \DateTimeImmutable('13:00', new \DateTimeZone('Europe/Paris'));
+    RecurringMessage::every('1 day', new Message(), $from);
+
+    // create a message every day until a specific date
+    $until = '2023-06-12';
+    RecurringMessage::every('1 day', new Message(), null, $until);
+
+    // combine from and until for more precise control
+    $from = new \DateTimeImmutable('2023-01-01 13:47', new \DateTimeZone('Europe/Paris'));
+    $until = '2023-06-12';
+    RecurringMessage::every('first Monday of next month', new Message(), $from, $until);
+
+When starting the scheduler, the message isn't sent to the messenger immediately.
+If you don't set a ``from`` parameter, the first frequency period starts from the
+moment the scheduler runs. For example, if you start it at 8:33 and the message
+is scheduled hourly, it will run at 9:33, 10:33, 11:33, etc.
 
 Custom Triggers
 ~~~~~~~~~~~~~~~
@@ -418,10 +448,10 @@ by adding one of these attributes to a service or a command:
 :class:`Symfony\\Component\\Scheduler\\Attribute\\AsCronTask`.
 
 For both of these attributes, you have the ability to define the schedule to
-use via the ``schedule``option. By default, the ``default`` named schedule will
+use via the ``schedule`` option. By default, the ``default`` named schedule will
 be used. Also, by default, the ``__invoke`` method of your service will be called
-but, it's also possible to specify the method to call via the ``method``option
-and you can define arguments via ``arguments``option if necessary.
+but, it's also possible to specify the method to call via the ``method`` option
+and you can define arguments via ``arguments`` option if necessary.
 
 .. _scheduler-attributes-cron-task:
 
@@ -458,7 +488,8 @@ The attribute takes more parameters to customize the trigger::
     // when applying this attribute to a Symfony console command, you can pass
     // arguments and options to the command using the 'arguments' option:
     #[AsCronTask('0 0 * * *', arguments: 'some_argument --some-option --another-option=some_value')]
-    class MyCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
 
 .. _scheduler-attributes-periodic-task:
 
@@ -507,7 +538,8 @@ The ``#[AsPeriodicTask]`` attribute takes many parameters to customize the trigg
     // when applying this attribute to a Symfony console command, you can pass
     // arguments and options to the command using the 'arguments' option:
     #[AsPeriodicTask(frequency: '1 day', arguments: 'some_argument --some-option --another-option=some_value')]
-    class MyCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
 
 Managing Scheduled Messages
 ---------------------------
@@ -559,7 +591,7 @@ In your handler, you can check a condition and, if affirmative, access the
     {
         public function getSchedule(): Schedule
         {
-            $this->removeOldReports = RecurringMessage::cron(‘3 8 * * 1’, new CleanUpOldSalesReport());
+            $this->removeOldReports = RecurringMessage::cron('3 8 * * 1', new CleanUpOldSalesReport());
 
             return $this->schedule ??= (new Schedule())
                 ->with(
@@ -723,8 +755,9 @@ after a message is consumed::
         $schedule = $event->getSchedule();
         $context = $event->getMessageContext();
         $message = $event->getMessage();
+        $result = $event->getResult();
 
-        // do something with the schedule, context or message
+        // do something with the schedule, context, message or result
     }
 
 Execute this command to find out which listeners are registered for this event
@@ -841,6 +874,41 @@ code::
     use the ``messenger:consume`` command as explained in the previous
     section.
 
+Modifying the Schedule at Runtime
+---------------------------------
+
+When a recurring message is added to or removed from the schedule,
+the scheduler automatically restarts and recalculates the internal trigger heap.
+This enables dynamic control of scheduled tasks at runtime::
+
+    // src/Scheduler/DynamicScheduleProvider.php
+    namespace App\Scheduler;
+
+    #[AsSchedule('uptoyou')]
+    class DynamicScheduleProvider implements ScheduleProviderInterface
+    {
+        private ?Schedule $schedule = null;
+
+        public function getSchedule(): Schedule
+        {
+            return $this->schedule ??= (new Schedule())
+                ->with(
+                    // ...
+                )
+            ;
+        }
+
+        public function clearAndAddMessages(): void
+        {
+            // clear the current schedule and add new recurring messages
+            $this->schedule?->clear();
+            $this->schedule?->add(
+                RecurringMessage::cron('@hourly', new DoActionMessage()),
+                RecurringMessage::cron('@daily', new DoAnotherActionMessage()),
+            );
+        }
+    }
+
 Debugging the Schedule
 ----------------------
 
@@ -930,10 +998,6 @@ handle a message only once, you can use the ``processOnlyLastMissedRun`` option:
         }
     }
 
-.. versionadded:: 7.2
-
-    The ``processOnlyLastMissedRun`` option was introduced in Symfony 7.2.
-
 To scale your schedules more effectively, you can use multiple workers. In such
 cases, a good practice is to add a :doc:`lock </components/lock>` to prevent the
 same task more than once::
@@ -986,9 +1050,9 @@ When using the ``RedispatchMessage``, Symfony will attach a
 :class:`Symfony\\Component\\Scheduler\\Messenger\\ScheduledStamp` to the message,
 helping you identify those messages when needed.
 
-.. _`MakerBundle`: https://symfony.com/doc/current/bundles/SymfonyMakerBundle/index.html
 .. _`Deploying to Production`: https://symfony.com/doc/current/messenger.html#deploying-to-production
 .. _`Memoizing`: https://en.wikipedia.org/wiki/Memoization
 .. _`cron command-line utility`: https://en.wikipedia.org/wiki/Cron
 .. _`crontab.guru website`: https://crontab.guru/
 .. _`relative formats`: https://www.php.net/manual/en/datetime.formats.php#datetime.formats.relative
+.. _`Scheduler quick-start screencast`: https://symfonycasts.com/screencast/mailtrap/bonus-symfony-scheduler

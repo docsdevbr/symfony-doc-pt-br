@@ -159,29 +159,22 @@ Twig Extension & Autoconfiguration
 Thanks to Symfony's service handling, you can *extend* Symfony in many ways, like
 by creating an event subscriber or a security voter for complex authorization
 rules. Let's add a new filter to Twig called ``greet``. How? Create a class
-that extends ``AbstractExtension``::
+with your logic::
 
     // src/Twig/GreetExtension.php
     namespace App\Twig;
 
     use App\GreetingGenerator;
-    use Twig\Extension\AbstractExtension;
-    use Twig\TwigFilter;
+    use Twig\Attribute\AsTwigFilter;
 
-    class GreetExtension extends AbstractExtension
+    class GreetExtension
     {
         public function __construct(
             private GreetingGenerator $greetingGenerator,
         ) {
         }
 
-        public function getFilters(): array
-        {
-            return [
-                new TwigFilter('greet', [$this, 'greetUser']),
-            ];
-        }
-
+        #[AsTwigFilter('greet')]
         public function greetUser(string $name): string
         {
             $greeting =  $this->greetingGenerator->getRandomGreeting();
@@ -198,7 +191,7 @@ After creating just *one* file, you can use this immediately:
     {# Will print something like "Hey Symfony!" #}
     <h1>{{ name|greet }}</h1>
 
-How does this work? Symfony notices that your class extends ``AbstractExtension``
+How does this work? Symfony notices that your class uses the ``#[AsTwigFilter]`` attribute
 and so *automatically* registers it as a Twig extension. This is called autoconfiguration,
 and it works for *many* many things. Create a class and then extend a base class
 (or implement an interface). Symfony takes care of the rest.

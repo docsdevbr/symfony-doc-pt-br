@@ -101,9 +101,9 @@ or by a custom password strength estimator.
 
     class User
     {
-        #[Assert\PasswordStrength([
-            'minScore' => PasswordStrength::STRENGTH_VERY_STRONG, // Very strong password required
-        ])]
+        #[Assert\PasswordStrength(
+            minScore: PasswordStrength::STRENGTH_VERY_STRONG, // Very strong password required
+        )]
         protected $rawPassword;
     }
 
@@ -123,18 +123,14 @@ The default message supplied when the password does not reach the minimum requir
 
     class User
     {
-        #[Assert\PasswordStrength([
-            'message' => 'Your password is too easy to guess. Company\'s security policy requires to use a stronger password.'
-        ])]
+        #[Assert\PasswordStrength(
+            message: 'Your password is too easy to guess. Company\'s security policy requires to use a stronger password.'
+        )]
         protected $rawPassword;
     }
 
 Customizing the Password Strength Estimation
 --------------------------------------------
-
-.. versionadded:: 7.2
-
-    The feature to customize the password strength estimation was introduced in Symfony 7.2.
 
 By default, this constraint calculates the strength of a password based on its
 length and the number of unique characters used. You can get the calculated

@@ -35,11 +35,11 @@ You can modify this file to add custom logic:
 .. note::
 
     If you don't use Symfony Flex, make sure this file is configured as
-    bootstrap file in your ``phpunit.xml.dist`` file:
+    bootstrap file in your ``phpunit.dist.xml`` file:
 
     .. code-block:: xml
 
-        <!-- phpunit.xml.dist -->
+        <!-- phpunit.dist.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <phpunit
             bootstrap="tests/bootstrap.php"

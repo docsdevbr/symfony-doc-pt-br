@@ -258,11 +258,6 @@ Below is the configuration for the pull request state machine.
     that are used in the workflow. Symfony will automatically extract the places
     from the transitions.
 
-    .. versionadded:: 7.1
-
-        The support for omitting the ``places`` option was introduced in
-        Symfony 7.1.
-
 Symfony automatically creates a service for each workflow (:class:`Symfony\\Component\\Workflow\\Workflow`)
 or state machine (:class:`Symfony\\Component\\Workflow\\StateMachine`) you
 have defined in your configuration. You can use the workflow inside a class by using

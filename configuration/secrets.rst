@@ -178,10 +178,6 @@ you to reveal a single secret's value.
 
      my secret
 
-.. versionadded:: 7.1
-
-    The ``secrets:reveal`` command was introduced in Symfony 7.1.
-
 Remove Secrets
 --------------
 
@@ -311,7 +307,7 @@ The secrets system is enabled by default and some of its behavior can be configu
                 xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd
                     http://symfony.com/schema/dic/framework https://symfony.com/schema/dic/framework/framework-1.0.xsd"
             >
-                <framework:config secret="%env(APP_SECRET)%">
+                <framework:config>
                     <framework:secrets
                         vault_directory="%kernel.project_dir%/config/secrets/%kernel.environment%"
                         local_dotenv_file="%kernel.project_dir%/.env.%kernel.environment%.local"

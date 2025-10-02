@@ -1,18 +1,12 @@
 The Yaml Component
 ==================
 
-    The Yaml component loads and dumps YAML files.
+The Symfony Yaml component loads and dumps YAML files. It parses YAML strings
+into PHP arrays and can also convert PHP arrays back into YAML strings.
 
-What is It?
------------
-
-The Symfony Yaml component parses YAML strings to convert them to PHP arrays.
-It is also able to convert PHP arrays to YAML strings.
-
-`YAML`_, *YAML Ain't Markup Language*, is a human friendly data serialization
-standard for all programming languages. YAML is a great format for your
-configuration files. YAML files are as expressive as XML files and as readable
-as INI files.
+`YAML`_, *YAML Ain't Markup Language*, is a human-friendly data serialization
+language for all programming languages. It is a popular format for configuration
+files, balancing readability with advanced features.
 
 .. tip::
 
@@ -298,7 +292,7 @@ You can make it convert to a ``DateTime`` instance by using the ``PARSE_DATETIME
 flag::
 
     $date = Yaml::parse('2016-05-27', Yaml::PARSE_DATETIME);
-    var_dump(get_class($date)); // DateTime
+    var_dump($date::class); // DateTime
 
 Dumping Multi-line Literal Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -372,11 +366,6 @@ giving the enumeration FQCN::
     $parameters = Yaml::parse($yaml, Yaml::PARSE_CONSTANT);
     // $parameters = ['bar' => ['foo', 'bar']];
 
-.. versionadded:: 7.1
-
-    The support for using the enum FQCN without specifying a case
-    was introduced in Symfony 7.1.
-
 Parsing and Dumping of Binary Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -428,6 +417,12 @@ you can dump them as ``~`` with the ``DUMP_NULL_AS_TILDE`` flag::
     $dumped = Yaml::dump(['foo' => null], 2, 4, Yaml::DUMP_NULL_AS_TILDE);
     // foo: ~
 
+Another valid representation of the ``null`` value is an empty string. You can
+use the ``DUMP_NULL_AS_EMPTY`` flag to dump null values as empty strings::
+
+    $dumped = Yaml::dump(['foo' => null], 2, 4, Yaml::DUMP_NULL_AS_EMPTY);
+    // foo:
+
 Dumping Numeric Keys as Strings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -439,6 +434,50 @@ By default, digit-only array keys are dumped as integers. You can use the
 
     $dumped = Yaml::dump([200 => 'foo'], 2, 4, Yaml::DUMP_NUMERIC_KEY_AS_STRING);
     // '200': foo
+
+Dumping Double Quotes on Values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, only unsafe string values are enclosed in double quotes (for example,
+if they are reserved words or contain newlines and spaces). Use the
+``DUMP_FORCE_DOUBLE_QUOTES_ON_VALUES`` flag to add double quotes to all string values::
+
+    $dumped = Yaml::dump([
+        'foo' => 'bar', 'some foo' => 'some bar', 'x' => 3.14, 'y' => true, 'z' => null,
+    ]);
+    // foo: bar, 'some foo': 'some bar', x: 3.14, 'y': true, z: null
+
+    $dumped = Yaml::dump([
+        'foo' => 'bar', 'some foo' => 'some bar', 'x' => 3.14, 'y' => true, 'z' => null,
+    ], 2, 4, Yaml::DUMP_FORCE_DOUBLE_QUOTES_ON_VALUES);
+    // "foo": "bar", "some foo": "some bar", "x": 3.14, "y": true, "z": null
+
+Dumping Collection of Maps
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the YAML component dumps collections of maps, it uses a hyphen on a separate
+line as a delimiter:
+
+.. code-block:: yaml
+
+    planets:
+      -
+        name: Mercury
+        distance: 57910000
+      -
+        name: Jupiter
+        distance: 778500000
+
+To produce a more compact output where the delimiter is included within the map,
+use the ``Yaml::DUMP_COMPACT_NESTED_MAPPING`` flag:
+
+.. code-block:: yaml
+
+    planets:
+      - name: Mercury
+        distance: 57910000
+      - name: Jupiter
+        distance: 778500000
 
 Syntax Validation
 ~~~~~~~~~~~~~~~~~

@@ -13,19 +13,17 @@ that adds two convenient methods to lock and release commands::
     // ...
     use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Command\LockableTrait;
-    use Symfony\Component\Console\Input\InputInterface;
-    use Symfony\Component\Console\Output\OutputInterface;
+    use Symfony\Component\Console\Style\SymfonyStyle;
 
-    class UpdateContentsCommand extends Command
+    #[AsCommand(name: 'contents:update')]
+    class UpdateContentsCommand
     {
         use LockableTrait;
 
-        // ...
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(SymfonyStyle $io): int
         {
             if (!$this->lock()) {
-                $output->writeln('The command is already running in another process.');
+                $io->writeln('The command is already running in another process.');
 
                 return Command::SUCCESS;
             }
@@ -52,7 +50,8 @@ a ``$lockFactory`` property with your own lock factory::
     use Symfony\Component\Console\Command\LockableTrait;
     use Symfony\Component\Lock\LockFactory;
 
-    class UpdateContentsCommand extends Command
+    #[AsCommand(name: 'contents:update')]
+    class UpdateContentsCommand
     {
         use LockableTrait;
 
@@ -62,9 +61,5 @@ a ``$lockFactory`` property with your own lock factory::
 
         // ...
     }
-
-.. versionadded::  7.1
-
-    The ``$lockFactory`` property was introduced in Symfony 7.1.
 
 .. _`locks`: https://en.wikipedia.org/wiki/Lock_(computer_science)

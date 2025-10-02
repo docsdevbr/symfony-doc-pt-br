@@ -72,9 +72,9 @@ will contain a host name.
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('name', new Assert\Hostname([
-                    'message' => 'The server name must be a valid hostname.',
-                ]));
+                $metadata->addPropertyConstraint('name', new Assert\Hostname(
+                    message: 'The server name must be a valid hostname.',
+                ));
             }
         }
 

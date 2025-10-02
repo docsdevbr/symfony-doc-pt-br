@@ -217,9 +217,48 @@ user by dynamically rewriting the current page rather than loading entire new
 pages from a server.
 
 By default, the debug toolbar displays the information of the initial page load
-and doesn't refresh after each AJAX request. However, you can set the
-``Symfony-Debug-Toolbar-Replace`` header to a value of ``'1'`` in the response to
-the AJAX request to force the refresh of the toolbar::
+and doesn't refresh after each AJAX request. However, you can configure the
+toolbar to be refreshed after each AJAX request by enabling ``ajax_replace`` in the
+``web_profiler`` configuration:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/web_profiler.yaml
+        web_profiler:
+            toolbar:
+                ajax_replace: true
+
+    .. code-block:: xml
+
+        <!-- config/packages/web_profiler.xml -->
+        <?xml version="1.0" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:framework="http://symfony.com/schema/dic/symfony"
+            xmlns:web-profiler="http://symfony.com/schema/dic/webprofiler"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+                <web-profiler:config>
+                    <web-profiler:toolbar ajax-replace="true"/>
+                </web-profiler:config>
+        </container>
+
+    .. code-block:: php
+
+        // config/packages/web_profiler.php
+        use Symfony\Config\WebProfilerConfig;
+
+        return static function (WebProfilerConfig $profiler): void {
+            $profiler->toolbar()
+                ->ajaxReplace(true);
+        };
+
+If you need a more sophisticated solution, you can set the
+``Symfony-Debug-Toolbar-Replace`` header to a value of ``'1'`` in the response
+yourself::
 
     $response->headers->set('Symfony-Debug-Toolbar-Replace', '1');
 
@@ -228,31 +267,21 @@ production. To do that, create an :doc:`event subscriber </event_dispatcher>`
 and listen to the :ref:`kernel.response <component-http-kernel-kernel-response>`
 event::
 
+    use Symfony\Component\DependencyInjection\Attribute\When;
     use Symfony\Component\EventDispatcher\EventSubscriberInterface;
     use Symfony\Component\HttpKernel\Event\ResponseEvent;
     use Symfony\Component\HttpKernel\KernelInterface;
 
     // ...
 
+    #[When(env: 'dev')]
     class MySubscriber implements EventSubscriberInterface
     {
-        public function __construct(
-            private KernelInterface $kernel,
-        ) {
-        }
-
         // ...
 
         public function onKernelResponse(ResponseEvent $event): void
         {
-            if (!$this->kernel->isDebug()) {
-                return;
-            }
-
-            $request = $event->getRequest();
-            if (!$request->isXmlHttpRequest()) {
-                return;
-            }
+            // Your custom logic here
 
             $response = $event->getResponse();
             $response->headers->set('Symfony-Debug-Toolbar-Replace', '1');

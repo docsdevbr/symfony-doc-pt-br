@@ -1,9 +1,9 @@
 Types of Injection
 ==================
 
-Making a class's dependencies explicit and requiring that they be injected
-into it is a good way of making a class more reusable, testable and decoupled
-from others.
+Making a class's dependencies explicit and requiring that they are injected
+into it is a good way to make a class more reusable, testable, and decoupled
+from the rest of the code.
 
 There are several ways that the dependencies can be injected. Each injection
 point has advantages and disadvantages to consider, as well as different
@@ -88,10 +88,10 @@ service container configuration:
 There are several advantages to using constructor injection:
 
 * If the dependency is a requirement and the class cannot work without it
-  then injecting it via the constructor ensures it is present when the class
+  then injecting it via the constructor ensures it is present especially when the class
   is used as the class cannot be constructed without it.
 
-* The constructor is only ever called once when the object is created, so
+* The constructor is only called once when the object is created, so
   you can be sure that the dependency will not change during the object's
   lifetime.
 
@@ -190,7 +190,7 @@ so, here's the advantages of immutable-setters:
 * Immutable setters works with optional dependencies, this way, if you don't need
   a dependency, the setter doesn't need to be called.
 
-* Like the constructor injection, using immutable setters force the dependency to stay
+* Like the constructor injection, using immutable setters forces the dependency to stay
   the same during the lifetime of a service.
 
 * This type of injection works well with traits as the service can be composed,
@@ -362,7 +362,7 @@ Another possibility is setting public fields of the class directly::
                 ->property('mailer', service('mailer'));
         };
 
-There are mainly only disadvantages to using property injection, it is similar
+There are mainly only disadvantages to using property injection. It is similar
 to setter injection but with this additional important problem:
 
 * You cannot control when the dependency is set at all, it can be changed

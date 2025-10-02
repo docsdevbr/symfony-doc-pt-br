@@ -163,10 +163,6 @@ an ``integer`` from :phpclass:`IntlDateFormatter` calendar constants or an insta
 of the :phpclass:`IntlCalendar` to use. By default, the Gregorian calendar
 with the application default locale is used.
 
-.. versionadded:: 7.2
-
-    The ``calendar`` option was introduced in Symfony 7.2.
-
 .. include:: /reference/forms/types/options/date_widget.rst.inc
 
 .. include:: /reference/forms/types/options/years.rst.inc

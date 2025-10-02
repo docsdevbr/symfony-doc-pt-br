@@ -37,7 +37,7 @@ example, this is the default file created by the "API Platform" bundle:
         mapping:
             paths: ['%kernel.project_dir%/src/Entity']
 
-Splitting the configuration into lots of small files might appear intimidating for some
+Splitting the configuration into lots of small files might seem intimidating to some
 Symfony newcomers. However, you'll get used to them quickly and you rarely need
 to change these files after package installation.
 
@@ -391,10 +391,6 @@ essential parameters for your application's functionality are not empty::
 If a non-empty parameter is ``null``, an empty string ``''``, or an empty array ``[]``,
 Symfony will throw an exception. This validation is **not** made at compile time
 but when attempting to retrieve the value of the parameter.
-
-.. versionadded:: 7.2
-
-    Validating non-empty parameters was introduced in Symfony 7.2.
 
 .. seealso::
 
@@ -983,11 +979,6 @@ to learn more about this.
 
 If you need to know the path to the ``.env`` file that Symfony is using, you can
 read the ``SYMFONY_DOTENV_PATH`` environment variable in your application.
-
-.. versionadded:: 7.1
-
-    The ``SYMFONY_DOTENV_PATH`` environment variable was introduced in Symfony
-    7.1.
 
 .. _configuration-secrets:
 

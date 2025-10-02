@@ -26,9 +26,6 @@ until you interact with the proxy in some way.
     Lazy services do not support `final`_ or ``readonly`` classes, but you can use
     `Interface Proxifying`_ to work around this limitation.
 
-    In PHP versions prior to 8.0 lazy services do not support parameters with
-    default values for built-in PHP classes (e.g. ``PDO``).
-
 .. _lazy-services_configuration:
 
 Configuration
@@ -77,11 +74,6 @@ same signature of the class representing the service should be injected. A lazy
 `ghost object`_ is an object that is created empty and that is able to initialize
 itself when being accessed for the first time). The same happens when calling
 ``Container::get()`` directly.
-
-To check if your lazy service works you can check the interface of the received object::
-
-    dump(class_implements($service));
-    // the output should include "Symfony\Component\VarExporter\LazyObjectInterface"
 
 You can also configure your service's laziness thanks to the
 :class:`Symfony\\Component\\DependencyInjection\\Attribute\\Autoconfigure` attribute.
@@ -145,10 +137,6 @@ It defines an optional parameter used to define interfaces for proxy and interse
         FooInterface|BarInterface $foo,
     ) {
     }
-
-.. versionadded:: 7.1
-
-    The ``#[Lazy]`` attribute was introduced in Symfony 7.1.
 
 Interface Proxifying
 --------------------

@@ -365,10 +365,6 @@ method does, which stops an event and then restarts it immediately::
     // Gets the last event period:
     // $event->getLastPeriod();
 
-.. versionadded:: 7.2
-
-    The ``getLastPeriod()`` method was introduced in Symfony 7.2.
-
 Profiling Sections
 ..................
 
@@ -394,10 +390,6 @@ know their names, as follows::
     foreach($this->stopwatch->getSectionEvents(Stopwatch::ROOT) as $event) {
         echo (string) $event;
     }
-
-.. versionadded:: 7.2
-
-    The ``Stopwatch::ROOT`` constant as a shortcut for ``__root__`` was introduced in Symfony 7.2.
 
 Learn more
 ----------

@@ -10,10 +10,9 @@ When a lot of logging has to happen, it's cumbersome to print information
 depending on the verbosity settings (``-v``, ``-vv``, ``-vvv``) because the
 calls need to be wrapped in conditions. For example::
 
-    use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function __invoke(OutputInterface $output): int
     {
         if ($output->isDebug()) {
             $output->writeln('Some info');
@@ -34,23 +33,22 @@ the current log level and the console verbosity.
 
 The example above could then be rewritten as::
 
-    // src/Command/YourCommand.php
+    // src/Command/MyCommand.php
     namespace App\Command;
 
     use Psr\Log\LoggerInterface;
+    use Symfony\Component\Console\Attribute\AsCommand;
     use Symfony\Component\Console\Command\Command;
-    use Symfony\Component\Console\Input\InputInterface;
-    use Symfony\Component\Console\Output\OutputInterface;
 
-    class YourCommand extends Command
+    #[AsCommand(name: 'app:my-command')]
+    class MyCommand
     {
         public function __construct(
             private LoggerInterface $logger,
         ) {
-            parent::__construct();
         }
 
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(): int
         {
             $this->logger->debug('Some info');
             $this->logger->notice('Some more info');

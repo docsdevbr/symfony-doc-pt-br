@@ -43,9 +43,23 @@ The ``$file`` variable is an instance of
 
 .. warning::
 
-    The ``Finder`` object doesn't reset its internal state automatically.
-    This means that you need to create a new instance if you do not want
-    to get mixed results.
+    The ``Finder`` object is stateful. Any method call will change all its
+    instances. If you need to perform several searches, create multiple instances
+    of ``Finder`` or clone it after setting the common configuration::
+
+        $finder = new Finder();
+        // first, configure the common options for the following searches
+        $finder->files()->in('./templates');
+
+        // then, clone the finder to create a new instance before searching for files
+        foreach ((clone $finder)->name('partial_*') as $file) {
+            echo('Processing partials config: ' . $file->getRelativePathname());
+        }
+
+        // without cloning, the previous ->name() call would affect this search
+        foreach ((clone $finder)->name('partial_*')->name('plugin_*') as $file) {
+            echo('Processing plugin config: ' . $file->getRelativePathname());
+        }
 
 Searching for Files and Directories
 -----------------------------------

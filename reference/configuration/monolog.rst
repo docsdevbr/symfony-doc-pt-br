@@ -30,4 +30,4 @@ in your application configuration.
     messages in the profiler. The profiler uses the name "debug" so it
     is reserved and cannot be used in the configuration.
 
-.. _`Monolog Configuration`: https://github.com/symfony/monolog-bundle/blob/master/DependencyInjection/Configuration.php
+.. _`Monolog Configuration`: https://github.com/symfony/monolog-bundle/blob/4.x/src/DependencyInjection/Configuration.php

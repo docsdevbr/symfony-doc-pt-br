@@ -139,8 +139,8 @@ following:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('profileData', new Assert\Collection([
-                    'fields' => [
+                $metadata->addPropertyConstraint('profileData', new Assert\Collection(
+                    fields: [
                         'personal_email' => new Assert\Email(),
                         'short_bio' => [
                             new Assert\NotBlank(),
@@ -150,8 +150,8 @@ following:
                             ]),
                         ],
                     ],
-                    'allowMissingFields' => true,
-                ]));
+                    allowMissingFields: true,
+                ));
             }
         }
 
@@ -267,15 +267,15 @@ you can do the following:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('profileData', new Assert\Collection([
-                    'fields' => [
+                $metadata->addPropertyConstraint('profileData', new Assert\Collection(
+                    fields: [
                         'personal_email'  => new Assert\Required([
                             new Assert\NotBlank(),
                             new Assert\Email(),
                         ]),
                         'alternate_email' => new Assert\Optional(new Assert\Email()),
                     ],
-                ]));
+                ));
             }
         }
 
@@ -291,28 +291,28 @@ groups. Take the following example::
 
     use Symfony\Component\Validator\Constraints as Assert;
 
-    $constraint = new Assert\Collection([
-        'fields' => [
+    $constraint = new Assert\Collection(
+        fields: [
             'name' => new Assert\NotBlank(['groups' => 'basic']),
             'email' => new Assert\NotBlank(['groups' => 'contact']),
         ],
-    ]);
+    );
 
 This will result in the following configuration::
 
-    $constraint = new Assert\Collection([
-        'fields' => [
-            'name' => new Assert\Required([
-                'constraints' => new Assert\NotBlank(['groups' => 'basic']),
-                'groups' => ['basic', 'strict'],
-            ]),
-            'email' => new Assert\Required([
-                "constraints" => new Assert\NotBlank(['groups' => 'contact']),
-                'groups' => ['basic', 'strict'],
-            ]),
+    $constraint = new Assert\Collection(
+        fields: [
+            'name' => new Assert\Required(
+                constraints: new Assert\NotBlank(groups: ['basic']),
+                groups: ['basic', 'strict'],
+            ),
+            'email' => new Assert\Required(
+                constraints: new Assert\NotBlank(groups: ['contact']),
+                groups: ['basic', 'strict'],
+            ),
         ],
-        'groups' => ['basic', 'strict'],
-    ]);
+        groups: ['basic', 'strict'],
+    );
 
 The default ``allowMissingFields`` option requires the fields in all groups.
 So when validating in ``contact`` group, ``$name`` can be empty but the key is
@@ -360,7 +360,7 @@ Parameter        Description
 ``fields``
 ~~~~~~~~~~
 
-**type**: ``array`` [:ref:`default option <validation-default-option>`]
+**type**: ``array``
 
 This option is required and is an associative array defining all of the
 keys in the collection and, for each key, exactly which validator(s) should

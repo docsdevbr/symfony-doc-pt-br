@@ -16,27 +16,16 @@ For example, suppose you want to log something from within your command::
 
     use Psr\Log\LoggerInterface;
     use Symfony\Component\Console\Attribute\AsCommand;
-    use Symfony\Component\Console\Command\Command;
-    use Symfony\Component\Console\Input\InputInterface;
-    use Symfony\Component\Console\Output\OutputInterface;
 
-    #[AsCommand(name: 'app:sunshine')]
-    class SunshineCommand extends Command
+    #[AsCommand(name: 'app:sunshine', description: 'Good morning!')]
+    class SunshineCommand
     {
         public function __construct(
             private LoggerInterface $logger,
         ) {
-            // you *must* call the parent constructor
-            parent::__construct();
         }
 
-        protected function configure(): void
-        {
-            $this
-                ->setDescription('Good morning!');
-        }
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
+        public function __invoke(): int
         {
             $this->logger->info('Waking up the sun');
             // ...
@@ -70,7 +59,7 @@ To make your command lazily loaded, either define its name using the PHP
     // ...
 
     #[AsCommand(name: 'app:sunshine')]
-    class SunshineCommand extends Command
+    class SunshineCommand
     {
         // ...
     }

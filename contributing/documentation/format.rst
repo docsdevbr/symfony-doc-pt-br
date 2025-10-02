@@ -2,19 +2,17 @@ Documentation Format
 ====================
 
 The Symfony documentation uses `reStructuredText`_ as its markup language and
-`Sphinx`_ for generating the documentation in the formats read by the end users,
-such as HTML and PDF.
+a custom tool called `Docs Builder`_ for generating the documentation pages.
 
 reStructuredText
 ----------------
 
 reStructuredText is a plain text markup syntax similar to Markdown, but much
-stricter with its syntax. If you are new to reStructuredText, take some time to
-familiarize with this format by reading the existing `Symfony documentation`_
-source code.
+stricter with its syntax. If you are new to reStructuredText, check out the
+`reStructuredText Primer`_ tutorial and the `reStructuredText Reference`_.
 
-If you want to learn more about this format, check out the `reStructuredText Primer`_
-tutorial and the `reStructuredText Reference`_.
+You can also take some time to familiarize with this format by reading the
+existing `Symfony documentation`_ source.
 
 .. warning::
 
@@ -24,12 +22,11 @@ tutorial and the `reStructuredText Reference`_.
     * Lists start at the beginning of a line (no indentation is allowed);
     * Inline code blocks use double-ticks (````like this````).
 
-Sphinx
-------
+Custom reStructuredText Directives
+----------------------------------
 
-Sphinx_ is a build system that provides tools to create documentation from
-reStructuredText documents. As such, it adds new directives and interpreted text
-roles to the standard reStructuredText markup. Read more about the `Sphinx Markup Constructs`_.
+The Symfony documentation includes several custom directives that extend the
+standard reStructuredText syntax.
 
 Syntax Highlighting
 ~~~~~~~~~~~~~~~~~~~
@@ -45,9 +42,9 @@ change it with the ``code-block`` directive:
 
 .. note::
 
-    Besides all of the major programming languages, the syntax highlighter
-    supports all kinds of markup and configuration languages. Check out the
-    list of `supported languages`_ on the syntax highlighter website.
+    Code highlighting is supported for all programming languages commonly used
+    in Symfony Docs, such as ``yaml``, ``xml``, ``twig``, ``html``, ``js``,
+    ``json``, ``text``, ``bash``, ``diff``, etc.
 
 .. _docs-configuration-blocks:
 
@@ -246,44 +243,42 @@ If you are documenting a brand new feature, a change or a deprecation that's
 been made in Symfony, you should precede your description of the change with
 the corresponding directive and a short description:
 
-For a new feature or a behavior change use the ``.. versionadded:: 7.x``
+For a new feature or a behavior change use the ``.. versionadded:: 8.x``
 directive:
 
 .. code-block:: rst
 
-    .. versionadded:: 7.2
+    .. versionadded:: 8.2
 
-        ... ... ... was introduced in Symfony 7.2.
+        ... ... ... was introduced in Symfony 8.2.
 
 If you are documenting a behavior change, it may be helpful to *briefly*
 describe how the behavior has changed:
 
 .. code-block:: rst
 
-    .. versionadded:: 7.2
+    .. versionadded:: 8.2
 
-       ... ... ... was introduced in Symfony 7.2. Prior to this,
+       ... ... ... was introduced in Symfony 8.2. Prior to this,
        ... ... ... ... ... ... ... ... .
 
-For a deprecation use the ``.. deprecated:: 7.x`` directive:
+For a deprecation use the ``.. deprecated:: 8.x`` directive:
 
 .. code-block:: rst
 
-    .. deprecated:: 7.2
+    .. deprecated:: 8.2
 
-        ... ... ... was deprecated in Symfony 7.2.
+        ... ... ... was deprecated in Symfony 8.2.
 
-Whenever a new major version of Symfony is released (e.g. 8.0, 9.0, etc), a new
+Whenever a new major version of Symfony is released (e.g. 9.0, 10.0, etc), a new
 branch of the documentation is created from the ``x.4`` branch of the previous
 major version. At this point, all the ``versionadded`` and ``deprecated`` tags
 for Symfony versions that have a lower major version will be removed. For
-example, if Symfony 8.0 were released today, 7.0 to 7.4 ``versionadded`` and
-``deprecated`` tags would be removed from the new ``8.0`` branch.
+example, if Symfony 9.0 were released today, 8.0 to 8.4 ``versionadded`` and
+``deprecated`` tags would be removed from the new ``9.0`` branch.
 
-.. _reStructuredText: https://docutils.sourceforge.io/rst.html
-.. _Sphinx: https://www.sphinx-doc.org/
+.. _`reStructuredText`: https://docutils.sourceforge.io/rst.html
+.. _`Docs Builder`: https://github.com/symfony-tools/docs-builder
 .. _`Symfony documentation`: https://github.com/symfony/symfony-docs
 .. _`reStructuredText Primer`: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _`reStructuredText Reference`: https://docutils.sourceforge.io/docs/user/rst/quickref.html
-.. _`Sphinx Markup Constructs`: https://www.sphinx-doc.org/en/1.7/markup/index.html
-.. _`supported languages`: https://pygments.org/languages/

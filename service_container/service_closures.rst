@@ -52,6 +52,13 @@ argument of type ``service_closure``:
                 # In case the dependency is optional
                 # arguments: [!service_closure '@?mailer']
 
+            # you can also use the special '@>' syntax as a shortcut of '!service_closure'
+            App\Service\AnotherService:
+                arguments: ['@>mailer']
+
+                # the shortcut also works for optional dependencies
+                # arguments: ['@>?mailer']
+
     .. code-block:: xml
 
         <!-- config/services.xml -->

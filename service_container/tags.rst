@@ -155,21 +155,29 @@ In a Symfony application, call this method in your kernel class::
         }
     }
 
-In a Symfony bundle, call this method in the ``load()`` method of the
-:doc:`bundle extension class </bundles/extension>`::
+In bundles extending the :class:`Symfony\\Component\\HttpKernel\\Bundle\\AbstractBundle`
+class, call this method in the ``loadExtension()`` method of the main bundle class::
 
-    // src/DependencyInjection/MyBundleExtension.php
-    class MyBundleExtension extends Extension
+    // ...
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
+    use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+    use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+
+    class MyBundle extends AbstractBundle
     {
-        // ...
-
-        public function load(array $configs, ContainerBuilder $container): void
+        public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
         {
-            $container->registerForAutoconfiguration(CustomInterface::class)
+            $builder
+                ->registerForAutoconfiguration(CustomInterface::class)
                 ->addTag('app.custom_tag')
             ;
         }
     }
+
+.. note::
+
+    For bundles not extending the ``AbstractBundle`` class, call this method in
+    the ``load()`` method of the :doc:`bundle extension class </bundles/extension>`.
 
 Autoconfiguration registering is not limited to interfaces. It is possible
 to use PHP attributes to autoconfigure services by using the
@@ -750,7 +758,7 @@ directly via PHP attributes:
 
 .. note::
 
-    Some IDEs will show an error when using ``#[TaggedIterator]`` together
+    Some IDEs will show an error when using ``#[AutowireIterator]`` together
     with the `PHP constructor promotion`_:
     *"Attribute cannot be applied to a property because it does not contain the 'Attribute::TARGET_PROPERTY' flag"*.
     The reason is that those constructor arguments are both parameters and class
@@ -1039,8 +1047,6 @@ you can define it in the configuration of the collecting service:
         // config/services.php
         namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
-
         return function (ContainerConfigurator $container): void {
             $services = $container->services();
 
@@ -1130,7 +1136,6 @@ to index the services:
 
         use App\Handler\One;
         use App\Handler\Two;
-        use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 
         return function (ContainerConfigurator $container): void {
             $services = $container->services();
@@ -1234,7 +1239,6 @@ get the value used to index the services:
         namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
         use App\HandlerCollection;
-        use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 
         return function (ContainerConfigurator $container) {
             $services = $container->services();
@@ -1277,6 +1281,16 @@ be used directly on the class of the service you want to configure::
 
     #[AsTaggedItem(index: 'handler_one', priority: 10)]
     class One
+    {
+        // ...
+    }
+
+You can apply the ``#[AsTaggedItem]`` attribute multiple times to register the
+same service under different indexes::
+
+    #[AsTaggedItem(index: 'handler_one', priority: 5)]
+    #[AsTaggedItem(index: 'handler_two', priority: 20)]
+    class SomeService
     {
         // ...
     }

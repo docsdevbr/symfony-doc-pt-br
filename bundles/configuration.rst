@@ -477,6 +477,14 @@ the extension. You might want to change this to a more professional URL::
         }
     }
 
+.. deprecated:: 7.4
+
+    The ``getNamespace()`` method, together with XML support, is deprecated
+    since Symfony 7.4 and will be removed in Symfony 8.0.
+
+    If your bundle needs to remain compatible with older Symfony versions that
+    still support XML, keep this method and add the ``@deprecated`` annotation to it.
+
 Providing an XML Schema
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -509,6 +517,14 @@ can place it anywhere you like. You should return this path as the base path::
             return __DIR__.'/../config/schema';
         }
     }
+
+.. deprecated:: 7.4
+
+    The ``getXsdValidationBasePath()`` method, together with XML support, is
+    deprecated since Symfony 7.4 and will be removed in Symfony 8.0.
+
+    If your bundle needs to remain compatible with older Symfony versions that
+    still support XML, keep this method and add the ``@deprecated`` annotation to it.
 
 Assuming the XSD file is called ``hello-1.0.xsd``, the schema location will be
 ``https://acme_company.com/schema/dic/hello/hello-1.0.xsd``:

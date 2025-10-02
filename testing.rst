@@ -5,14 +5,38 @@ Whenever you write a new line of code, you also potentially add new bugs.
 To build better and more reliable applications, you should test your code
 using both functional and unit tests.
 
+Symfony integrates with an independent library called `PHPUnit`_ to give you a
+rich testing framework. This article covers the PHPUnit basics you'll need to
+write Symfony tests. To learn everything about PHPUnit and its features, read
+the `official PHPUnit documentation`_.
+
+Types of Tests
+--------------
+
+There are many types of automated tests and precise definitions often
+differ from project to project. In Symfony, the following definitions are
+used. If you have learned something different, that is not necessarily
+wrong, merely different from what the Symfony documentation is using.
+
+`Unit Tests`_
+    These tests ensure that *individual* units of source code (e.g. a single
+    class) behave as intended.
+
+`Integration Tests`_
+    These tests test a combination of classes and commonly interact with
+    Symfony's service container. These tests do not yet cover the fully
+    working application, those are called *Application tests*.
+
+`Application Tests`_
+    Application tests (also known as functional tests) test the behavior of a
+    complete application. They make HTTP requests (both real and simulated ones)
+    and test that the response is as expected.
+
 .. _testing-installation:
+.. _the-phpunit-testing-framework:
 
-The PHPUnit Testing Framework
------------------------------
-
-Symfony integrates with an independent library called `PHPUnit`_ to give
-you a rich testing framework. This article won't cover PHPUnit itself,
-which has its own excellent `documentation`_.
+Installation
+------------
 
 Before creating your first test, install ``symfony/test-pack``, which installs
 some other packages needed for testing (such as ``phpunit/phpunit``):
@@ -31,40 +55,18 @@ This command automatically runs your application tests. Each test is a
 PHP class ending with "Test" (e.g. ``BlogControllerTest``) that lives in
 the ``tests/`` directory of your application.
 
-PHPUnit is configured by the ``phpunit.xml.dist`` file in the root of your
-application. The default configuration provided by Symfony Flex will be
-enough in most cases. Read the `PHPUnit documentation`_ to discover all
-possible configuration options (e.g. to enable code coverage or to split
-your test into multiple "test suites").
+PHPUnit is configured by the ``phpunit.dist.xml`` file in the root of your
+application (in PHPUnit versions older than 10, the file is named ``phpunit.xml.dist``).
+The default configuration provided by Symfony Flex will be enough in most cases.
+Read the `PHPUnit documentation`_ to discover all possible configuration options
+(e.g. to enable code coverage or to split your test into multiple "test suites").
 
 .. note::
 
     :ref:`Symfony Flex <symfony-flex>` automatically creates
-    ``phpunit.xml.dist`` and ``tests/bootstrap.php``. If these files are
+    ``phpunit.dist.xml`` and ``tests/bootstrap.php``. If these files are
     missing, you can try running the recipe again using
     ``composer recipes:install phpunit/phpunit --force -v``.
-
-Types of Tests
---------------
-
-There are many types of automated tests and precise definitions often
-differ from project to project. In Symfony, the following definitions are
-used. If you have learned something different, that is not necessarily
-wrong, just different from what the Symfony documentation is using.
-
-`Unit Tests`_
-    These tests ensure that *individual* units of source code (e.g. a single
-    class) behave as intended.
-
-`Integration Tests`_
-    These tests test a combination of classes and commonly interact with
-    Symfony's service container. These tests do not yet cover the fully
-    working application, those are called *Application tests*.
-
-`Application Tests`_
-    Application tests test the behavior of a complete application. They
-    make HTTP requests (both real and simulated ones) and test that the
-    response is as expected.
 
 Unit Tests
 ----------
@@ -79,7 +81,7 @@ By convention, the ``tests/`` directory should replicate the directory
 of your application for unit tests. So, if you're testing a class in the
 ``src/Form/`` directory, put the test in the ``tests/Form/`` directory.
 Autoloading is automatically enabled via the ``vendor/autoload.php`` file
-(as configured by default in the ``phpunit.xml.dist`` file).
+(as configured by default in the ``phpunit.dist.xml`` file).
 
 You can run tests using the ``bin/phpunit`` command:
 
@@ -111,7 +113,7 @@ to use the Symfony Kernel to fetch a service from the dependency injection
 container.
 
 Symfony provides a :class:`Symfony\\Bundle\\FrameworkBundle\\Test\\KernelTestCase`
-class to help you creating and booting the kernel in your tests using
+class to help you create and boot the kernel in your tests using
 ``bootKernel()``::
 
     // tests/Service/NewsletterGeneratorTest.php
@@ -384,11 +386,14 @@ Now, enable it as a PHPUnit extension:
 
 .. code-block:: xml
 
-    <!-- phpunit.xml.dist -->
+    <!-- phpunit.dist.xml -->
     <phpunit>
         <!-- ... -->
 
         <extensions>
+            <!-- use this with PHPUnit 10 or newer -->
+            <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
+            <!-- use this with legacy PHPUnit versions older than 10 -->
             <extension class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
         </extensions>
     </phpunit>
@@ -400,11 +405,11 @@ test finishes to undo all changes. Read more in the documentation of the
 
 .. _doctrine-fixtures:
 
-Load Dummy Data Fixtures
-........................
+Load Test Data Fixtures
+.......................
 
 Instead of using the real data from the production database, it's common to
-use fake or dummy data in the test database. This is usually called
+use fake or test data in the test database. This is usually called
 *"fixtures data"* and Doctrine provides a library to create and load them.
 Install it with:
 
@@ -575,6 +580,8 @@ This allows you to create all types of requests you can think of:
     :ref:`framework.test <reference-framework-test>` option is enabled).
     This means you can override the service entirely if you need to.
 
+.. _testing-multiple-requests-in-one-test:
+
 Multiple Requests in One Test
 .............................
 
@@ -712,6 +719,30 @@ stores in the session of the test client. If you need to define custom
 attributes in this token, you can use the ``tokenAttributes`` argument of the
 :method:`Symfony\\Bundle\\FrameworkBundle\\KernelBrowser::loginUser` method.
 
+You can also use an :ref:`in-memory user <security-memory-user-provider>` in your tests
+by instantiating :class:`Symfony\\Component\\Security\\Core\\User\\InMemoryUser` directly::
+
+    // tests/Controller/ProfileControllerTest.php
+    use Symfony\Component\Security\Core\User\InMemoryUser;
+
+    $client = static::createClient();
+    $testUser = new InMemoryUser('admin', 'password', ['ROLE_ADMIN']);
+    $client->loginUser($testUser);
+
+Before doing this, you must define the in-memory user in your test environment
+configuration to ensure it exists and can be authenticated::
+
+.. code-block:: yaml
+
+    # config/packages/security.yaml
+    when@test:
+        security:
+            providers:
+                users_in_memory:
+                    memory:
+                        users:
+                            admin: { password: password, roles: ROLE_ADMIN }
+
 To set a specific firewall (``main`` is set by default)::
 
     $client->loginUser($testUser, 'my_firewall');
@@ -732,8 +763,10 @@ a shortcut to make AJAX requests::
     // the required HTTP_X_REQUESTED_WITH header is added automatically
     $client->xmlHttpRequest('POST', '/submit', ['name' => 'Fabien']);
 
-Sending Custom Headers
-......................
+.. _sending-custom-headers:
+
+Sending Custom HTTP Headers
+...........................
 
 If your application behaves according to some HTTP headers, pass them as the
 second argument of ``createClient()``::
@@ -862,8 +895,8 @@ Use the ``submitForm()`` method to submit the form that contains the given butto
         'comment_form[content]' => '...',
     ]);
 
-The first argument of ``submitForm()`` is the text content, ``id``, ``value`` or
-``name`` of any ``<button>`` or ``<input type="submit">`` included in the form.
+The first argument of ``submitForm()`` is the text content, ``id`` or ``name``
+of any ``<button>`` or ``<input type="submit">`` included in the form.
 The second optional argument is used to override the default form field values.
 
 .. note::
@@ -961,11 +994,11 @@ However, Symfony provides useful shortcut methods for the most common cases:
 Response Assertions
 ...................
 
-``assertResponseIsSuccessful(string $message = '', bool $verbose = true)``
+``assertResponseIsSuccessful(string $message = '', ?bool $verbose = null)``
     Asserts that the response was successful (HTTP status is 2xx).
-``assertResponseStatusCodeSame(int $expectedCode, string $message = '', bool $verbose = true)``
+``assertResponseStatusCodeSame(int $expectedCode, string $message = '', ?bool $verbose = null)``
     Asserts a specific HTTP status code.
-``assertResponseRedirects(?string $expectedLocation = null, ?int $expectedCode = null, string $message = '', bool $verbose = true)``
+``assertResponseRedirects(?string $expectedLocation = null, ?int $expectedCode = null, string $message = '', ?bool $verbose = null)``
     Asserts the response is a redirect response (optionally, you can check
     the target location and status code). The excepted location can be either
     an absolute or a relative path.
@@ -983,12 +1016,16 @@ Response Assertions
     Asserts the response format returned by the
     :method:`Symfony\\Component\\HttpFoundation\\Response::getFormat` method
     is the same as the expected value.
-``assertResponseIsUnprocessable(string $message = '', bool $verbose = true)``
+``assertResponseIsUnprocessable(string $message = '', bool ?$verbose = null)``
     Asserts the response is unprocessable (HTTP status is 422)
 
-.. versionadded:: 7.1
+By default, these assert methods provide detailed error messages when they fail.
+You can control the verbosity level using the optional ``verbose`` argument in
+each assert method. To set this verbosity level globally, use the
+``setBrowserKitAssertionsAsVerbose()`` method from the
+:class:`Symfony\\Bundle\\FrameworkBundle\\Test\\BrowserKitAssertionsTrait`::
 
-    The ``$verbose`` parameters were introduced in Symfony 7.1.
+    BrowserKitAssertionsTrait::setBrowserKitAssertionsAsVerbose(false);
 
 Request Assertions
 ..................
@@ -1008,6 +1045,10 @@ Browser Assertions
 ``assertBrowserCookieValueSame(string $name, string $expectedValue, string $path = '/', ?string $domain = null, string $message = '')``
     Asserts the given cookie in the test Client is set to the expected
     value.
+``assertBrowserHistoryIsOnFirstPage(string $message = '')``/``assertBrowserHistoryIsNotOnFirstPage(string $message = '')``
+    Asserts that the browser history is (not) on the first page.
+``assertBrowserHistoryIsOnLastPage(string $message = '')``/``assertBrowserHistoryIsNotOnLastPage(string $message = '')``
+    Asserts that the browser history is (not) on the last page.
 ``assertThatForClient(Constraint $constraint, string $message = '')``
     Asserts the given Constraint in the Client. Useful for using your custom asserts
     in the same way as built-in asserts (i.e. without passing the Client as argument)::
@@ -1080,8 +1121,8 @@ Mailer Assertions
 ``assertEmailHeaderSame(RawMessage $email, string $headerName, string $expectedValue, string $message = '')``/``assertEmailHeaderNotSame(RawMessage $email, string $headerName, string $expectedValue, string $message = '')``
     Asserts that the given email does (not) have the expected header set to
     the expected value.
-``assertEmailAddressContains(RawMessage $email, string $headerName, string $expectedValue, string $message = '')``
-    Asserts that the given address header equals the expected e-mail
+``assertEmailAddressContains(RawMessage $email, string $headerName, string $expectedValue, string $message = '')``/``assertEmailAddressNotContains(RawMessage $email, string $headerName, string $expectedValue, string $message = '')``
+    Asserts that the given address header does (not) equal the expected e-mail
     address. This assertion normalizes addresses like ``Jane Smith
     <jane@example.com>`` into ``jane@example.com``.
 ``assertEmailSubjectContains(RawMessage $email, string $expectedValue, string $message = '')``/``assertEmailSubjectNotContains(RawMessage $email, string $expectedValue, string $message = '')``
@@ -1159,7 +1200,7 @@ Learn more
     /components/css_selector
 
 .. _`PHPUnit`: https://phpunit.de/
-.. _`documentation`: https://docs.phpunit.de/
+.. _`official PHPUnit documentation`: https://docs.phpunit.de/
 .. _`Writing Tests for PHPUnit`: https://docs.phpunit.de/en/10.5/writing-tests-for-phpunit.html
 .. _`PHPUnit documentation`: https://docs.phpunit.de/en/10.5/configuration.html
 .. _`unit test`: https://en.wikipedia.org/wiki/Unit_testing

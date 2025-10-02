@@ -94,6 +94,25 @@ Inherited Options
 
 These options inherit from the :doc:`ChoiceType </reference/forms/types/choice>`:
 
+choices
+~~~~~~~
+
+**type**: ``array`` **default**: ``[]``
+
+By default, this field displays all the cases of the related PHP enum. Use this
+option to explicitly define which options to display::
+
+    use App\Config\TextAlign;
+    use Symfony\Component\Form\Extension\Core\Type\EnumType;
+    // ...
+
+    $builder->add('alignment', EnumType::class, [
+        'choices' => [
+            TextAlign::Left,
+            TextAlign::Right,
+        ],
+    ]);
+
 .. include:: /reference/forms/types/options/choice_attr.rst.inc
 
 .. include:: /reference/forms/types/options/choice_filter.rst.inc

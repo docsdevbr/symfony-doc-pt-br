@@ -87,6 +87,7 @@ inside the task form itself. To accomplish this, add a ``category`` field
 to the ``TaskType`` object whose type is an instance of the new ``CategoryType``
 class::
 
+    // src/Form/TaskType.php
     use App\Form\CategoryType;
     use Symfony\Component\Form\FormBuilderInterface;
 

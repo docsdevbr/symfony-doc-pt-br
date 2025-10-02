@@ -9,19 +9,18 @@ it is possible to remove this need by declaring a single command application::
     <?php
     require __DIR__.'/vendor/autoload.php';
 
-    use Symfony\Component\Console\Input\InputArgument;
-    use Symfony\Component\Console\Input\InputInterface;
-    use Symfony\Component\Console\Input\InputOption;
+    use Symfony\Component\Console\Attribute\Argument;
+    use Symfony\Component\Console\Attribute\Option;
     use Symfony\Component\Console\Output\OutputInterface;
     use Symfony\Component\Console\SingleCommandApplication;
 
     (new SingleCommandApplication())
         ->setName('My Super Command') // Optional
         ->setVersion('1.0.0') // Optional
-        ->addArgument('foo', InputArgument::OPTIONAL, 'The directory')
-        ->addOption('bar', null, InputOption::VALUE_REQUIRED)
-        ->setCode(function (InputInterface $input, OutputInterface $output): int {
+        ->setCode(function (OutputInterface $output, #[Argument] string $foo = 'The directory', #[Option] string $bar = ''): int {
             // output arguments and options
+
+            return 0;
         })
         ->run();
 

@@ -342,11 +342,6 @@ command without having to worry about the number of arguments or options::
         // ...
     }
 
-.. versionadded:: 7.1
-
-    The :method:`Symfony\\Component\\Console\\Input\\ArgvInput::getRawTokens`
-    method was introduced in Symfony 7.1.
-
 Adding Argument/Option Value Completion
 ---------------------------------------
 
@@ -356,7 +351,7 @@ can also implement value completion for the input in your commands. For
 instance, you may want to complete all usernames from the database in the
 ``name`` argument of your greet command.
 
-To achieve this, use the 5th argument of ``addArgument()``/``addOption``::
+To achieve this, use the 5th argument of ``addArgument()`` or the 6th argument of ``addOption()``::
 
     // ...
     use Symfony\Component\Console\Completion\CompletionInput;
@@ -447,19 +442,16 @@ The Console component adds some predefined options to all commands:
 * ``--verbose``: sets the verbosity level (e.g. ``1`` the default, ``2`` and
   ``3``, or you can use respective shortcuts ``-v``, ``-vv`` and ``-vvv``)
 * ``--silent``: disables all output and interaction, including errors
-* ``--quiet``: disables output and interaction, but errors are still displayed
-* ``--no-interaction``: disables interaction
-* ``--version``: outputs the version number of the console application
-* ``--help``: displays the command help
+* ``--quiet|-q``: disables output and interaction, but errors are still displayed
+* ``--no-interaction|-n``: disables interaction
+* ``--version|-V``: outputs the version number of the console application
+* ``--help|-h``: displays the command help
 * ``--ansi|--no-ansi``: whether to force of disable coloring the output
-
-.. versionadded:: 7.2
-
-    The ``--silent`` option was introduced in Symfony 7.2.
+* ``--profile``: enables the Symfony profiler
 
 When using the ``FrameworkBundle``, two more options are predefined:
 
-* ``--env``: sets the Kernel configuration environment (defaults to ``APP_ENV``)
+* ``--env|-e``: sets the Kernel configuration environment (defaults to ``APP_ENV``)
 * ``--no-debug``: disables Kernel debug (defaults to ``APP_DEBUG``)
 
 So your custom commands can use them too out-of-the-box.

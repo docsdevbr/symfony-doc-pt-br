@@ -162,10 +162,6 @@ each time you ask for it.
                 # this creates a service per class whose id is the fully-qualified class name
                 App\:
                     resource: '../src/'
-                    exclude:
-                        - '../src/DependencyInjection/'
-                        - '../src/Entity/'
-                        - '../src/Kernel.php'
 
                 # order is important in this file because service definitions
                 # always *replace* previous ones; add your own service configuration below
@@ -187,7 +183,7 @@ each time you ask for it.
 
                     <!-- makes classes in src/ available to be used as services -->
                     <!-- this creates a service per class whose id is the fully-qualified class name -->
-                    <prototype namespace="App\" resource="../src/" exclude="../src/{DependencyInjection,Entity,Kernel.php}"/>
+                    <prototype namespace="App\" resource="../src/"/>
 
                     <!-- order is important in this file because service definitions
                          always *replace* previous ones; add your own service configuration below -->
@@ -212,8 +208,7 @@ each time you ask for it.
 
                 // makes classes in src/ available to be used as services
                 // this creates a service per class whose id is the fully-qualified class name
-                $services->load('App\\', '../src/')
-                    ->exclude('../src/{DependencyInjection,Entity,Kernel.php}');
+                $services->load('App\\', '../src/');
 
                 // order is important in this file because service definitions
                 // always *replace* previous ones; add your own service configuration below
@@ -221,14 +216,56 @@ each time you ask for it.
 
     .. tip::
 
-        The value of the ``resource`` and ``exclude`` options can be any valid
-        `glob pattern`_. The value of the ``exclude`` option can also be an
-        array of glob patterns.
+        The value of the ``resource`` option can be any valid `glob pattern`_.
 
     Thanks to this configuration, you can automatically use any classes from the
     ``src/`` directory as a service, without needing to manually configure
     it. Later, you'll learn how to :ref:`import many services at once
     <service-psr4-loader>` with resource.
+
+    If some files or directories in your project should not become services, you
+    can exclude them using the ``exclude`` option:
+
+    .. configuration-block::
+
+        .. code-block:: yaml
+
+            # config/services.yaml
+            services:
+                # ...
+                App\:
+                    resource: '../src/'
+                    exclude:
+                        - '../src/SomeDirectory/'
+                        - '../src/AnotherDirectory/'
+                        - '../src/SomeFile.php'
+
+        .. code-block:: xml
+
+            <!-- config/services.xml -->
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <container xmlns="http://symfony.com/schema/dic/services"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://symfony.com/schema/dic/services
+                    https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+                <services>
+                    <prototype namespace="App\" resource="../src/" exclude="../src/{SomeDirectory,AnotherDirectory,Kernel.php}"/>
+                    <!-- ... -->
+                </services>
+            </container>
+
+        .. code-block:: php
+
+            // config/services.php
+            namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+            return function(ContainerConfigurator $container): void {
+                // ...
+
+                $services->load('App\\', '../src/')
+                    ->exclude('../src/{SomeDirectory,AnotherDirectory,Kernel.php}');
+            };
 
     If you'd prefer to manually wire your service, you can
     :ref:`use explicit configuration <services-explicitly-configure-wire-services>`.
@@ -281,10 +318,6 @@ environment, you can use the ``#[WhenNot]`` attribute::
     {
         // ...
     }
-
-.. versionadded:: 7.2
-
-    The ``#[WhenNot]`` attribute was introduced in Symfony 7.2.
 
 .. _services-constructor-injection:
 
@@ -348,6 +381,127 @@ type-hints by running:
       Symfony\Component\Routing\RouterInterface - alias:router.default
 
       [...]
+
+In addition to injecting services, you can also pass scalar values and collections
+as arguments of other services:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        services:
+            App\Service\SomeService:
+                arguments:
+                    # string, numeric and boolean arguments can be passed "as is"
+                    - 'Foo'
+                    - true
+                    - 7
+                    - 3.14
+
+                    # constants can be built-in, user-defined, or Enums
+                    - !php/const E_ALL
+                    - !php/const PDO::FETCH_NUM
+                    - !php/const Symfony\Component\HttpKernel\Kernel::VERSION
+                    - !php/const App\Config\SomeEnum::SomeCase
+
+                    # when not using autowiring, you can pass service arguments explicitly
+                    - '@some-service-id'  # the leading '@' tells this is a service ID, not a string
+                    - '@?some-service-id' # using '?' means to pass null if service doesn't exist
+
+                    # binary contents are passed encoded as base64 strings
+                    - !!binary VGhpcyBpcyBhIEJlbGwgY2hhciAH
+
+                    # collections (arrays) can include any type of argument
+                    -
+                        first: !php/const true
+                        second: 'Foo'
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:framework="http://symfony.com/schema/dic/symfony"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+            <services>
+                <service id="App\Service\SomeService">
+                    <!-- arguments without a type can be strings or numbers -->
+                    <argument>Foo</argument>
+                    <argument>7</argument>
+                    <argument>3.14</argument>
+                    <!-- explicitly declare a string argument -->
+                    <argument type="string">Foo</argument>
+                    <!-- booleans are passed as constants -->
+                    <argument type="constant">true</argument>
+
+                    <!-- constants can be built-in, user-defined, or Enums -->
+                    <argument type="constant">E_ALL</argument>
+                    <argument type="constant">PDO::FETCH_NUM</argument>
+                    <argument type="constant">Symfony\Component\HttpKernel\Kernel::VERSION</argument>
+                    <argument type="constant">App\Config\SomeEnum::SomeCase</argument>
+
+                    <!-- when not using autowiring, you can pass service arguments explicitly -->
+                    <argument type="service"
+                              id="some-service-id"
+                              on-invalid="dependency_injection-ignore"/>
+
+                    <!-- binary contents are passed encoded as base64 strings -->
+                    <argument type="binary">VGhpcyBpcyBhIEJlbGwgY2hhciAH</argument>
+
+                    <!-- collections (arrays) can include any type of argument -->
+                    <argument type="collection">
+                        <argument key="first" type="constant">true</argument>
+                        <argument key="second" type="string">Foo</argument>
+                    </argument>
+                </service>
+
+                <!-- ... -->
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use Symfony\Component\DependencyInjection\ContainerInterface;
+        use Symfony\Component\DependencyInjection\Reference;
+
+        return static function (ContainerConfigurator $container) {
+            $services = $container->services();
+
+            $services->set(App\Service\SomeService::class)
+                // string, numeric and boolean arguments can be passed "as is"
+                ->arg(0, 'Foo')
+                ->arg(1, true)
+                ->arg(2, 7)
+                ->arg(3, 3.14)
+
+                // constants: built-in, user-defined, or Enums
+                ->arg(4, E_ALL)
+                ->arg(5, \PDO::FETCH_NUM)
+                ->arg(6, Symfony\Component\HttpKernel\Kernel::VERSION)
+                ->arg(7, App\Config\SomeEnum::SomeCase)
+
+                // when not using autowiring, you can pass service arguments explicitly
+                ->arg(8, service('some-service-id')) # fails if service doesn't exist
+                # passes null if service doesn't exist
+                ->arg(9, new Reference('some-service-id', Reference::IGNORE_ON_INVALID_REFERENCE))
+
+                // collection with mixed argument types
+                ->arg(10, [
+                    'first' => true,
+                    'second' => 'Foo',
+                ]);
+
+            // ...
+        };
 
 Handling Multiple Services
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1072,20 +1226,12 @@ application to production (e.g. in your continuous integration server):
     # the command will fail if any of those environment variables are missing
     $ php bin/console lint:container --resolve-env-vars
 
-.. versionadded:: 7.2
-
-    The ``--resolve-env-vars`` option was introduced in Symfony 7.2.
-
 Performing those checks whenever the container is compiled can hurt performance.
 That's why they are implemented in :doc:`compiler passes </service_container/compiler_passes>`
 called ``CheckTypeDeclarationsPass`` and ``CheckAliasValidityPass``, which are
 disabled by default and enabled only when executing the ``lint:container`` command.
 If you don't mind the performance loss, you can enable these compiler passes in
 your application.
-
-.. versionadded:: 7.1
-
-    The ``CheckAliasValidityPass`` compiler pass was introduced in Symfony 7.1.
 
 .. _container-public:
 

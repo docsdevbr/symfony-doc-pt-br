@@ -180,7 +180,7 @@ You can adjust the time period using the ``time`` option:
             // ...
 
             $monolog->handler('deduplicated')
-                ->type('deduplicated')
+                ->type('deduplication')
                 // the time in seconds during which duplicate entries are discarded (default: 60)
                 ->time(10)
                 ->handler('symfony_mailer')
@@ -304,7 +304,7 @@ get logged on the server as well as the emails being sent:
             ;
 
             $monolog->handler('deduplicated')
-                ->type('deduplicated')
+                ->type('deduplication')
                 ->handler('symfony_mailer')
             ;
 

@@ -389,7 +389,7 @@ e.g. change the service based on a parameter:
 
             # you can use the arg() function to retrieve an argument from the definition
             App\Email\NewsletterManagerInterface:
-                factory: "@=arg(0).createNewsletterManager() ?: service("default_newsletter_manager")"
+                factory: '@=arg(0).createNewsletterManager() ?: service("default_newsletter_manager")'
                 arguments:
                     - '@App\Email\NewsletterManagerFactory'
 
@@ -410,7 +410,7 @@ e.g. change the service based on a parameter:
 
                 <!-- you can use the arg() function to retrieve an argument from the definition -->
                 <service id="App\Email\NewsletterManagerInterface">
-                    <factory expression="arg(0).createNewsletterManager() ?: service("default_newsletter_manager")"/>
+                    <factory expression="arg(0).createNewsletterManager() ?: service('default_newsletter_manager')"/>
                     <argument type="service" id="App\Email\NewsletterManagerFactory"/>
                 </service>
             </services>

@@ -37,8 +37,4 @@ loaded/dumped inside a Symfony application:
         </file>
     </xliff>
 
-.. versionadded:: 7.2
-
-    The support of attributes in the ``<segment>`` element was introduced in Symfony 7.2.
-
 .. _XLIFF: https://docs.oasis-open.org/xliff/xliff-core/v2.1/xliff-core-v2.1.html

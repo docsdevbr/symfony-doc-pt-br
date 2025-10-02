@@ -420,5 +420,5 @@ Learn more
 .. _`Monolog`: https://github.com/Seldaek/monolog
 .. _`LoggerInterface`: https://github.com/php-fig/log/blob/master/src/LoggerInterface.php
 .. _`logrotate`: https://github.com/logrotate/logrotate
-.. _`Monolog Configuration`: https://github.com/symfony/monolog-bundle/blob/master/DependencyInjection/Configuration.php#L25
+.. _`Monolog Configuration`: https://github.com/symfony/monolog-bundle/blob/4.x/src/DependencyInjection/Configuration.php
 .. _`STDERR PHP stream`: https://www.php.net/manual/en/features.commandline.io-streams.php

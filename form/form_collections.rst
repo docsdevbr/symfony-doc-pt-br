@@ -699,13 +699,12 @@ the relationship between the removed ``Tag`` and ``Task`` object.
 
     The Symfony community has created some JavaScript packages that provide the
     functionality needed to add, edit and delete elements of the collection.
-    Check out the `@a2lix/symfony-collection`_ package for modern browsers and
-    the `symfony-collection`_ package based on jQuery for the rest of browsers.
+    Check out the `@a2lix/symfony-collection`_ or search on GitHub for other
+    recent packages.
 
 .. _`Owning Side and Inverse Side`: https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/unitofwork-associations.html
 .. _`JSFiddle`: https://jsfiddle.net/ey8ozh6n/
 .. _`@a2lix/symfony-collection`: https://github.com/a2lix/symfony-collection
-.. _`symfony-collection`: https://github.com/ninsuo/symfony-collection
 .. _`ArrayCollection`: https://www.doctrine-project.org/projects/doctrine-collections/en/1.6/index.html
 .. _`Symfony UX Demo of Form Collections`: https://ux.symfony.com/live-component/demos/form-collection-type
 .. _`Stimulus`: https://symfony.com/doc/current/frontend/encore/simple-example.html#stimulus-symfony-ux

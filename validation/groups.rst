@@ -101,21 +101,21 @@ user registers and when a user updates their contact information later:
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('email', new Assert\Email([
-                    'groups' => ['registration'],
-                ]));
+                $metadata->addPropertyConstraint('email', new Assert\Email(
+                    groups: ['registration'],
+                ));
 
-                $metadata->addPropertyConstraint('password', new Assert\NotBlank([
-                    'groups' => ['registration'],
-                ]));
-                $metadata->addPropertyConstraint('password', new Assert\Length([
-                    'min'    => 7,
-                    'groups' => ['registration'],
-                ]));
+                $metadata->addPropertyConstraint('password', new Assert\NotBlank(
+                    groups: ['registration'],
+                ));
+                $metadata->addPropertyConstraint('password', new Assert\Length(
+                    min: 7,
+                    groups: ['registration'],
+                ));
 
-                $metadata->addPropertyConstraint('city', new Assert\Length([
-                    'min' => 2,
-                ]));
+                $metadata->addPropertyConstraint('city', new Assert\Length(
+                    min: 2,
+                ));
             }
         }
 

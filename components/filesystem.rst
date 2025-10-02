@@ -316,10 +316,6 @@ creates them before appending the contents.
 ``readFile``
 ~~~~~~~~~~~~
 
-.. versionadded:: 7.1
-
-    The ``readFile()`` method was introduced in Symfony 7.1.
-
 :method:`Symfony\\Component\\Filesystem\\Filesystem::readFile` returns all the
 contents of a file as a string. Unlike the :phpfunction:`file_get_contents` function
 from PHP, it throws an exception when the given file path is not readable and
@@ -337,7 +333,8 @@ Dealing with file paths usually involves some difficulties:
 - Platform differences: file paths look different on different platforms. UNIX
   file paths start with a slash ("/"), while Windows file paths start with a
   system drive ("C:"). UNIX uses forward slashes, while Windows uses backslashes
-  by default.
+  by default. However, Windows also accepts forward slashes, so both types of
+  separators generally work.
 - Absolute/relative paths: web applications frequently need to deal with absolute
   and relative paths. Converting one to the other properly is tricky and repetitive.
 
@@ -374,6 +371,45 @@ Malformed paths are returned unchanged::
 
     echo Path::canonicalize('C:Programs/PHP/php.ini');
     // => C:Programs/PHP/php.ini
+
+Joining Paths
+~~~~~~~~~~~~~
+
+The :method:`Symfony\\Component\\Filesystem\\Path::join` method concatenates
+the given paths and normalizes separators. It's a cleaner alternative to
+string concatenation for building file paths::
+
+    echo Path::join('/var/www', 'vhost', 'config.ini');
+    // => /var/www/vhost/config.ini
+
+    echo Path::join('C:\\Program Files', 'PHP', 'php.ini');
+    // => C:/Program Files/PHP/php.ini
+    // (both forward slashes and backslashes work on Windows)
+
+The ``join()`` method handles multiple scenarios correctly:
+
+Empty parts are ignored::
+
+    echo Path::join('/var/www', '', 'config.ini');
+    // => /var/www/config.ini
+
+Leading slashes in subsequent arguments are removed::
+
+    echo Path::join('/var/www', '/etc', 'config.ini');
+    // => /var/www/etc/config.ini
+
+Trailing slashes are preserved only for root paths::
+
+    echo Path::join('/var/www', 'vhost/');
+    // => /var/www/vhost
+
+    echo Path::join('/', '');
+    // => /
+
+Works with any number of arguments::
+
+    echo Path::join('/var', 'www', 'vhost', 'symfony', 'config', 'config.ini');
+    // => /var/www/vhost/symfony/config/config.ini
 
 Converting Absolute/Relative Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -19,14 +19,10 @@ key in your application configuration.
     namespace and the related XSD schema is available at:
     ``https://symfony.com/schema/dic/services/services-1.0.xsd``
 
-Configuration
--------------
-
 **Basic Options**:
 
 * `access_denied_url`_
-* `erase_credentials`_
-* `hide_user_not_found`_
+* `expose_security_errors`_
 * `session_fixation_strategy`_
 
 **Advanced Options**:
@@ -41,107 +37,34 @@ separate articles:
 * `role_hierarchy`_
 
 access_denied_url
-~~~~~~~~~~~~~~~~~
+-----------------
 
 **type**: ``string`` **default**: ``null``
 
 Defines the URL where the user is redirected after a ``403`` HTTP error (unless
 you define a custom access denial handler). Example: ``/no-permission``
 
-delete_cookies
-~~~~~~~~~~~~~~
+expose_security_errors
+----------------------
 
-**type**: ``array`` **default**: ``[]``
+**type**: ``string`` **default**: ``'none'``
 
-Lists the names (and other optional features) of the cookies to delete when the
-user logs out::
+User enumeration is a common security issue where attackers infer valid usernames
+based on error messages. For example, a message like "This user does not exist"
+shown by your login form reveals whether a username exists.
 
-.. configuration-block::
+This option lets you hide some or all errors related to user accounts
+(e.g. blocked or expired accounts) to prevent this issue. Instead, these
+errors will trigger a generic ``BadCredentialsException``. The value of this
+option can be one of the following:
 
-    .. code-block:: yaml
-
-        # config/packages/security.yaml
-        security:
-            # ...
-
-            firewalls:
-                main:
-                    # ...
-                    logout:
-                        delete_cookies:
-                            cookie1-name: null
-                            cookie2-name:
-                                path: '/'
-                            cookie3-name:
-                                path: null
-                                domain: example.com
-
-    .. code-block:: xml
-
-        <!-- config/packages/security.xml -->
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <srv:container xmlns="http://symfony.com/schema/dic/security"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns:srv="http://symfony.com/schema/dic/services"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services
-                https://symfony.com/schema/dic/services/services-1.0.xsd">
-
-            <config>
-                <!-- ... -->
-
-                <firewall name="main">
-                    <!-- ... -->
-                    <logout path="...">
-                        <delete-cookie name="cookie1-name"/>
-                        <delete-cookie name="cookie2-name" path="/"/>
-                        <delete-cookie name="cookie3-name" domain="example.com"/>
-                    </logout>
-                </firewall>
-            </config>
-        </srv:container>
-
-    .. code-block:: php
-
-        // config/packages/security.php
-
-        // ...
-
-        return static function (SecurityConfig $securityConfig): void {
-            // ...
-
-            $securityConfig->firewall('main')
-                ->logout()
-                    ->deleteCookie('cookie1-name')
-                    ->deleteCookie('cookie2-name')
-                        ->path('/')
-                    ->deleteCookie('cookie3-name')
-                        ->path(null)
-                        ->domain('example.com');
-        };
-
-erase_credentials
-~~~~~~~~~~~~~~~~~
-
-**type**: ``boolean`` **default**: ``true``
-
-If ``true``, the ``eraseCredentials()`` method of the user object is called
-after authentication.
-
-hide_user_not_found
-~~~~~~~~~~~~~~~~~~~
-
-**type**: ``boolean`` **default**: ``true``
-
-If ``true``, when a user is not found a generic exception of type
-:class:`Symfony\\Component\\Security\\Core\\Exception\\BadCredentialsException`
-is thrown with the message "Bad credentials".
-
-If ``false``, the exception thrown is of type
-:class:`Symfony\\Component\\Security\\Core\\Exception\\UserNotFoundException`
-and it includes the given not found user identifier.
+* ``'none'``: hides all user-related security exceptions;
+* ``'account_status'``: shows account-related exceptions (e.g. blocked or expired
+  accounts) but only for users who provided the correct password;
+* ``'all'``: shows all security-related exceptions.
 
 session_fixation_strategy
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 **type**: ``string`` **default**: ``SessionAuthenticationStrategy::MIGRATE``
 
@@ -430,7 +353,7 @@ delete_cookies
 **type**: ``array`` **default**: ``[]``
 
 Lists the names (and other optional features) of the cookies to delete when the
-user logs out::
+user logs out:
 
 .. configuration-block::
 
@@ -578,7 +501,9 @@ the current firewall and not the other ones.
 
 **type**: ``string`` **default**: ``/logout``
 
-The path which triggers logout. You need to set up a route with a matching path.
+The path or route name that triggers the logout. If the value starts with a
+``/`` character, it's treated as a path; otherwise, it's treated as a route
+name. If you use a path, make sure to also define a route that matches it.
 
 target
 ......
@@ -1060,6 +985,58 @@ the session must not be used when authenticating users:
         return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->stateless(true);
+            // ...
+        };
+
+.. _reference-security-lazy:
+
+lazy
+~~~~
+
+Firewalls can configure a ``lazy`` boolean option to load the user and start the
+session only if the application actually accesses the User object, (e.g. calling
+``is_granted()`` in a template or ``isGranted()`` in a controller or service):
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/security.yaml
+        security:
+            # ...
+
+            firewalls:
+                main:
+                    # ...
+                    lazy: true
+
+    .. code-block:: xml
+
+        <!-- config/packages/security.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <srv:container xmlns="http://symfony.com/schema/dic/security"
+            xmlns:srv="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/security
+                https://symfony.com/schema/dic/security/security-1.0.xsd">
+
+            <config>
+                <firewall name="main" lazy="true">
+                    <!-- ... -->
+                </firewall>
+            </config>
+        </srv:container>
+
+    .. code-block:: php
+
+        // config/packages/security.php
+        use Symfony\Config\SecurityConfig;
+
+        return static function (SecurityConfig $security): void {
+            $security->firewall('main')
+                ->lazy(true);
             // ...
         };
 

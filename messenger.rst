@@ -3,7 +3,7 @@ Messenger: Sync & Queued Message Handling
 
 Messenger provides a message bus with the ability to send messages and then
 handle them immediately in your application or send them through transports
-(e.g. queues) to be handled later. To learn more deeply about it, read the
+(e.g. queues) to be handled later. To learn more about it, read the
 :doc:`Messenger component docs </components/messenger>`.
 
 Installation
@@ -265,10 +265,6 @@ you can configure them to be sent to a transport:
                 ->routing('App\Message\SmsNotification')->senders(['async'])
             ;
         };
-
-.. versionadded:: 7.2
-
-    The ``#[AsMessage]`` attribute was introduced in Symfony 7.2.
 
 Thanks to this, the ``App\Message\SmsNotification`` will be sent to the ``async``
 transport and its handler(s) will *not* be called immediately. Any messages not
@@ -539,22 +535,31 @@ command with the ``--all`` option:
 
     $ php bin/console messenger:consume --all
 
-.. versionadded:: 7.1
+When using ``--all``, you can exclude specific receivers using the ``--exclude-receivers``
+option (shortcut ``-eq``):
 
-    The ``--all`` option was introduced in Symfony 7.1.
+.. code-block:: terminal
 
-The ``--keepalive`` option can be used to prevent messages from being prematurely
-redelivered during long-running processing. It marks the message as "in progress"
-and prevents it from being redelivered until the worker finishes processing it.
+    $ php bin/console messenger:consume --all --exclude-receivers=async_priority_low --exclude-receivers=failed
 
 .. note::
 
-    This option is only available for supported transports, which are
-    the Beanstalkd and AmazonSQS transports.
+    The ``--exclude-receivers`` option can only be used together with ``--all``.
+    Also, you cannot exclude all receivers.
 
-.. versionadded:: 7.2
+Messages that take a long time to process may be redelivered prematurely because
+some transports assume that an unacknowledged message is lost. To prevent this
+issue, use the ``--keepalive`` command option to specify an interval (in seconds;
+default value = ``5``) at which the message is marked as "in progress". This prevents
+the message from being redelivered until the worker completes processing it:
 
-    The ``--keepalive`` option was introduced in Symfony 7.2.
+.. code-block:: terminal
+
+    $ php bin/console messenger:consume --keepalive
+
+.. note::
+
+    This option is only available for the following transports: Beanstalkd, AmazonSQS, Doctrine and Redis.
 
 .. tip::
 
@@ -752,10 +757,6 @@ of some or all transports:
     $ php bin/console messenger:stats --format=json
     $ php bin/console messenger:stats my_transport_name other_transport_name --format=json
 
-.. versionadded:: 7.2
-
-    The ``format`` option was introduced in Symfony 7.2.
-
 .. note::
 
     In order for this command to work, the configured transport's receiver must implement
@@ -844,7 +845,50 @@ message before terminating.
 
 However, you might prefer to use different POSIX signals for graceful shutdown.
 You can override default ones by setting the ``framework.messenger.stop_worker_on_signals``
-configuration option.
+configuration option:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/messenger.yaml
+        framework:
+            messenger:
+                stop_worker_on_signals:
+                    - SIGTERM
+                    - SIGINT
+                    - SIGUSR1
+
+    .. code-block:: xml
+
+        <!-- config/packages/messenger.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns:framework="http://symfony.com/schema/dic/symfony"
+                   xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+            <framework:config>
+                <framework:messenger>
+                    <!-- ... -->
+                    <framework:stop-worker-on-signal>SIGTERM</framework:stop-worker-on-signal>
+                    <framework:stop-worker-on-signal>SIGINT</framework:stop-worker-on-signal>
+                    <framework:stop-worker-on-signal>SIGUSR1</framework:stop-worker-on-signal>
+                </framework:messenger>
+            </framework:config>
+        </container>
+
+    .. code-block:: php
+
+        // config/packages/messenger.php
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework): void {
+            $framework->messenger()
+                ->stopWorkerOnSignals(['SIGTERM', 'SIGINT', 'SIGUSR1']);
+        };
 
 In some cases the ``SIGTERM`` signal is sent by Supervisor itself (e.g. stopping
 a Docker container having Supervisor as its entrypoint). In these cases you
@@ -1112,10 +1156,6 @@ this is configurable for each transport:
             ;
         };
 
-.. versionadded:: 7.1
-
-    The ``jitter`` option was introduced in Symfony 7.1.
-
 .. tip::
 
     Symfony triggers a :class:`Symfony\\Component\\Messenger\\Event\\WorkerMessageRetriedEvent`
@@ -1152,11 +1192,6 @@ the message will always be retried infinitely and ``max_retries`` setting will b
 You can define a custom retry delay (e.g., to use the value from the ``Retry-After``
 header in an HTTP response) by setting the ``retryDelay`` argument in the
 constructor of the ``RecoverableMessageHandlingException``.
-
-.. versionadded:: 7.2
-
-    The ``retryDelay`` argument and the ``getRetryDelay()`` method were introduced
-    in Symfony 7.2.
 
 .. _messenger-failure-transport:
 
@@ -1234,8 +1269,8 @@ to retry them:
     # see the 10 first messages
     $ php bin/console messenger:failed:show --max=10
 
-    # see only MyClass messages
-    $ php bin/console messenger:failed:show --class-filter='MyClass'
+    # see only App\Message\MyMessage messages
+    $ php bin/console messenger:failed:show --class-filter='App\Message\MyMessage'
 
     # see the number of messages by message class
     $ php bin/console messenger:failed:show --stats
@@ -1258,14 +1293,12 @@ to retry them:
     # remove all messages in the failure transport
     $ php bin/console messenger:failed:remove --all
 
+    # remove only App\Message\MyMessage messages
+    $ php bin/console messenger:failed:remove --class-filter='App\Message\MyMessage'
+
 If the message fails again, it will be re-sent back to the failure transport
 due to the normal :ref:`retry rules <messenger-retries-failures>`. Once the max
 retry has been hit, the message will be discarded permanently.
-
-.. versionadded:: 7.2
-
-    The option to skip a message in the ``messenger:failed:retry`` command was
-    introduced in Symfony 7.2
 
 Multiple Failed Transports
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1442,7 +1475,7 @@ RabbitMQ. Install it by running:
 
     $ composer require symfony/amqp-messenger
 
-The AMQP transport DSN may looks like this:
+The AMQP transport DSN may look like this:
 
 .. code-block:: env
 
@@ -1583,7 +1616,7 @@ The transport has a number of options:
     Exchange flags
 
 ``exchange[name]``
-    Name of the exchange
+    Name of the exchange. Use an empty string to use the default exchange.
 
 ``exchange[type]`` (default: ``fanout``)
     Type of exchange
@@ -1629,7 +1662,7 @@ Install it by running:
 
     $ composer require symfony/doctrine-messenger
 
-The Doctrine transport DSN may looks like this:
+The Doctrine transport DSN may look like this:
 
 .. code-block:: env
 
@@ -1667,7 +1700,7 @@ The transport has a number of options:
 
     .. note::
 
-        Set ``redeliver_timeout`` to a greater value than your slowest message
+        Set ``redeliver_timeout`` to a greater value than your longest message
         duration. Otherwise, some messages will start a second time while the
         first one is still being handled.
 
@@ -1691,6 +1724,9 @@ in the table.
     The length of time to wait for a response when calling
     ``PDO::pgsqlGetNotify``, in milliseconds.
 
+The Doctrine transport supports the ``--keepalive`` option by periodically updating
+the ``delivered_at`` timestamp to prevent the message from being redelivered.
+
 Beanstalkd Transport
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -1713,8 +1749,9 @@ The Beanstalkd transport DSN may looks like this:
 
 The transport has a number of options:
 
-``tube_name`` (default: ``default``)
-    Name of the queue
+``bury_on_reject`` (default: ``false``)
+    When set to ``true``, rejected messages are placed into a "buried" state
+    in Beanstalkd instead of being deleted.
 
 ``timeout`` (default: ``0``)
     Message reservation timeout - in seconds. 0 will cause the server to
@@ -1724,9 +1761,24 @@ The transport has a number of options:
     The message time to run before it is put back in the ready queue - in
     seconds.
 
-.. versionadded:: 7.2
+``tube_name`` (default: ``default``)
+    Name of the queue
 
-    Keepalive support, using the ``--keepalive`` option, was added in Symfony 7.2.
+The Beanstalkd transport supports the ``--keepalive`` option by using Beanstalkd's
+``touch`` command to periodically reset the job's ``ttr``.
+
+The Beanstalkd transport lets you set the priority of the messages being dispatched.
+Use the :class:`Symfony\\Component\\Messenger\\Bridge\\Beanstalkd\\Transport\\BeanstalkdPriorityStamp`
+and pass a number to specify the priority (default = ``1024``; lower numbers mean higher priority)::
+
+    use App\Message\SomeMessage;
+    use Symfony\Component\Messenger\Stamp\BeanstalkdPriorityStamp;
+
+    $this->bus->dispatch(new SomeMessage('some data'), [
+        // 0 = highest priority
+        // 2**32 - 1 = lowest priority
+        new BeanstalkdPriorityStamp(0),
+    ]);
 
 .. _messenger-redis-transport:
 
@@ -1768,7 +1820,20 @@ under the transport in ``messenger.yaml``:
     The Redis consumer group name
 
 ``consumer`` (default: ``consumer``)
-    Consumer name used in Redis
+    Consumer name used in Redis. Allows setting an explicit consumer name identifier.
+    Recommended in environments with multiple workers to prevent duplicate message
+    processing. Typically set via an environment variable:
+
+    .. code-block:: yaml
+
+        # config/packages/messenger.yaml
+        framework:
+            messenger:
+                transports:
+                    redis:
+                        dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                        options:
+                            consumer: '%env(MESSENGER_CONSUMER_NAME)%'
 
 ``auto_setup`` (default: ``true``)
     Whether to create the Redis group automatically
@@ -1817,10 +1882,6 @@ under the transport in ``messenger.yaml``:
 ``redis_sentinel`` (default: ``null``)
     An alias of the ``sentinel_master`` option
 
-    .. versionadded:: 7.1
-
-        The ``redis_sentinel`` option was introduced in Symfony 7.1.
-
 ``ssl`` (default: ``null``)
     Map of `SSL context options`_ for the TLS channel. This is useful for example
     to change the requirements for the TLS channel in tests:
@@ -1860,6 +1921,9 @@ under the transport in ``messenger.yaml``:
     ``stream_max_entries`` (if you can estimate how many max entries is acceptable
     in your case) to avoid memory leaks. Otherwise, all messages will remain
     forever in Redis.
+
+The Redis transport supports the ``--keepalive`` option by using Redis's ``XCLAIM``
+command to periodically reset the message's idle time to zero.
 
 In Memory Transport
 ~~~~~~~~~~~~~~~~~~~
@@ -2003,6 +2067,12 @@ The transport has a number of options:
 ``queue_name`` (default: ``messages``)
     Name of the queue
 
+``queue_attributes``
+    Attributes of a queue as per `SQS CreateQueue API`_. Array of strings indexed by keys of ``AsyncAws\Sqs\Enum\QueueAttributeName``.
+
+``queue_tags``
+    Cost allocation tags of a queue as per `SQS CreateQueue API`_. Array of strings indexed by strings.
+
 ``region`` (default: ``eu-west-1``)
     Name of the AWS region
 
@@ -2050,9 +2120,8 @@ The transport has a number of options:
     FIFO queues don't support setting a delay per message, a value of ``delay: 0``
     is required in the retry strategy settings.
 
-.. versionadded:: 7.2
-
-    Keepalive support, using the `--keepalive` option, was added in Symfony 7.2.
+The SQS transport supports the ``--keepalive`` option by using the ``ChangeMessageVisibility``
+action to periodically update the ``VisibilityTimeout`` of the message.
 
 Serializing Messages
 ~~~~~~~~~~~~~~~~~~~~
@@ -2137,6 +2206,17 @@ on a case-by-case basis via the :class:`Symfony\\Component\\Messenger\\Stamp\\Se
     provides that control. See `SymfonyCasts' message serializer tutorial`_ for
     details.
 
+Closing Connections
+~~~~~~~~~~~~~~~~~~~
+
+When using a transport that requires a connection, you can close it by calling the
+:method:`Symfony\\Component\\Messenger\\Transport\\CloseableTransportInterface::close`
+method to free up resources in long-running processes.
+
+This interface is implemented by the following transports: AmazonSqs, Amqp, and Redis.
+If you need to close a Doctrine connection, you can do so
+:ref:`using middleware <middleware-for-doctrine>`.
+
 Running Commands And External Processes
 ---------------------------------------
 
@@ -2192,8 +2272,9 @@ will take care of creating a new process with the parameters you passed::
 
     class CleanUpService
     {
-        public function __construct(private readonly MessageBusInterface $bus)
-        {
+        public function __construct(
+            private readonly MessageBusInterface $bus,
+        ) {
         }
 
         public function cleanUp(): void
@@ -2203,6 +2284,30 @@ will take care of creating a new process with the parameters you passed::
             // ...
         }
     }
+
+If you want to use shell features such as redirections or pipes, use the static
+:method:`Symfony\\Component\\Process\\Messenger\\RunProcessMessage::fromShellCommandline` factory method::
+
+    use Symfony\Component\Messenger\MessageBusInterface;
+    use Symfony\Component\Process\Messenger\RunProcessMessage;
+
+    class CleanUpService
+    {
+        public function __construct(
+            private readonly MessageBusInterface $bus,
+        ) {
+        }
+
+        public function cleanUp(): void
+        {
+            $this->bus->dispatch(RunProcessMessage::fromShellCommandline('echo "Hello World" > var/log/hello.txt'));
+
+            // ...
+        }
+    }
+
+For more information, read the documentation about
+:ref:`using features from the OS shell <process-using-features-from-the-os-shell>`.
 
 Once handled, the handler will return a
 :class:`Symfony\\Component\\Process\\Messenger\\RunProcessContext` which
@@ -2350,6 +2455,11 @@ wherever you need a query bus behavior instead of the ``MessageBusInterface``::
         }
     }
 
+You can also add new stamps when handling a message; they will be appended
+to the existing ones::
+
+    $this->handle(new SomeMessage($data), [new SomeStamp(), new AnotherStamp()]);
+
 Customizing Handlers
 --------------------
 
@@ -2444,7 +2554,8 @@ Possible options to configure with tags are:
     Name of the method that will process the message.
 
 ``priority``
-    Priority of the handler when multiple handlers can process the same message.
+    Defines the order in which the handler is executed when multiple handlers
+    can process the same message; those with higher priority run first.
 
 .. _handler-subscriber-options:
 
@@ -2570,7 +2681,7 @@ using the ``DispatchAfterCurrentBusMiddleware`` and adding a
     {
         public function __construct(
             private MailerInterface $mailer,
-            EntityManagerInterface $em,
+            private EntityManagerInterface $em,
         ) {
         }
 
@@ -3575,3 +3686,4 @@ Learn more
 .. _`high connection churn`: https://www.rabbitmq.com/connections.html#high-connection-churn
 .. _`article about CQRS`: https://martinfowler.com/bliki/CQRS.html
 .. _`SSL context options`: https://php.net/context.ssl
+.. _`SQS CreateQueue API`: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_CreateQueue.html

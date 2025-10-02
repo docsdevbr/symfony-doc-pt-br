@@ -304,35 +304,33 @@ You can now use the ``asset()`` function:
 .. code-block:: html+twig
 
     {# the image lives at "public/images/logo.png" #}
-    <img src="{{ asset('images/logo.png') }}" alt="Symfony!"/>
+    <img src="{{ asset('images/logo.png') }}" alt="Symfony!">
 
     {# the CSS file lives at "public/css/blog.css" #}
-    <link href="{{ asset('css/blog.css') }}" rel="stylesheet"/>
+    <link href="{{ asset('css/blog.css') }}" rel="stylesheet">
 
     {# the JS file lives at "public/bundles/acme/js/loader.js" #}
     <script src="{{ asset('bundles/acme/js/loader.js') }}"></script>
 
-The ``asset()`` function's main purpose is to make your application more portable.
-If your application lives at the root of your host (e.g. ``https://example.com``),
-then the rendered path should be ``/images/logo.png``. But if your application
-lives in a subdirectory (e.g. ``https://example.com/my_app``), each asset path
-should render with the subdirectory (e.g. ``/my_app/images/logo.png``). The
-``asset()`` function takes care of this by determining how your application is
-being used and generating the correct paths accordingly.
+Using the ``asset()`` function is recommended for these reasons:
 
-.. tip::
+* **Asset versioning**: ``asset()`` appends a version hash to asset URLs for
+  cache busting. This works both via :doc:`AssetMapper </frontend>` and the
+  :doc:`Asset component </components/asset>` (see also the
+  :ref:`assets configuration options <reference-assets>`, such as ``version``
+  and ``version_format``).
 
-    The ``asset()`` function supports various cache busting techniques via the
-    :ref:`version <reference-framework-assets-version>`,
-    :ref:`version_format <reference-assets-version-format>`, and
-    :ref:`json_manifest_path <reference-assets-json-manifest-path>` configuration options.
+* **Application portability**: whether your app is hosted at the root
+  (e.g. ``https://example.com``) or in a subdirectory (e.g. ``https://example.com/my_app``),
+  ``asset()`` generates the correct path (e.g. ``/images/logo.png`` vs ``/my_app/images/logo.png``)
+  automatically based on your app's base URL.
 
 If you need absolute URLs for assets, use the ``absolute_url()`` Twig function
 as follows:
 
 .. code-block:: html+twig
 
-    <img src="{{ absolute_url(asset('images/logo.png')) }}" alt="Symfony!"/>
+    <img src="{{ absolute_url(asset('images/logo.png')) }}" alt="Symfony!">
 
     <link rel="shortcut icon" href="{{ absolute_url('favicon.png') }}">
 
@@ -497,8 +495,8 @@ in container parameters <service-container-parameters>`:
     .. code-block:: php
 
         // config/packages/twig.php
-        use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
         use Symfony\Config\TwigConfig;
+        use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
         return static function (TwigConfig $twig): void {
             // ...
@@ -663,10 +661,6 @@ a block to render::
         }
     }
 
-.. versionadded:: 7.2
-
-    The ``#[Template]`` attribute's ``block`` argument was introduced in Symfony 7.2.
-
 Rendering a Template in Services
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -819,10 +813,6 @@ provided by Symfony:
             ;
         };
 
-.. versionadded:: 7.2
-
-    The ``headers`` option was introduced in Symfony 7.2.
-
 Checking if a Template Exists
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -874,10 +864,6 @@ errors. It's useful to run it before deploying your application to production
 
     # you can also excludes directories
     $ php bin/console lint:twig templates/ --excludes=data_collector --excludes=dev_tool
-
-.. versionadded:: 7.1
-
-    The option to exclude directories was introduced in Symfony 7.1.
 
 When running the linter inside `GitHub Actions`_, the output is automatically
 adapted to the format required by GitHub, but you can force that format too:
@@ -968,7 +954,7 @@ following code to display the user information is repeated in several places:
 
     {# ... #}
     <div class="user-profile">
-        <img src="{{ user.profileImageUrl }}" alt="{{ user.fullName }}"/>
+        <img src="{{ user.profileImageUrl }}" alt="{{ user.fullName }}">
         <p>{{ user.fullName }} - {{ user.email }}</p>
     </div>
 
@@ -1253,7 +1239,7 @@ In practice, the ``base.html.twig`` template would look like this:
             <meta charset="UTF-8">
             <title>{% block title %}My Application{% endblock %}</title>
             {% block stylesheets %}
-                <link rel="stylesheet" type="text/css" href="/css/base.css"/>
+                <link rel="stylesheet" type="text/css" href="/css/base.css">
             {% endblock %}
         </head>
         <body>
@@ -1508,8 +1494,8 @@ Bundle Templates
 ~~~~~~~~~~~~~~~~
 
 If you :ref:`install packages/bundles <symfony-flex>` in your application, they
-may include their own Twig templates (in the ``Resources/views/`` directory of
-each bundle). To avoid messing with your own templates, Symfony adds bundle
+may include their own Twig templates (in the ``templates/`` directory of each
+bundle). To avoid messing with your own templates, Symfony adds bundle
 templates under an automatic namespace created after the bundle name.
 
 For example, the templates of a bundle called ``AcmeBlogBundle`` are available
@@ -1548,23 +1534,20 @@ as currency:
     {# pass in the 3 optional arguments #}
     {{ product.price|price(2, ',', '.') }}
 
-Create a class that extends ``AbstractExtension`` and fill in the logic::
+.. _templates-twig-filter-attribute:
+
+Create a regular PHP class with a method that contains the filter logic. Then,
+add the ``#[AsTwigFilter]`` attribute to define the name and options of
+the Twig filter::
 
     // src/Twig/AppExtension.php
     namespace App\Twig;
 
-    use Twig\Extension\AbstractExtension;
-    use Twig\TwigFilter;
+    use Twig\Attribute\AsTwigFilter;
 
-    class AppExtension extends AbstractExtension
+    class AppExtension
     {
-        public function getFilters(): array
-        {
-            return [
-                new TwigFilter('price', [$this, 'formatPrice']),
-            ];
-        }
-
+        #[AsTwigFilter('price')]
         public function formatPrice(float $number, int $decimals = 0, string $decPoint = '.', string $thousandsSep = ','): string
         {
             $price = number_format($number, $decimals, $decPoint, $thousandsSep);
@@ -1574,24 +1557,19 @@ Create a class that extends ``AbstractExtension`` and fill in the logic::
         }
     }
 
-If you want to create a function instead of a filter, define the
-``getFunctions()`` method::
+.. _templates-twig-function-attribute:
+
+If you want to create a function instead of a filter, use the
+``#[AsTwigFunction]`` attribute::
 
     // src/Twig/AppExtension.php
     namespace App\Twig;
 
-    use Twig\Extension\AbstractExtension;
-    use Twig\TwigFunction;
+    use Twig\Attribute\AsTwigFunction;
 
-    class AppExtension extends AbstractExtension
+    class AppExtension
     {
-        public function getFunctions(): array
-        {
-            return [
-                new TwigFunction('area', [$this, 'calculateArea']),
-            ];
-        }
-
+        #[AsTwigFunction('area')]
         public function calculateArea(int $width, int $length): int
         {
             return $width * $length;
@@ -1602,6 +1580,11 @@ If you want to create a function instead of a filter, define the
 
     Along with custom filters and functions, you can also register
     `global variables`_.
+
+If you're using the :ref:`default services.yaml configuration <service-container-services-load-example>`,
+the :ref:`service autoconfiguration <services-autoconfigure>` feature will enable
+this class as a Twig extension. Otherwise, you need to define a service manually
+and :doc:`tag it </service_container/tags>` with the ``twig.attribute_extension`` tag.
 
 Register an Extension as a Service
 ..................................
@@ -1626,10 +1609,11 @@ this command to confirm that your new filter was successfully registered:
 Creating Lazy-Loaded Twig Extensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Including the code of the custom filters/functions in the Twig extension class
-is the simplest way to create extensions. However, Twig must initialize all
-extensions before rendering any template, even if the template doesn't use an
-extension.
+When :ref:`using attributes to extend Twig <templates-twig-filter-attribute>`,
+the **Twig extensions are already lazy-loaded** and you don't have to do anything
+else. However, if your Twig extensions follow the **legacy approach** of extending
+the ``AbstractExtension`` class, Twig initializes all the extensions before
+rendering any template, even if they are not used.
 
 If extensions don't define dependencies (i.e. if you don't inject services in
 them) performance is not affected. However, if extensions define lots of complex

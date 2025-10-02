@@ -114,7 +114,7 @@ done!
 
     .. code-block:: xml
 
-        <!-- phpunit.xml.dist -->
+        <!-- phpunit.dist.xml -->
         <phpunit>
             <!-- ... -->
 

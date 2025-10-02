@@ -12,25 +12,25 @@ using `PHPUnit`_. At first, install PHPUnit as a development dependency:
 
 .. code-block:: terminal
 
-    $ composer require --dev phpunit/phpunit:^9.6
+    $ composer require --dev phpunit/phpunit:^11.0
 
-Then, create a PHPUnit configuration file in ``example.com/phpunit.xml.dist``:
+Then, create a PHPUnit configuration file in ``example.com/phpunit.dist.xml``:
 
 .. code-block:: xml
 
     <?xml version="1.0" encoding="UTF-8"?>
     <phpunit
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
         backupGlobals="false"
         colors="true"
         bootstrap="vendor/autoload.php"
     >
-        <coverage processUncoveredFiles="true">
+        <source>
             <include>
                 <directory suffix=".php">./src</directory>
             </include>
-        </coverage>
+        </source>
 
         <testsuites>
             <testsuite name="Test Suite">
@@ -103,12 +103,12 @@ We are now ready to write our first test::
             $matcher
                 ->expects($this->once())
                 ->method('match')
-                ->will($this->throwException($exception))
+                ->willThrowException($exception)
             ;
             $matcher
                 ->expects($this->once())
                 ->method('getContext')
-                ->will($this->returnValue($this->createMock(Routing\RequestContext::class)))
+                ->willReturn($this->createMock(Routing\RequestContext::class))
             ;
             $controllerResolver = $this->createMock(ControllerResolverInterface::class);
             $argumentResolver = $this->createMock(ArgumentResolverInterface::class);
@@ -161,16 +161,16 @@ Response::
         $matcher
             ->expects($this->once())
             ->method('match')
-            ->will($this->returnValue([
+            ->willReturn([
                 '_route' => 'is_leap_year/{year}',
                 'year' => '2000',
                 '_controller' => [new LeapYearController(), 'index'],
-            ]))
+            ])
         ;
         $matcher
             ->expects($this->once())
             ->method('getContext')
-            ->will($this->returnValue($this->createMock(Routing\RequestContext::class)))
+            ->willReturn($this->createMock(Routing\RequestContext::class))
         ;
         $controllerResolver = new ControllerResolver();
         $argumentResolver = new ArgumentResolver();
@@ -194,7 +194,7 @@ coverage feature (you need to enable `XDebug`_ first):
 
     $ ./vendor/bin/phpunit --coverage-html=cov/
 
-Open ``example.com/cov/src/Simplex/Framework.php.html`` in a browser and check
+Open ``example.com/cov/Simplex/Framework.php.html`` in a browser and check
 that all the lines for the Framework class are green (it means that they have
 been visited when the tests were executed).
 
@@ -212,6 +212,6 @@ Symfony code.
 Now that we are confident (again) about the code we have written, we can
 safely think about the next batch of features we want to add to our framework.
 
-.. _`PHPUnit`: https://docs.phpunit.de/en/9.6/
-.. _`test doubles`: https://docs.phpunit.de/en/9.6/test-doubles.html
+.. _`PHPUnit`: https://docs.phpunit.de/en/11.0/
+.. _`test doubles`: https://docs.phpunit.de/en/11.0/test-doubles.html
 .. _`XDebug`: https://xdebug.org/

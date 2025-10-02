@@ -92,10 +92,6 @@ reflect the real structure of the configuration values::
         ->end()
     ;
 
-.. versionadded:: 7.2
-
-    The ``stringNode()`` method was introduced in Symfony 7.2.
-
 The root node itself is an array node, and has children, like the boolean
 node ``auto_connect`` and the scalar node ``default_connection``. In general:
 after defining a node, a call to ``end()`` takes you one step up in the
@@ -119,10 +115,6 @@ node definition. Node types are available for:
 
 and are created with ``node($name, $type)`` or their associated shortcut
 ``xxxxNode($name)`` method.
-
-.. versionadded:: 7.2
-
-    Support for the ``string`` type was introduced in Symfony 7.2.
 
 Numeric Node Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -185,6 +177,21 @@ The configuration can now be written like this::
             ->end()
         ->end()
     ;
+
+You can also use the ``enumFqcn()`` method to pass the FQCN of an enum
+class to the node. This will automatically set the values of the node to
+the cases of the enum::
+
+    $rootNode
+        ->children()
+            ->enumNode('delivery')
+                ->enumFqcn(Delivery::class)
+            ->end()
+        ->end()
+    ;
+
+When using a backed enum, the values provided to the node will be cast
+to one of the enum cases if possible.
 
 Array Nodes
 ~~~~~~~~~~~
@@ -262,9 +269,9 @@ Before defining the children of an array node, you can provide options like:
 A basic prototyped array configuration can be defined as follows::
 
     $node
-        ->fixXmlConfig('driver')
         ->children()
-            ->arrayNode('drivers')
+            // the arguments are the plural and singular variants of the option name
+            ->arrayNode('drivers', 'driver')
                 ->scalarPrototype()->end()
             ->end()
         ->end()
@@ -293,9 +300,8 @@ The processed configuration is::
 A more complex example would be to define a prototyped array with children::
 
     $node
-        ->fixXmlConfig('connection')
         ->children()
-            ->arrayNode('connections')
+            ->arrayNode('connections', 'connection')
                 ->arrayPrototype()
                     ->children()
                         ->scalarNode('table')->end()
@@ -366,9 +372,8 @@ the Symfony Config component treats arrays as lists by default.
 In order to maintain the array keys use the ``useAttributeAsKey()`` method::
 
     $node
-        ->fixXmlConfig('connection')
         ->children()
-            ->arrayNode('connections')
+            ->arrayNode('connections', 'connection')
                 ->useAttributeAsKey('name')
                 ->arrayPrototype()
                     ->children()
@@ -526,6 +531,26 @@ and in XML:
 
     <!-- entries-per-page: This value is only used for the search results page. -->
     <config entries-per-page="25"/>
+
+You can also provide a URL to a full documentation page::
+
+    $rootNode
+        ->docUrl('Full documentation is available at https://example.com/docs/{version:major}.{version:minor}/reference.html')
+        ->children()
+            ->integerNode('entries_per_page')
+                ->defaultValue(25)
+            ->end()
+        ->end()
+    ;
+
+A few placeholders are available to customize the URL:
+
+* ``{version:major}``: The major version of the package currently installed
+* ``{version:minor}``: The minor version of the package currently installed
+* ``{package}``: The name of the package
+
+The placeholders will be replaced when printing the configuration tree with the
+``config:dump-reference`` command.
 
 Optional Sections
 -----------------
@@ -691,14 +716,14 @@ normalization would make both of these ``auto_connect``.
     ``foo-bar_moo`` or if it already exists.
 
 Another difference between YAML and XML is in the way arrays of values may
-be represented. In YAML you may have:
+be represented. In YAML you may have an option called ``extensions`` (in plural):
 
 .. code-block:: yaml
 
     twig:
         extensions: ['twig.extension.foo', 'twig.extension.bar']
 
-and in XML:
+and in XML you have a list of options called ``extension`` (in singular):
 
 .. code-block:: xml
 
@@ -707,33 +732,18 @@ and in XML:
         <twig:extension>twig.extension.bar</twig:extension>
     </twig:config>
 
-This difference can be removed in normalization by pluralizing the key used
-in XML. You can specify that you want a key to be pluralized in this way
-with ``fixXmlConfig()``::
+This difference can be removed in normalization by defining the singular variant
+of the option name using the second argument of the ``arrayNode()`` method::
 
     $rootNode
-        ->fixXmlConfig('extension')
         ->children()
-            ->arrayNode('extensions')
+            ->arrayNode('extensions', 'extension')
                 ->scalarPrototype()->end()
             ->end()
         ->end()
     ;
 
-If it is an irregular pluralization you can specify the plural to use as
-a second argument::
-
-    $rootNode
-        ->fixXmlConfig('child', 'children')
-        ->children()
-            ->arrayNode('children')
-                // ...
-            ->end()
-        ->end()
-    ;
-
-As well as fixing this, ``fixXmlConfig()`` ensures that single XML elements
-are still turned into an array. So you may have:
+This ensures that single XML elements are still turned into an array. So you may have:
 
 .. code-block:: xml
 
@@ -748,7 +758,7 @@ and sometimes only:
 
 By default, ``connection`` would be an array in the first case and a string
 in the second, making it difficult to validate. You can ensure it is always
-an array with ``fixXmlConfig()``.
+an array with the second argument of ``arrayNode()``.
 
 You can further control the normalization process if you need to. For example,
 you may want to allow a string to be set and used as a particular key or
@@ -815,6 +825,7 @@ A validation rule always has an "if" part. You can specify this part in
 the following ways:
 
 - ``ifTrue()``
+- ``ifFalse()``
 - ``ifString()``
 - ``ifNull()``
 - ``ifEmpty()``

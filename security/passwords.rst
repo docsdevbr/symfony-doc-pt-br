@@ -124,75 +124,38 @@ Further in this article, you can find a
 
         .. code-block:: yaml
 
-            # config/packages/test/security.yaml
-            security:
-                # ...
+            # config/packages/security.yaml
+            when@test:
+                security:
+                    # ...
 
-                password_hashers:
-                    # Use your user class name here
-                    App\Entity\User:
-                        algorithm: plaintext # disable hashing (only do this in tests!)
-
-                    # or use the lowest possible values
-                    App\Entity\User:
-                        algorithm: auto # This should be the same value as in config/packages/security.yaml
-                        cost: 4 # Lowest possible value for bcrypt
-                        time_cost: 3 # Lowest possible value for argon
-                        memory_cost: 10 # Lowest possible value for argon
-
-        .. code-block:: xml
-
-            <!-- config/packages/test/security.xml -->
-            <?xml version="1.0" encoding="UTF-8"?>
-            <srv:container xmlns="http://symfony.com/schema/dic/security"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xmlns:srv="http://symfony.com/schema/dic/services"
-                xsi:schemaLocation="http://symfony.com/schema/dic/services
-                    https://symfony.com/schema/dic/services/services-1.0.xsd">
-
-                <config>
-                    <!-- class: Use your user class name here -->
-                    <!-- algorithm: disable hashing (only do this in tests!) -->
-                    <security:password-hasher
-                        class="App\Entity\User"
-                        algorithm="plaintext"
-                    />
-
-                    <!-- or use the lowest possible values -->
-                    <!-- algorithm: This should be the same value as in config/packages/security.yaml -->
-                    <!-- cost: Lowest possible value for bcrypt -->
-                    <!-- time_cost: Lowest possible value for argon -->
-                    <!-- memory_cost: Lowest possible value for argon -->
-                    <security:password-hasher
-                        class="App\Entity\User"
-                        algorithm="auto"
-                        cost="4"
-                        time_cost="3"
-                        memory_cost="10"
-                    />
-                </config>
-            </srv:container>
+                    password_hashers:
+                        # Use your user class name here
+                        App\Entity\User:
+                            algorithm: auto
+                            cost: 4 # Lowest possible value for bcrypt
+                            time_cost: 3 # Lowest possible value for argon
+                            memory_cost: 10 # Lowest possible value for argon
 
         .. code-block:: php
 
-            // config/packages/test/security.php
+            // config/packages/security.php
             use App\Entity\User;
+            use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
             use Symfony\Config\SecurityConfig;
 
-            return static function (SecurityConfig $security): void {
+            return static function (SecurityConfig $security, ContainerConfigurator $container): void {
                 // ...
 
-                // Use your user class name here
-                $security->passwordHasher(User::class)
-                    ->algorithm('plaintext'); // disable hashing (only do this in tests!)
-
-                // or use the lowest possible values
-                $security->passwordHasher(User::class)
-                    ->algorithm('auto') // This should be the same value as in config/packages/security.yaml
-                    ->cost(4) // Lowest possible value for bcrypt
-                    ->timeCost(2) // Lowest possible value for argon
-                    ->memoryCost(10) // Lowest possible value for argon
-                ;
+                if ('test' === $container->env()) {
+                    // Use your user class name here
+                    $security->passwordHasher(User::class)
+                        ->algorithm('auto') // This should be the same value as in config/packages/security.yaml
+                        ->cost(4) // Lowest possible value for bcrypt
+                        ->timeCost(2) // Lowest possible value for argon
+                        ->memoryCost(10) // Lowest possible value for argon
+                    ;
+                }
             };
 
 Hashing the Password
@@ -292,6 +255,60 @@ you'll see a success message and a list of any other steps you need to do.
 You can customize the reset password bundle's behavior by updating the
 ``reset_password.yaml`` file. For more information on the configuration,
 check out the `SymfonyCastsResetPasswordBundle`_  guide.
+
+Injecting a Specific Password Hasher
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In some cases, you may define a password hasher in your configuration that is
+not tied to a user class. For example, you might use a separate hasher for
+password recovery codes or API tokens.
+
+With the following configuration:
+
+.. code-block:: yaml
+
+    # config/packages/security.yaml
+    security:
+        password_hashers:
+            recovery_code: 'auto'
+
+        firewalls:
+            main:
+                # ...
+
+You can inject the ``recovery_code`` password hasher into any service. However,
+you can't rely on standard autowiring, as Symfony doesn't know which specific
+hasher to provide.
+
+Instead, use the ``#[Target]`` attribute to explicitly request the hasher by
+its configuration key::
+
+    // src/Controller/HomepageController.php
+    namespace App\Controller;
+
+    use Symfony\Component\DependencyInjection\Attribute\Target;
+    use Symfony\Component\PasswordHasher\PasswordHasherInterface;
+
+    class HomepageController extends AbstractController
+    {
+        public function __construct(
+            #[Target('recovery_code')]
+            private readonly PasswordHasherInterface $passwordHasher,
+        ) {
+        }
+
+        #[Route('/')]
+        public function index(): Response
+        {
+            $plaintextToken = 'some-secret-token';
+
+            // Note: use hash(), not hashPassword(), as we are not using a UserInterface object
+            $hashedToken = $this->passwordHasher->hash($plaintextToken);
+        }
+    }
+
+When injecting a specific hasher by its name, you should type-hint the generic
+:class:`Symfony\\Component\\PasswordHasher\\PasswordHasherInterface`.
 
 .. _security-password-migration:
 
@@ -500,13 +517,14 @@ the user provider::
     namespace App\Security;
 
     // ...
+    use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
     use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
     class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
     {
         // ...
 
-        public function upgradePassword(UserInterface $user, string $newHashedPassword): void
+        public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
         {
             // set the new hashed password on the User object
             $user->setPassword($newHashedPassword);

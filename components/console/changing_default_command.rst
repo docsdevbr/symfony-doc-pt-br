@@ -9,20 +9,14 @@ name to the ``setDefaultCommand()`` method::
 
     use Symfony\Component\Console\Attribute\AsCommand;
     use Symfony\Component\Console\Command\Command;
-    use Symfony\Component\Console\Input\InputInterface;
-    use Symfony\Component\Console\Output\OutputInterface;
+    use Symfony\Component\Console\Style\SymfonyStyle;
 
-    #[AsCommand(name: 'hello:world')]
+    #[AsCommand(name: 'hello:world', description: 'Outputs "Hello World"')]
     class HelloWorldCommand extends Command
     {
-        protected function configure(): void
+        public function __invoke(SymfonyStyle $io): int
         {
-            $this->setDescription('Outputs "Hello World"');
-        }
-
-        protected function execute(InputInterface $input, OutputInterface $output): int
-        {
-            $output->writeln('Hello World');
+            $io->writeln('Hello World');
 
             return Command::SUCCESS;
         }

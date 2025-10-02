@@ -305,10 +305,14 @@ correctly. To validate the types of the options, call
 
             // specify multiple allowed types
             $resolver->setAllowedTypes('port', ['null', 'int']);
+            // if you prefer, you can also use the following equivalent syntax
+            $resolver->setAllowedTypes('port', 'int|null');
 
             // check all items in an array recursively for a type
             $resolver->setAllowedTypes('dates', 'DateTime[]');
             $resolver->setAllowedTypes('ports', 'int[]');
+            // the following syntax means "an array of integers or an array of strings"
+            $resolver->setAllowedTypes('endpoints', '(int|string)[]');
         }
     }
 
@@ -386,7 +390,7 @@ returns ``true`` for acceptable values and ``false`` for invalid values::
 
         // ...
         $resolver->setAllowedValues('transport', Validation::createIsValidCallable(
-            new Length(['min' => 10 ])
+            new Length(min: 10)
         ));
 
 In sub-classes, you can use :method:`Symfony\\Component\\OptionsResolver\\OptionsResolver::addAllowedValues`
@@ -654,7 +658,7 @@ default value::
 
         public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefault('spool', function (OptionsResolver $spoolResolver): void {
+            $resolver->setOptions('spool', function (OptionsResolver $spoolResolver): void {
                 $spoolResolver->setDefaults([
                     'type' => 'file',
                     'path' => '/path/to/spool',
@@ -690,7 +694,7 @@ to the closure to access to them::
         public function configureOptions(OptionsResolver $resolver): void
         {
             $resolver->setDefault('sandbox', false);
-            $resolver->setDefault('spool', function (OptionsResolver $spoolResolver, Options $parent): void {
+            $resolver->setOptions('spool', function (OptionsResolver $spoolResolver, Options $parent): void {
                 $spoolResolver->setDefaults([
                     'type' => $parent['sandbox'] ? 'memory' : 'file',
                     // ...
@@ -713,13 +717,13 @@ In same way, parent options can access to the nested options as normal arrays::
 
         public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefault('spool', function (OptionsResolver $spoolResolver): void {
+            $resolver->setOptions('spool', function (OptionsResolver $spoolResolver): void {
                 $spoolResolver->setDefaults([
                     'type' => 'file',
                     // ...
                 ]);
             });
-            $resolver->setDefault('profiling', function (Options $options): void {
+            $resolver->setOptions('profiling', function (Options $options): void {
                 return 'file' === $options['spool']['type'];
             });
         }
@@ -740,7 +744,7 @@ with ``host``, ``database``, ``user`` and ``password`` each.
 
 The best way to implement this is to define the ``connections`` option as prototype::
 
-    $resolver->setDefault('connections', function (OptionsResolver $connResolver): void {
+    $resolver->setOptions('connections', function (OptionsResolver $connResolver): void {
         $connResolver
             ->setPrototype(true)
             ->setRequired(['host', 'database'])
@@ -918,7 +922,7 @@ can change your code to do the configuration only once per class::
         public function __construct(array $options = [])
         {
             // What type of Mailer is this, a Mailer, a GoogleMailer, ... ?
-            $class = get_class($this);
+            $class = $this::class;
 
             // Was configureOptions() executed before for this class?
             if (!isset(self::$resolversByClass[$class])) {

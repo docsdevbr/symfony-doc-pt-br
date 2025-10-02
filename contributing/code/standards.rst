@@ -211,7 +211,7 @@ Naming Conventions
 * Use `camelCase`_ for PHP variables, function and method names, arguments
   (e.g. ``$acceptableContentTypes``, ``hasSession()``);
 
-Use `snake_case`_ for configuration parameters, route names and Twig template
+* Use `snake_case`_ for configuration parameters, route names and Twig template
   variables (e.g. ``framework.csrf_protection``, ``http_status_code``);
 
 * Use SCREAMING_SNAKE_CASE for constants (e.g. ``InputArgument::IS_ARRAY``);
@@ -300,7 +300,7 @@ Documentation
 * When adding a new class or when making significant changes to an existing class,
   an ``@author`` tag with personal contact information may be added, or expanded.
   Please note it is possible to have the personal contact information updated or
-  removed per request to the :doc:`core team </contributing/code/core_team>`.
+  removed per request to the :doc:`core team </contributing/core_team>`.
 
 License
 ~~~~~~~

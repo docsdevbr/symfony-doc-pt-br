@@ -35,9 +35,9 @@ you can create your own named set or requirements to be reused consistently ever
                 return [
                     new Assert\NotBlank(),
                     new Assert\Type('string'),
-                    new Assert\Length(['min' => 12]),
+                    new Assert\Length(min: 12),
                     new Assert\NotCompromisedPassword(),
-                    new Assert\PasswordStrength(['minScore' => 4]),
+                    new Assert\PasswordStrength(minScore: 4),
                 ];
             }
         }
@@ -140,11 +140,6 @@ Validation groups and payload can be passed via constructor:
                 ));
             }
         }
-
-.. versionadded:: 7.2
-
-    Support for passing validation groups and the payload to the constructor
-    of the ``Compound`` class was introduced in Symfony 7.2.
 
 Options
 -------

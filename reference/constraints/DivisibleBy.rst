@@ -92,9 +92,9 @@ The following constraints ensure that:
             {
                 $metadata->addPropertyConstraint('weight', new Assert\DivisibleBy(0.25));
 
-                $metadata->addPropertyConstraint('quantity', new Assert\DivisibleBy([
-                    'value' => 5,
-                ]));
+                $metadata->addPropertyConstraint('quantity', new Assert\DivisibleBy(
+                    value: 5,
+                ));
             }
         }
 

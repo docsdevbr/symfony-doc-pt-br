@@ -189,7 +189,7 @@ fingertips thanks to a nice and simple API::
     // retrieves a COOKIE value
     $request->cookies->get('PHPSESSID');
 
-    // retrieves a HTTP request header, with normalized, lowercase keys
+    // retrieves an HTTP request header, with normalized, lowercase keys
     $request->headers->get('host');
     $request->headers->get('content-type');
 

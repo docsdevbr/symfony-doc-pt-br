@@ -149,7 +149,7 @@ stores an ``Address`` instance in the ``$address`` property::
             {
                 $metadata->addPropertyConstraint('street', new Assert\NotBlank());
                 $metadata->addPropertyConstraint('zipCode', new Assert\NotBlank());
-                $metadata->addPropertyConstraint('zipCode', new Assert\Length(['max' => 5]));
+                $metadata->addPropertyConstraint('zipCode', new Assert\Length(max: 5));
             }
         }
 
@@ -166,7 +166,7 @@ stores an ``Address`` instance in the ``$address`` property::
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
                 $metadata->addPropertyConstraint('firstName', new Assert\NotBlank());
-                $metadata->addPropertyConstraint('firstName', new Assert\Length(['min' => 4]));
+                $metadata->addPropertyConstraint('firstName', new Assert\Length(min: 4));
                 $metadata->addPropertyConstraint('lastName', new Assert\NotBlank());
             }
         }

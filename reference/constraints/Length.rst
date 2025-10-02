@@ -85,12 +85,12 @@ and ``50``, you might add the following:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('firstName', new Assert\Length([
-                    'min' => 2,
-                    'max' => 50,
-                    'minMessage' => 'Your first name must be at least {{ limit }} characters long',
-                    'maxMessage' => 'Your first name cannot be longer than {{ limit }} characters',
-                ]));
+                $metadata->addPropertyConstraint('firstName', new Assert\Length(
+                    min: 2,
+                    max: 50,
+                    minMessage: 'Your first name must be at least {{ limit }} characters long',
+                    maxMessage: 'Your first name cannot be longer than {{ limit }} characters',
+                ));
             }
         }
 
@@ -201,6 +201,8 @@ You can use the following parameters in this message:
 Parameter               Description
 ======================  ============================================================
 ``{{ limit }}``         The expected maximum length
+``{{ min }}``           The expected minimum length
+``{{ max }}``           The expected maximum length
 ``{{ value }}``         The current (invalid) value
 ``{{ value_length }}``  The current value's length
 ======================  ============================================================
@@ -233,6 +235,8 @@ You can use the following parameters in this message:
 Parameter               Description
 ======================  ============================================================
 ``{{ limit }}``         The expected minimum length
+``{{ min }}``           The expected minimum length
+``{{ max }}``           The expected maximum length
 ``{{ value }}``         The current (invalid) value
 ``{{ value_length }}``  The current value's length
 ======================  ============================================================

@@ -83,9 +83,9 @@ property is not empty, add the following:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('name', new NotBlank([
-                    'message' => 'author.name.not_blank',
-                ]));
+                $metadata->addPropertyConstraint('name', new NotBlank(
+                    message: 'author.name.not_blank',
+                ));
             }
         }
 
@@ -136,13 +136,13 @@ You can also use :class:`Symfony\\Component\\Translation\\TranslatableMessage` t
     use Symfony\Component\Translation\TranslatableMessage;
     use Symfony\Component\Validator\Constraints as Assert;
     use Symfony\Component\Validator\Context\ExecutionContextInterface;
-    
+
     #[Assert\Callback]
     public function validate(ExecutionContextInterface $context, mixed $payload): void
     {
         // somehow you have an array of "fake names"
         $fakeNames = [/* ... */];
-    
+
         // check if the name is actually a fake name
         if (in_array($this->getFirstName(), $fakeNames, true)) {
             $context->buildViolation(new TranslatableMessage('author.name.fake', [], 'validators'))

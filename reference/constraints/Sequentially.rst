@@ -110,7 +110,7 @@ You can validate each of these constraints sequentially to solve these issues:
                 $metadata->addPropertyConstraint('address', new Assert\Sequentially([
                     new Assert\NotNull(),
                     new Assert\Type('string'),
-                    new Assert\Length(['min' => 10]),
+                    new Assert\Length(min: 10),
                     new Assert\Regex(self::ADDRESS_REGEX),
                     new AcmeAssert\Geolocalizable(),
                 ]));
@@ -123,7 +123,7 @@ Options
 ``constraints``
 ~~~~~~~~~~~~~~~
 
-**type**: ``array`` [:ref:`default option <validation-default-option>`]
+**type**: ``array``
 
 This required option is the array of validation constraints that you want
 to apply sequentially.

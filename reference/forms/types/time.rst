@@ -99,6 +99,7 @@ on your underlying object. Valid values are:
 * ``string`` (e.g. ``12:17:26``)
 * ``datetime`` (a ``DateTime`` object)
 * ``datetime_immutable`` (a ``DateTimeImmutable`` object)
+* ``date_point`` (a :ref:`DatePoint <clock_date-point>` object)
 * ``array`` (e.g. ``['hour' => 12, 'minute' => 17, 'second' => 26]``)
 * ``timestamp`` (e.g. ``1307232000``)
 

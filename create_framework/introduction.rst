@@ -101,7 +101,7 @@ start with the simplest web application we can think of in PHP::
 
     printf('Hello %s', $name);
 
-You can use the :doc:`Symfony Local Web Server </setup/symfony_server>` to test
+You can use the :ref:`Symfony local web server <symfony-cli-server>` to test
 this great application in a browser
 (``http://localhost:8000/index.php?name=Fabien``):
 

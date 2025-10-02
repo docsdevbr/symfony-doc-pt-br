@@ -1,10 +1,6 @@
 Working with Emojis
 ===================
 
-.. versionadded:: 7.1
-
-    The emoji component was introduced in Symfony 7.1.
-
 Symfony provides several utilities to work with emoji characters and sequences
 from the `Unicode CLDR dataset`_. They are available via the Emoji component,
 which you must first install in your application:

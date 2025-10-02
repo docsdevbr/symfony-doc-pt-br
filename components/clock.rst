@@ -240,10 +240,6 @@ timestamps::
     // (for high precision sub-second datetimes) are also supported
     $dateOfFirstMoonLanding = DatePoint::createFromTimestamp(-14182940);
 
-.. versionadded:: 7.1
-
-    The ``createFromTimestamp()`` method was introduced in Symfony 7.1.
-
 .. note::
 
     In addition ``DatePoint`` offers stricter return types and provides consistent
@@ -261,11 +257,47 @@ timestamps::
     This feature polyfills PHP 8.4's behavior on the topic, as microseconds manipulation
     is not available in previous versions of PHP.
 
-.. versionadded:: 7.1
+Storing DatePoints in the Database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    The :method:`Symfony\\Component\\Clock\\DatePoint::setMicrosecond` and
-    :method:`Symfony\\Component\\Clock\\DatePoint::getMicrosecond` methods were
-    introduced in Symfony 7.1.
+If you :doc:`use Doctrine </doctrine>` to work with databases, consider using the
+new Doctrine types:
+
+=======================  ======================  =====
+DatePoint Doctrine type  Extends Doctrine type   Class
+=======================  ======================  =====
+``date_point``           ``datetime_immutable``  :class:`Symfony\\Bridge\\Doctrine\\Types\\DatePointType`
+``day_point``            ``date_immutable``      :class:`Symfony\\Bridge\\Doctrine\\Types\\DayPointType`
+``time_point``           ``time_immutable``      :class:`Symfony\\Bridge\\Doctrine\\Types\\TimePointType`
+=======================  ======================  =====
+
+They convert to/from ``DatePoint`` objects automatically::
+
+    // src/Entity/Product.php
+    namespace App\Entity;
+
+    use Doctrine\ORM\Mapping as ORM;
+    use Symfony\Component\Clock\DatePoint;
+
+    #[ORM\Entity]
+    class Product
+    {
+        // if you don't define the Doctrine type explicitly, Symfony will autodetect 'date_point':
+        #[ORM\Column]
+        private DatePoint $createdAt;
+
+        // if you prefer to define the Doctrine type explicitly:
+        #[ORM\Column(type: 'date_point')]
+        private DatePoint $updatedAt;
+
+        #[ORM\Column(type: 'day_point')]
+        public DatePoint $birthday;
+
+        #[ORM\Column(type: 'time_point')]
+        public DatePoint $openAt;
+
+        // ...
+    }
 
 .. _clock_writing-tests:
 

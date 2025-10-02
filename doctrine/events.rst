@@ -304,23 +304,6 @@ listener in the Symfony application by creating a new service for it and
 
 .. configuration-block::
 
-    .. code-block:: php-attributes
-
-        // src/EventListener/SearchIndexer.php
-        namespace App\EventListener;
-
-        use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
-        use Doctrine\ORM\Event\PostPersistEventArgs;
-
-        #[AsDoctrineListener('postPersist'/*, 500, 'default'*/)]
-        class SearchIndexer
-        {
-            public function postPersist(PostPersistEventArgs $event): void
-            {
-                // ...
-            }
-        }
-
     .. code-block:: yaml
 
         # config/services.yaml

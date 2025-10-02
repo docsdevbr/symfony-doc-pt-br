@@ -41,7 +41,7 @@ class::
 The controller is the ``number()`` method, which lives inside the
 controller class ``LuckyController``.
 
-This controller is pretty straightforward:
+This controller is quite simple:
 
 * *line 2*: Symfony takes advantage of PHP's namespace functionality to
   namespace the entire controller class.
@@ -363,6 +363,16 @@ attribute, arguments of your controller's action can be automatically fulfilled:
         // ...
     }
 
+The ``MapQueryParameter`` attribute supports the following argument types:
+
+* ``\BackedEnum``
+* ``array``
+* ``bool``
+* ``float``
+* ``int``
+* ``string``
+* Objects that extend :class:`Symfony\\Component\\Uid\\AbstractUid`
+
 ``#[MapQueryParameter]`` can take an optional argument called ``filter``. You can use the
 `Validate Filters`_ constants defined in PHP::
 
@@ -442,6 +452,22 @@ HTTP status to return if the validation fails::
     }
 
 The default status code returned if the validation fails is 404.
+
+If you want to map your object to a nested array in your query using a specific key,
+set the ``key`` option in the ``#[MapQueryString]`` attribute::
+
+    use App\Model\SearchDto;
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+
+    // ...
+
+    public function dashboard(
+        #[MapQueryString(key: 'search')] SearchDto $searchDto
+    ): Response
+    {
+        // ...
+    }
 
 If you need a valid DTO even when the request query string is empty, set a
 default value for your controller arguments::
@@ -584,10 +610,6 @@ using the ``type`` option of the attribute::
         // ...
     }
 
-.. versionadded:: 7.1
-
-    The ``type`` option of ``#[MapRequestPayload]`` was introduced in Symfony 7.1.
-
 .. _controller_map-uploaded-file:
 
 Mapping Uploaded Files
@@ -683,10 +705,6 @@ there are constraint violations:
         validationFailedStatusCode: Response::HTTP_REQUEST_ENTITY_TOO_LARGE
     )]
     UploadedFile $document
-
-.. versionadded:: 7.1
-
-    The ``#[MapUploadedFile]`` attribute was introduced in Symfony 7.1.
 
 Managing the Session
 --------------------

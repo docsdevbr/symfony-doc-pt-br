@@ -10,7 +10,7 @@ them later in JavaScript. For example:
 
     <div class="js-user-rating"
         data-is-authenticated="{{ app.user ? 'true' : 'false' }}"
-        data-user="{{ app.user|serialize(format = 'json') }}"
+        data-user="{{ app.user|serialize(format = 'json')|e('html') }}"
     >
         <!-- ... -->
     </div>

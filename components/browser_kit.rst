@@ -69,6 +69,12 @@ The value returned by the ``request()`` method is an instance of the
 :doc:`DomCrawler component </components/dom_crawler>`, which allows accessing
 and traversing HTML elements programmatically.
 
+.. note::
+
+    After making a request, subsequent requests will make the client to
+    reboot the kernel. This clears the security token, detaches Doctrine
+    entities, etc. Read more about :ref:`making multiple requests in the same test <testing-multiple-requests-in-one-test>`.
+
 The :method:`Symfony\\Component\\BrowserKit\\AbstractBrowser::jsonRequest` method,
 which defines the same arguments as the ``request()`` method, is a shortcut to
 convert the request parameters into a JSON string and set the needed HTTP headers::
@@ -143,7 +149,7 @@ field values, etc.) before submitting it::
     $crawler = $client->request('GET', 'https://github.com/login');
 
     // find the form with the 'Log in' button and submit it
-    // 'Log in' can be the text content, id, value or name of a <button> or <input type="submit">
+    // 'Log in' can be the text content, id or name of a <button> or <input type="submit">
     $client->submitForm('Log in');
 
     // the second optional argument lets you override the default form field values
@@ -328,6 +334,16 @@ history::
 
     // go forward to documentation page
     $crawler = $client->forward();
+
+    // check if the history position is on the first page
+    if (!$client->getHistory()->isFirstPage()) {
+        $crawler = $client->back();
+    }
+
+    // check if the history position is on the last page
+    if (!$client->getHistory()->isLastPage()) {
+        $crawler = $client->forward();
+    }
 
 You can delete the client's history with the ``restart()`` method. This will
 also delete all the cookies::

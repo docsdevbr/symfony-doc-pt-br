@@ -125,7 +125,7 @@ There are also some specialized constructors::
 
     // ByteString can create a random string of the given length
     $foo = ByteString::fromRandom(12);
-    // by default, random strings use A-Za-z0-9 characters; you can restrict
+    // by default, random strings use base58 characters; you can set
     // the characters to use with the second optional argument
     $foo = ByteString::fromRandom(6, 'AEIOU0123456789');
     $foo = ByteString::fromRandom(10, 'qwertyuiop');
@@ -234,17 +234,10 @@ Methods to Change Case
     u('Foo: Bar-baz.')->snake(); // 'foo_bar_baz'
     // changes all graphemes/code points to kebab-case
     u('Foo: Bar-baz.')->kebab(); // 'foo-bar-baz'
-    // other cases can be achieved by chaining methods. E.g. PascalCase:
-    u('Foo: Bar-baz.')->camel()->title(); // 'FooBarBaz'
-
-.. versionadded:: 7.1
-
-    The ``localeLower()``, ``localeUpper()`` and ``localeTitle()`` methods were
-    introduced in Symfony 7.1.
-
-.. versionadded:: 7.2
-
-    The ``kebab()`` method was introduced in Symfony 7.2.
+    // changes all graphemes/code points to PascalCase
+    u('Foo: Bar-baz.')->pascal(); // 'FooBarBaz'
+    // other cases can be achieved by chaining methods, e.g. :
+    u('Foo: Bar-baz.')->camel()->upper(); // 'FOOBARBAZ'
 
 The methods of all string classes are case-sensitive by default. You can perform
 case-insensitive operations with the ``ignoreCase()`` method::
@@ -410,10 +403,6 @@ Methods to Join, Split, Truncate and Reverse
     u('Lorem ipsum dolor sit amet')->truncate(8, cut: TruncateMode::WordBefore); // 'Lorem'
     // returns up to the last complete word that fits in the given length, surpassing it if needed
     u('Lorem ipsum dolor sit amet')->truncate(8, cut: TruncateMode::WordAfter);   // 'Lorem ipsum'
-
-.. versionadded:: 7.2
-
-    The ``TruncateMode`` parameter for truncate function was introduced in Symfony 7.2.
 
 ::
 
@@ -673,10 +662,6 @@ Symfony also provides inflectors for other languages::
     $inflector = new SpanishInflector();
     $result = $inflector->singularize('aviones'); // ['avión']
     $result = $inflector->pluralize('miércoles'); // ['miércoles']
-
-.. versionadded:: 7.2
-
-    The ``SpanishInflector`` class was introduced in Symfony 7.2.
 
 .. note::
 

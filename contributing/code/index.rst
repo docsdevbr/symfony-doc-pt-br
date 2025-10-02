@@ -9,7 +9,6 @@ Contributing Code
     reproducer
     pull_requests
     maintenance
-    core_team
     security
     tests
     bc

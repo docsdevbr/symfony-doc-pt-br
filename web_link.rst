@@ -146,7 +146,8 @@ The WebLink component provides the following Twig functions to send those hints:
 * ``prefetch()``: "identifies a resource that might be required by the next
   navigation, and that the user agent *should* fetch, such that the user agent
   can deliver a faster response once the resource is requested in the future".
-* ``prerender()``: "identifies a resource that might be required by the next
+* ``prerender()``: " **deprecated** and superseded by the `Speculation Rules API`_,
+  identifies a resource that might be required by the next
   navigation, and that the user agent *should* fetch and execute, such that the
   user agent can deliver a faster response once the resource is requested later".
 
@@ -194,6 +195,32 @@ You can also add links to the HTTP response directly from controllers and servic
         }
     }
 
+.. tip::
+
+    The possible values of link relations (``'preload'``, ``'preconnect'``, etc.)
+    are also defined as constants in the :class:`Symfony\\Component\\WebLink\\Link`
+    class (e.g. ``Link::REL_PRELOAD``, ``Link::REL_PRECONNECT``, etc.).
+
+Parsing Link Headers
+--------------------
+
+Some third-party APIs provide resources such as pagination URLs using the
+``Link`` HTTP header. The WebLink component provides the
+:class:`Symfony\\Component\\WebLink\\HttpHeaderParser` utility class to parse
+those headers and transform them into :class:`Symfony\\Component\\WebLink\\Link`
+instances::
+
+    use Symfony\Component\WebLink\HttpHeaderParser;
+
+    $parser = new HttpHeaderParser();
+    // get the value of the Link header from the Request
+    $linkHeader = '</foo.css>; rel="prerender",</bar.otf>; rel="dns-prefetch"; pr="0.7",</baz.js>; rel="preload"; as="script"';
+
+    $links = $parser->parse($linkHeader)->getLinks();
+    $links[0]->getRels();       // ['prerender']
+    $links[1]->getAttributes(); // ['pr' => '0.7']
+    $links[2]->getHref();       // '/baz.js'
+
 .. _`WebLink`: https://github.com/symfony/web-link
 .. _`HTTP/2 Server Push`: https://tools.ietf.org/html/rfc7540#section-8.2
 .. _`Resource Hints`: https://www.w3.org/TR/resource-hints/
@@ -206,3 +233,4 @@ You can also add links to the HTTP response directly from controllers and servic
 .. _`Akamai`: https://http2.akamai.com/
 .. _`link defined in the HTML specification`: https://html.spec.whatwg.org/dev/links.html#linkTypes
 .. _`PSR-13`: https://www.php-fig.org/psr/psr-13/
+.. _`Speculation Rules API`: https://developer.mozilla.org/docs/Web/API/Speculation_Rules_API

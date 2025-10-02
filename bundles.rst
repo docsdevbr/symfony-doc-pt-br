@@ -9,9 +9,13 @@ The Bundle System
     application code using bundles. This is :ref:`no longer recommended <best-practice-no-application-bundles>` and bundles
     should only be used to share code and features between multiple applications.
 
+.. screencast::
+
+    Do you prefer video tutorials? Check out the `Symfony Bundle Development screencast series`_.
+
 A bundle is similar to a plugin in other software, but even better. The core
 features of Symfony framework are implemented with bundles (FrameworkBundle,
-SecurityBundle, DebugBundle, etc.) They are also used to add new features in
+SecurityBundle, DebugBundle, etc.) Bundles are also used to add new features in
 your application via `third-party bundles`_.
 
 Bundles used in your applications must be enabled per
@@ -42,7 +46,7 @@ file::
 Creating a Bundle
 -----------------
 
-This section creates and enables a new bundle to show there are only a few steps required.
+This section creates and enables a new bundle to show that only a few steps are required.
 The new bundle is called AcmeBlogBundle, where the ``Acme`` portion is an example
 name that should be replaced by some "vendor" name that represents you or your
 organization (e.g. AbcBlogBundle for some company named ``Abc``).
@@ -169,3 +173,4 @@ Learn more
 .. _`third-party bundles`: https://github.com/search?q=topic%3Asymfony-bundle&type=Repositories
 .. _`Symfony 4.4 bundle documentation`: https://symfony.com/doc/4.4/bundles.html#bundle-directory-structure
 .. _`PSR-4`: https://www.php-fig.org/psr/psr-4/
+.. _`Symfony Bundle Development screencast series`: https://symfonycasts.com/screencast/bundle-development

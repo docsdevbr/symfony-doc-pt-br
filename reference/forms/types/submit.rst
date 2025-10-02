@@ -102,28 +102,8 @@ validation_groups
 **type**: ``array`` **default**: ``null``
 
 When your form contains multiple submit buttons, you can change the validation
-group based on the button which was used to submit the form. Imagine a registration
-form wizard with buttons to go to the previous or the next step::
-
-    use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-    // ...
-
-    $form = $this->createFormBuilder($user)
-        ->add('previousStep', SubmitType::class, [
-            'validation_groups' => false,
-        ])
-        ->add('nextStep', SubmitType::class, [
-            'validation_groups' => ['Registration'],
-        ])
-        ->getForm();
-
-The special ``false`` ensures that no validation is performed when the previous
-step button is clicked. When the second button is clicked, all constraints
-from the "Registration" are validated.
-
-.. seealso::
-
-    You can read more about this in :doc:`/form/data_based_validation`.
+group based on the clicked button. Read the article about
+:doc:`using validation groups in Symfony forms </form/validation_groups>`.
 
 Form Variables
 --------------

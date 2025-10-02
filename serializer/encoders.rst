@@ -64,13 +64,6 @@ are available to customize the behavior of the encoder:
     Sets the field enclosure (one character only).
 ``csv_end_of_line`` (default: ``\n``)
     Sets the character(s) used to mark the end of each line in the CSV file.
-``csv_escape_char`` (default: empty string)
-
-    .. deprecated:: 7.2
-
-        The ``csv_escape_char`` option was deprecated in Symfony 7.2.
-
-    Sets the escape character (at most one character).
 ``csv_key_separator`` (default: ``.``)
     Sets the separator for array's keys during its flattening
 ``csv_headers`` (default: ``[]``, inferred from input data's keys)
@@ -202,14 +195,18 @@ These are the options available on the :ref:`serializer context <serializer-cont
     If set to ``false``, will not wrap any value containing one of the
     following characters ( ``<``, ``>``, ``&``) in `a CDATA section`_ like
     following: ``<![CDATA[...]]>``.
-``cdata_wrapping_pattern`` (default: ````/[<>&]/````)
+``cdata_wrapping_pattern`` (default: ``/[<>&]/``)
     A regular expression pattern to determine if a value should be wrapped
     in a CDATA section.
-
-.. versionadded:: 7.1
-
-    The ``cdata_wrapping_pattern`` option was introduced in Symfony 7.1.
-
+``cdata_wrapping_name_pattern`` (default: ``false``)
+    A regular expression pattern that defines the names of fields whose values
+    should always be wrapped in a CDATA section, even if their contents don't
+    require it. Example: ``'/(firstname|lastname)/'``
+``ignore_empty_attributes`` (default: ``false``)
+    If set to true, ignores all attributes with empty values in the generated XML
+``preserve_numeric_keys`` (default: ``false``)
+    If set to true, it keeps numeric array indexes (e.g. ``<item key="0">``)
+    instead of collapsing them into ``<item>`` nodes.
 
 Example with a custom ``context``::
 
@@ -241,6 +238,45 @@ Example with a custom ``context``::
     //   <date>2019-10-24</date>
     // </track>
 
+Example with ``preserve_numeric_keys``::
+
+    use Symfony\Component\Serializer\Encoder\XmlEncoder;
+
+    $data = [
+        'person' => [
+            ['firstname' => 'Benjamin', 'lastname' => 'Alexandre'],
+            ['firstname' => 'Damien', 'lastname' => 'Clay'],
+        ],
+    ];
+
+    $xmlEncoder->encode($data, 'xml', ['preserve_numeric_keys' => false]);
+    // outputs:
+    //<response>
+    //  <person>
+    //    <firstname>Benjamin</firstname>
+    //    <lastname>Alexandre</lastname>
+    //  </person>
+    //  <person>
+    //    <firstname>Damien</firstname>
+    //    <lastname>Clay</lastname>
+    //  </person>
+    //</response>
+
+    $xmlEncoder->encode($data, 'xml', ['preserve_numeric_keys' => true]);
+    // outputs:
+    //<response>
+    //  <person>
+    //    <item key="0">
+    //        <firstname>Benjamin</firstname>
+    //        <lastname>Alexandre</lastname>
+    //    </item>
+    //      <item key="1">
+    //        <firstname>Damien</firstname>
+    //        <lastname>Clay</lastname>
+    //      </item>
+    //  </person>
+    //</response>
+
 The ``YamlEncoder``
 -------------------
 
@@ -266,7 +302,7 @@ Creating a Custom Encoder
 Imagine you want to serialize and deserialize `NEON`_. For that you'll have to
 create your own encoder::
 
-    // src/Serializer/YamlEncoder.php
+    // src/Serializer/NeonEncoder.php
     namespace App\Serializer;
 
     use Nette\Neon\Neon;

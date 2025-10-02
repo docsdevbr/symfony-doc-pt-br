@@ -277,8 +277,9 @@ Dispatch the Event
 
 The :method:`Symfony\\Component\\EventDispatcher\\EventDispatcher::dispatch`
 method notifies all listeners of the given event. It takes two arguments:
-the ``Event`` instance to pass to each listener of that event and the name
-of the event to dispatch::
+the ``Event`` instance to pass to each listener of that event and optionally the
+name of the event to dispatch. If it's not defined, the class of the ``Event``
+instance will be used::
 
     use Acme\Store\Event\OrderPlacedEvent;
     use Acme\Store\Order;

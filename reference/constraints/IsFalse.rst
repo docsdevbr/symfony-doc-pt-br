@@ -93,9 +93,9 @@ method returns **false**:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addGetterConstraint('stateInvalid', new Assert\IsFalse([
-                    'message' => "You've entered an invalid state.",
-                ]));
+                $metadata->addGetterConstraint('stateInvalid', new Assert\IsFalse(
+                    message: "You've entered an invalid state.",
+                ));
             }
 
             public function isStateInvalid(): bool

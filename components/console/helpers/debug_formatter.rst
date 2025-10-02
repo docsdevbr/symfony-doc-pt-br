@@ -10,15 +10,14 @@ this:
 .. image:: /_images/components/console/debug_formatter.png
     :alt: Console output, with the first line showing "RUN Running figlet", followed by lines showing the output of the command prefixed with "OUT" and "RES Finished the command" as last line in the output.
 
-Using the debug_formatter
+Using the Debug Formatter
 -------------------------
 
-The formatter is included in the default helper set and you can get it by
-calling :method:`Symfony\\Component\\Console\\Command\\Command::getHelper`::
+The debug formatter helper can be instantiated directly as shown::
 
-    $debugFormatter = $this->getHelper('debug_formatter');
+    $debugFormatter = new DebugFormatterHelper();
 
-The formatter accepts strings and returns a formatted string, which you then
+It accepts strings and returns a formatted string, which you then
 output to the console (or even log the information or do anything else).
 
 All methods of this helper have an identifier as the first argument. This is a

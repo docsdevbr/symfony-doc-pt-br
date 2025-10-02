@@ -84,6 +84,65 @@ generate and return the value::
     Use cache tags to delete more than one key at the time. Read more at
     :doc:`/components/cache/cache_invalidation`.
 
+Creating Sub-Namespaces
+-----------------------
+
+Sometimes you need to create context-dependent variations of data that should be
+cached. For example, the data used to render a dashboard page may be expensive
+to generate and unique per user, so you can't cache the same data for everyone.
+
+In such cases, Symfony allows you to create different cache contexts using
+namespaces. A cache namespace is an arbitrary string that identifies a set of
+related cache items. All cache adapters provided by the component implement the
+:class:`Symfony\\Contracts\\Cache\\NamespacedPoolInterface`, which provides the
+:method:`Symfony\\Contracts\\Cache\\NamespacedPoolInterface::withSubNamespace`
+method.
+
+This method allows you to namespace cached items by transparently prefixing their keys::
+
+    $userCache = $cache->withSubNamespace(sprintf('user-%d', $user->getId()));
+
+    $userCache->get('dashboard_data', function (ItemInterface $item): string {
+        $item->expiresAfter(3600);
+
+        return '...';
+    });
+
+In this example, the cache item uses the ``dashboard_data`` key, but it will be
+stored internally under a namespace based on the current user ID. This is handled
+automatically, so you **don't** need to manually prefix keys like ``user-27.dashboard_data``.
+
+There are no guidelines or restrictions on how to define cache namespaces.
+You can make them as granular or as generic as your application requires::
+
+    $localeCache = $cache->withSubNamespace($request->getLocale());
+
+    $flagCache = $cache->withSubNamespace(
+        $featureToggle->isEnabled('new_checkout') ? 'checkout-v2' : 'checkout-v1'
+    );
+
+    $channel = $request->attributes->get('_route')?->startsWith('api_') ? 'api' : 'web';
+    $channelCache = $cache->withSubNamespace($channel);
+
+.. tip::
+
+    You can combine cache namespaces with :ref:`cache tags <cache-using-cache-tags>`
+    for more advanced needs.
+
+There is no built-in way to invalidate caches by namespace. Instead, the recommended
+approach is to change the namespace itself. For this reason, it's common to include
+static or dynamic versioning data in the cache namespace::
+
+    // for simple applications, an incrementing static version number may be enough
+    $userCache = $cache->withSubNamespace(sprintf('v1-user-%d', $user->getId()));
+
+    // other applications may use dynamic versioning based on the date (e.g. monthly)
+    $userCache = $cache->withSubNamespace(sprintf('%s-user-%d', date('Ym'), $user->getId()));
+
+    // or even invalidate the cache when the user data changes
+    $checksum = hash('xxh128', $user->getUpdatedAt()->format(DATE_ATOM));
+    $userCache = $cache->withSubNamespace(sprintf('user-%d-%s', $user->getId(), $checksum));
+
 .. _cache_stampede-prevention:
 
 Stampede Prevention
@@ -222,12 +281,6 @@ function from the `Igbinary extension`_::
     $cache = new RedisAdapter(new \Redis(), 'namespace', 0, $marshaller);
 
 There are other *marshallers* that can encrypt or compress the data before storing it.
-
-.. versionadded:: 7.2
-
-    In Symfony versions prior to 7.2, the ``igbinary_serialize()`` function was
-    used by default when the Igbinary extension was installed. Starting from
-    Symfony 7.2, you have to enable Igbinary support explicitly.
 
 Advanced Usage
 --------------

@@ -95,9 +95,9 @@ between all of the rows in your user table:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addConstraint(new UniqueEntity([
-                    'fields' => 'email',
-                ]));
+                $metadata->addConstraint(new UniqueEntity(
+                    fields: 'email',
+                ));
 
                 $metadata->addPropertyConstraint('email', new Assert\Email());
             }
@@ -260,7 +260,7 @@ Now, the message would be bound to the ``port`` field with this configuration.
 ``fields``
 ~~~~~~~~~~
 
-**type**: ``array`` | ``string`` [:ref:`default option <validation-default-option>`]
+**type**: ``array`` | ``string``
 
 This required option is the field (or list of fields) on which this entity
 should be unique. For example, if you specified both the ``email`` and ``name``
@@ -277,7 +277,7 @@ each with a single field.
 ``ignoreNull``
 ~~~~~~~~~~~~~~
 
-**type**: ``boolean`` | ``string`` | ``array`` **default**: ``true``
+**type**: ``boolean``, ``string`` or ``array`` **default**: ``true``
 
 If this option is set to ``true``, then the constraint will allow multiple
 entities to have a ``null`` value for a field without failing validation.
@@ -346,10 +346,10 @@ this option to specify one or more fields to only ignore ``null`` values on them
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addConstraint(new UniqueEntity([
-                    'fields' => ['email', 'phoneNumber'],
-                    'ignoreNull' => 'phoneNumber',
-                ]));
+                $metadata->addConstraint(new UniqueEntity(
+                    fields: ['email', 'phoneNumber'],
+                    ignoreNull: 'phoneNumber',
+                ));
 
                 // ...
             }
@@ -396,5 +396,11 @@ blank, ``findBy()`` will be used. The method receives as its argument a
 ``fieldName => value`` associative array (where ``fieldName`` is each of the
 fields configured in the ``fields`` option). The method should return a
 :phpfunction:`countable PHP variable <is_countable>`.
+
+.. tip::
+
+    For ``binary`` and ``blob`` fields, instead of comparing large files directly,
+    consider storing and comparing a hash (e.g. ``hash('xxh128', $contents)``)
+    of the contents in your custom ``repositoryMethod``.
 
 .. _`race conditions`: https://en.wikipedia.org/wiki/Race_condition

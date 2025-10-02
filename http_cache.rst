@@ -19,7 +19,7 @@ The Symfony cache system is different because it relies on the simplicity
 and power of the HTTP cache as defined in `RFC 7234 - Caching`_. Instead of
 reinventing a caching methodology, Symfony embraces the standard that defines
 basic communication on the Web. Once you understand the fundamental HTTP
-validation and expiration caching models, you'll be ready to master the Symfony
+validation and expiration caching models, you'll be ready to understand the Symfony
 cache system.
 
 Since caching with HTTP isn't unique to Symfony, many articles already exist

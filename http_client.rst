@@ -157,11 +157,6 @@ brings most of the available options with type-hinted getters and setters::
             ->toArray()
     );
 
-.. versionadded:: 7.1
-
-    The :method:`Symfony\\Component\\HttpClient\\HttpOptions::setHeader`
-    method was introduced in Symfony 7.1.
-
 Some options are described in this guide:
 
 * `Authentication`_
@@ -175,8 +170,9 @@ Some options are described in this guide:
 Check out the full :ref:`http_client config reference <reference-http-client>`
 to learn about all the options.
 
-The HTTP client also has one configuration option called
-``max_host_connections``, this option can not be overridden by a request:
+The HTTP client also has a configuration option called
+:ref:`max_host_connections <reference-http-client-max-host-connections>`.
+This option cannot be overridden per request:
 
 .. configuration-block::
 
@@ -341,6 +337,12 @@ autoconfigure the HTTP client based on the requested URL:
 
 You can define several scopes, so that each set of options is added only if a
 requested URL matches one of the regular expressions set by the ``scope`` option.
+
+.. note::
+
+    The options passed to the ``request()`` method are merged with the default
+    options defined in the scoped client. The options passed to ``request()``
+    take precedence and override or extend the default ones.
 
 If you use scoped clients in the Symfony framework, you must use any of the
 methods defined by Symfony to :ref:`choose a specific service <services-wire-specific-service>`.
@@ -666,6 +668,15 @@ of the opened file, but you can configure both with the PHP streaming configurat
         $formData->getParts(); // Returns two instances of TextPart both
                                // with the name "array_field"
 
+The ``Content-Type`` of each form's part is detected automatically. However,
+you can override it by passing a ``DataPart``::
+
+    use Symfony\Component\Mime\Part\DataPart;
+
+    $formData = new FormDataPart([
+        ['json_data' => new DataPart(json_encode($json), null, 'application/json')]
+    ]);
+
 By default, HttpClient streams the body contents when uploading them. This might
 not work with all servers, resulting in HTTP status code 411 ("Length Required")
 because there is no ``Content-Length`` header. The solution is to turn the body
@@ -891,7 +902,7 @@ in your requests::
         'extra' => ['trace_content' => false],
     ]);
 
-This setting won’t affect other clients.
+This setting won't affect other clients.
 
 Using URI Templates
 ~~~~~~~~~~~~~~~~~~~
@@ -989,9 +1000,13 @@ Enabling cURL Support
 ~~~~~~~~~~~~~~~~~~~~~
 
 This component can make HTTP requests using native PHP streams and the
-``amphp/http-client`` and cURL libraries. Although they are interchangeable and
-provide the same features, including concurrent requests, HTTP/2 is only supported
-when using cURL or ``amphp/http-client``.
+``amphp/http-client`` (version 5.3.2 or higher) and cURL libraries. Although they
+are interchangeable and provide the same features, including concurrent requests,
+HTTP/2 is only supported when using cURL or ``amphp/http-client``.
+
+.. versionadded:: 8.0
+
+    Symfony started requiring ``amphp/http-client`` version 5.3.2 or higher in Symfony 8.0.
 
 .. note::
 
@@ -1302,65 +1317,75 @@ remaining to do.
 Concurrent Requests
 -------------------
 
-Thanks to responses being lazy, requests are always managed concurrently.
-On a fast enough network, the following code makes 379 requests in less than
-half a second when cURL is used::
+Symfony's HTTP client makes asynchronous HTTP requests by default. This means
+you don't need to configure anything special to send multiple requests in parallel
+and process them efficiently.
 
+Here's a practical example that fetches metadata about several Symfony
+components from the Packagist API in parallel::
+
+    $packages = ['console', 'http-kernel', '...', 'routing', 'yaml'];
     $responses = [];
-    for ($i = 0; $i < 379; ++$i) {
-        $uri = "https://http2.akamai.com/demo/tile-$i.png";
-        $responses[] = $client->request('GET', $uri);
+    foreach ($packages as $package) {
+        $uri = sprintf('https://repo.packagist.org/p2/symfony/%s.json', $package);
+        // send all requests concurrently (they won't block until response content is read)
+        $responses[$package] = $client->request('GET', $uri);
     }
 
-    foreach ($responses as $response) {
-        $content = $response->getContent();
-        // ...
+    $results = [];
+    // iterate through the responses and read their content
+    foreach ($responses as $package => $response) {
+        // process response data somehow ...
+        $results[$package] = $response->toArray();
     }
 
-As you can read in the first "for" loop, requests are issued but are not consumed
-yet. That's the trick when concurrency is desired: requests should be sent
-first and be read later on. This will allow the client to monitor all pending
-requests while your code waits for a specific one, as done in each iteration of
-the above "foreach" loop.
+As you can see, the requests are sent in the first loop, but their responses
+aren't consumed until the second one. This is the key to achieving parallel and
+concurrent execution: dispatch all requests first, and read them later.
+This allows the client to handle all pending responses efficiently while your
+code waits only when necessary.
 
 .. note::
 
-    The maximum number of concurrent requests that you can perform depends on
-    the resources of your machine (e.g. your operating system may limit the
-    number of simultaneous reads of the file that stores the certificates
-    file). Make your requests in batches to avoid these issues.
+    The maximum number of concurrent requests depends on your system's resources
+    (e.g. the operating system might limit the number of simultaneous connections
+    or access to certificate files). To avoid hitting these limits, consider
+    processing requests in batches.
+
+    There is, however, a maximum amount of concurrent connections that can be open
+    per host (``6`` by default). See :ref:`max_host_connections <reference-http-client-max-host-connections>`.
 
 Multiplexing Responses
 ~~~~~~~~~~~~~~~~~~~~~~
 
-If you look again at the snippet above, responses are read in requests' order.
-But maybe the 2nd response came back before the 1st? Fully asynchronous operations
-require being able to deal with the responses in whatever order they come back.
+In the previous example, responses are read in the same order as the requests
+were sent. However, it's possible that, for instance, the second response arrives
+before the first. To handle such cases efficiently, you need fully asynchronous
+processing, which allows responses to be handled in whatever order they arrive.
 
-In order to do so, the
-:method:`Symfony\\Contracts\\HttpClient\\HttpClientInterface::stream`
-accepts a list of responses to monitor. As mentioned
+To achieve this, the
+:method:`Symfony\\Contracts\\HttpClient\\HttpClientInterface::stream` method
+can be used to monitor a list of responses. As mentioned
 :ref:`previously <http-client-streaming-responses>`, this method yields response
-chunks as they arrive from the network. By replacing the "foreach" in the
-snippet with this one, the code becomes fully async::
+chunks as soon as they arrive over the network. Replacing the standard ``foreach``
+loop with the following version enables true asynchronous behavior::
 
     foreach ($client->stream($responses) as $response => $chunk) {
         if ($chunk->isFirst()) {
-            // headers of $response just arrived
-            // $response->getHeaders() is now a non-blocking call
+            // the $response headers just arrived
+            // $response->getHeaders() is now non-blocking
         } elseif ($chunk->isLast()) {
-            // the full content of $response just completed
-            // $response->getContent() is now a non-blocking call
+            // the full $response body has been received
+            // $response->getContent() is now non-blocking
         } else {
-            // $chunk->getContent() will return a piece
-            // of the response body that just arrived
+            // $chunk->getContent() returns a piece of the body that just arrived
         }
     }
 
 .. tip::
 
-    Use the ``user_data`` option combined with ``$response->getInfo('user_data')``
-    to track the identity of the responses in your foreach loops.
+    Use the ``user_data`` option along with ``$response->getInfo('user_data')``
+    to identify each response during streaming.
 
 Dealing with Network Timeouts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1586,11 +1611,6 @@ installed in your application::
 
         $client = HttpClient::createForBaseUri('https://example.com');
         $throttlingClient = new ThrottlingHttpClient($client, $limiter);
-
-.. versionadded:: 7.1
-
-    The :class:`Symfony\\Component\\HttpClient\\ThrottlingHttpClient` was
-    introduced in Symfony 7.1.
 
 Consuming Server-Sent Events
 ----------------------------
@@ -2040,11 +2060,6 @@ snapshots in files::
 
     $response = MockResponse::fromFile('tests/fixtures/response.xml');
 
-.. versionadded:: 7.1
-
-    The :method:`Symfony\\Component\\HttpClient\\Response\\MockResponse::fromFile`
-    method was introduced in Symfony 7.1.
-
 Another way of using :class:`Symfony\\Component\\HttpClient\\MockHttpClient` is to
 pass a callback that generates the responses dynamically when it's called::
 
@@ -2226,11 +2241,6 @@ directly from a file::
     use Symfony\Component\HttpClient\Response\JsonMockResponse;
 
     $response = JsonMockResponse::fromFile('tests/fixtures/response.json');
-
-.. versionadded:: 7.1
-
-    The :method:`Symfony\\Component\\HttpClient\\Response\\JsonMockResponse::fromFile`
-    method was introduced in Symfony 7.1.
 
 Testing Request Data
 ~~~~~~~~~~~~~~~~~~~~

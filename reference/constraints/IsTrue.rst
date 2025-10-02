@@ -97,9 +97,9 @@ Then you can validate this method with ``IsTrue`` as follows:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addGetterConstraint('tokenValid', new IsTrue([
-                    'message' => 'The token is invalid.',
-                ]));
+                $metadata->addGetterConstraint('tokenValid', new IsTrue(
+                    message: 'The token is invalid.',
+                ));
             }
 
             public function isTokenValid(): bool

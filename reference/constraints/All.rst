@@ -79,12 +79,12 @@ entry in that array:
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('favoriteColors', new Assert\All([
-                    'constraints' => [
+                $metadata->addPropertyConstraint('favoriteColors', new Assert\All(
+                    constraints: [
                         new Assert\NotBlank(),
-                        new Assert\Length(['min' => 5]),
+                        new Assert\Length(min: 5),
                     ],
-                ]));
+                ));
             }
         }
 
@@ -97,7 +97,7 @@ Options
 ``constraints``
 ~~~~~~~~~~~~~~~
 
-**type**: ``array`` [:ref:`default option <validation-default-option>`]
+**type**: ``array``
 
 This required option is the array of validation constraints that you want
 to apply to each element of the underlying array.

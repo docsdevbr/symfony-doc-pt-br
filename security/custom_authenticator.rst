@@ -1,18 +1,28 @@
 How to Write a Custom Authenticator
 ===================================
 
-Symfony comes with :ref:`many authenticators <security-authenticators>` and
-third party bundles also implement more complex cases like JWT and oAuth
-2.0. However, sometimes you need to implement a custom authentication
-mechanism that doesn't exist yet or you need to customize one. In such
-cases, you must create and use your own authenticator.
+Symfony comes with :ref:`many authenticators <security-authenticators>`, and
+third-party bundles also implement more complex cases like JWT and OAuth 2.0.
+However, sometimes you need to implement a custom authentication mechanism
+that doesn't exist yet, or you need to customize an existing one.
 
-Authenticators should implement the
-:class:`Symfony\\Component\\Security\\Http\\Authenticator\\AuthenticatorInterface`.
-You can also extend
-:class:`Symfony\\Component\\Security\\Http\\Authenticator\\AbstractAuthenticator`,
-which has a default implementation for the ``createToken()``
-method that fits most use-cases::
+To save time, you can install `Symfony Maker`_ and let Symfony generate a new
+authenticator by running the following command:
+
+.. code-block:: terminal
+
+    $ php bin/console make:security:custom
+
+      What is the class name of the authenticator (e.g. CustomAuthenticator):
+      > ApiKeyAuthenticator
+
+      updated: config/packages/security.yaml
+      created: src/Security/ApiKeyAuthenticator.php
+
+      Success!
+
+Open the ``src/Security/ApiKeyAuthenticator.php`` file created by this command,
+and you'll find something like the following::
 
     // src/Security/ApiKeyAuthenticator.php
     namespace App\Security;
@@ -77,13 +87,23 @@ method that fits most use-cases::
         }
     }
 
+Authenticators must implement the
+:class:`Symfony\\Component\\Security\\Http\\Authenticator\\AuthenticatorInterface`.
+You can also extend
+:class:`Symfony\\Component\\Security\\Http\\Authenticator\\AbstractAuthenticator`,
+which provides a default implementation of the ``createToken()`` method suitable
+for most use cases.
+
 .. tip::
 
-    If your custom authenticator is a login form, you can extend from the
+    If your custom authenticator is a login form, consider extending
     :class:`Symfony\\Component\\Security\\Http\\Authenticator\\AbstractLoginFormAuthenticator`
-    class instead to make your job easier.
+    to simplify your implementation.
 
-The authenticator can be enabled using the ``custom_authenticators`` setting:
+Custom authenticators must be explicitly enabled in the security configuration
+using the ``custom_authenticators`` setting of your firewall(s). If you used the
+``make:security:custom`` command, this configuration is already updated, but you
+should review it:
 
 .. configuration-block::
 
@@ -209,13 +229,20 @@ requires a user and some sort of "credentials" (e.g. a password).
 Use the
 :class:`Symfony\\Component\\Security\\Http\\Authenticator\\Passport\\Badge\\UserBadge`
 to attach the user to the passport. The ``UserBadge`` requires a user
-identifier (e.g. the username or email), which is used to load the user
-using :ref:`the user provider <security-user-providers>`::
+identifier (e.g. the username or email)::
 
     use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 
     // ...
-    $passport = new Passport(new UserBadge($email), $credentials);
+    $passport = new Passport(new UserBadge($userIdentifier), $credentials);
+
+User Identifier
+~~~~~~~~~~~~~~~
+
+The user identifier is a unique string that identifies the user. It is often
+something like their email address or username, but it can be any unique value
+associated with the user. It allows loading the user through the configured
+:ref:`user provider <security-user-providers>`.
 
 .. note::
 
@@ -254,6 +281,65 @@ using :ref:`the user provider <security-user-providers>`::
                 );
             }
         }
+
+Some applications normalize user identifiers before processing them. For example,
+lowercasing identifiers helps treat values like "john.doe", "John.Doe", or
+"JOHN.DOE" as equivalent in systems where identifiers are case-insensitive.
+
+If needed, you can pass a normalizer as the third argument to ``UserBadge``.
+This callable receives the ``$userIdentifier`` and must return a string.
+
+The example below uses a normalizer that converts usernames to a normalized,
+ASCII-only, lowercase format::
+
+    // src/Security/NormalizedUserBadge.php
+    namespace App\Security;
+
+    use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+    use function Symfony\Component\String\u;
+
+    final class NormalizedUserBadge extends UserBadge
+    {
+        public function __construct(string $identifier)
+        {
+            $callback = static fn (string $identifier): string => u($identifier)->normalize(UnicodeString::NFKC)->ascii()->lower()->toString();
+
+            parent::__construct($identifier, null, $callback);
+        }
+    }
+
+::
+
+    // src/Security/PasswordAuthenticator.php
+    namespace App\Security;
+
+    final class PasswordAuthenticator extends AbstractLoginFormAuthenticator
+    {
+        // simplified for brevity
+        public function authenticate(Request $request): Passport
+        {
+            $username = (string) $request->request->get('username', '');
+            $password = (string) $request->request->get('password', '');
+
+            $request->getSession()
+                ->set(SecurityRequestAttributes::LAST_USERNAME, $username);
+
+            return new Passport(
+                new NormalizedUserBadge($username),
+                new PasswordCredentials($password),
+                [
+                    // all other useful badges
+                ]
+            );
+        }
+    }
+
+User Credential
+~~~~~~~~~~~~~~~
+
+The user credential is used to authenticate the user; that is, to verify
+the validity of the provided information (such as a password, an API token,
+or custom credentials).
 
 The following credential classes are supported by default:
 
@@ -389,4 +475,5 @@ authenticator methods (e.g. ``createToken()``)::
         }
     }
 
+.. _`Symfony Maker`: https://symfony.com/doc/current/bundles/SymfonyMakerBundle/index.html
 .. _`session storage flooding`: https://symfony.com/blog/cve-2016-4423-large-username-storage-in-session

@@ -119,13 +119,13 @@ below a certain file size and a valid PDF, add the following:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('bioFile', new Assert\File([
-                    'maxSize' => '1024k',
-                    'extensions' => [
+                $metadata->addPropertyConstraint('bioFile', new Assert\File(
+                    maxSize: '1024k',
+                    extensions: [
                         'pdf',
                     ],
-                    'extensionsMessage' => 'Please upload a valid PDF',
-                ]));
+                    extensionsMessage: 'Please upload a valid PDF',
+                ));
             }
         }
 
@@ -237,6 +237,8 @@ Parameter         Description
 ``{{ suffix }}``  Suffix for the used file size unit (see above)
 ================  =============================================================
 
+.. _reference-constraints-file-mime-types:
+
 ``mimeTypes``
 ~~~~~~~~~~~~~
 
@@ -274,6 +276,27 @@ You can find a list of existing mime types on the `IANA website`_.
 If set, the validator will check that the filename of the underlying file
 doesn't exceed a certain length.
 
+``filenameCountUnit``
+~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``File::FILENAME_COUNT_BYTES``
+
+The character count unit to use for the filename max length check.
+By default :phpfunction:`strlen` is used, which counts the length of the string in bytes.
+
+Can be one of the following constants of the
+:class:`Symfony\\Component\\Validator\\Constraints\\File` class:
+
+* ``FILENAME_COUNT_BYTES``: Uses :phpfunction:`strlen` counting the length of the
+  string in bytes.
+* ``FILENAME_COUNT_CODEPOINTS``: Uses :phpfunction:`mb_strlen` counting the length
+  of the string in Unicode code points. Simple (multibyte) Unicode characters count
+  as 1 character, while for example ZWJ sequences of composed emojis count as
+  multiple characters.
+* ``FILENAME_COUNT_GRAPHEMES``: Uses :phpfunction:`grapheme_strlen` counting the
+  length of the string in graphemes, i.e. even emojis and ZWJ sequences of composed
+  emojis count as 1 character.
+
 ``filenameTooLongMessage``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -289,6 +312,31 @@ Parameter                       Description
 ==============================  ==============================================================
 ``{{ filename_max_length }}``   Maximum number of characters allowed
 ==============================  ==============================================================
+
+``filenameCharset``
+~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string``  **default**: ``null``
+
+The charset to be used when computing value's filename max length with the
+:phpfunction:`mb_check_encoding` and :phpfunction:`mb_strlen`
+PHP functions.
+
+``filenameCharsetMessage``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``This filename does not match the expected charset.``
+
+The message that will be shown if the value is not using the given `filenameCharsetMessage`_.
+
+You can use the following parameters in this message:
+
+=================  ============================================================
+Parameter          Description
+=================  ============================================================
+``{{ charset }}``  The expected charset
+``{{ name }}``     The current (invalid) value
+=================  ============================================================
 
 ``extensionsMessage``
 ~~~~~~~~~~~~~~~~~~~~~

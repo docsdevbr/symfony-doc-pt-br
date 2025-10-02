@@ -115,7 +115,7 @@ sessions for anonymous users, you must *completely* avoid accessing the session.
 .. note::
 
     Sessions will also be started when using features that rely on them internally,
-    such as the :ref:`CSRF protection in forms <csrf-protection-forms>`.
+    such as the :ref:`stateful CSRF protection in forms <csrf-protection-forms>`.
 
 .. _flash-messages:
 
@@ -425,11 +425,6 @@ Check out the Symfony config reference to learn more about the other available
     ``session.auto_start = 1`` This directive should be turned off in
     ``php.ini``, in the web server directives or in ``.htaccess``.
 
-.. deprecated:: 7.2
-
-    The ``sid_length`` and ``sid_bits_per_character`` options were deprecated
-    in Symfony 7.2 and will be ignored in Symfony 8.0.
-
 The session cookie is also available in :ref:`the Response object <component-http-foundation-response>`.
 This is useful to get that cookie in the CLI context or when using PHP runners
 like Roadrunner or Swoole.
@@ -511,11 +506,6 @@ Alternatively, you can configure these settings by passing ``gc_probability``,
 :class:`Symfony\\Component\\HttpFoundation\\Session\\Storage\\NativeSessionStorage`
 or to the :method:`Symfony\\Component\\HttpFoundation\\Session\\Storage\\NativeSessionStorage::setOptions`
 method.
-
-.. versionadded:: 7.2
-
-    Using the ``php.ini`` directive as the default value for ``gc_probability``
-    was introduced in Symfony 7.2.
 
 .. _session-database:
 
@@ -975,7 +965,7 @@ MariaDB/MySQL
         `sess_data` BLOB NOT NULL,
         `sess_lifetime` INTEGER UNSIGNED NOT NULL,
         `sess_time` INTEGER UNSIGNED NOT NULL,
-        INDEX `sessions_sess_lifetime_idx` (`sess_lifetime`)
+        INDEX `sess_lifetime_idx` (`sess_lifetime`)
     ) COLLATE utf8mb4_bin, ENGINE = InnoDB;
 
 .. note::
@@ -996,7 +986,7 @@ PostgreSQL
         sess_lifetime INTEGER NOT NULL,
         sess_time INTEGER NOT NULL
     );
-    CREATE INDEX sessions_sess_lifetime_idx ON sessions (sess_lifetime);
+    CREATE INDEX sess_lifetime_idx ON sessions (sess_lifetime);
 
 Microsoft SQL Server
 ++++++++++++++++++++
@@ -1008,7 +998,7 @@ Microsoft SQL Server
         sess_data NVARCHAR(MAX) NOT NULL,
         sess_lifetime INTEGER NOT NULL,
         sess_time INTEGER NOT NULL,
-        INDEX sessions_sess_lifetime_idx (sess_lifetime)
+        INDEX sess_lifetime_idx (sess_lifetime)
     );
 
 .. _session-database-mongodb:
@@ -1852,8 +1842,8 @@ the example below:
                 https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <framework:config>
-                <framework:session storage-id="session.storage.php_bridge"
-                    handler-id="session.storage.native_file"
+                <framework:session storage-id="session.storage.factory.php_bridge"
+                    handler-id="session.handler.native_file"
                 />
             </framework:config>
         </container>
@@ -1866,7 +1856,7 @@ the example below:
         return static function (FrameworkConfig $framework): void {
             $framework->session()
                 ->storageFactoryId('session.storage.factory.php_bridge')
-                ->handlerId('session.storage.native_file')
+                ->handlerId('session.handler.native_file')
             ;
         };
 

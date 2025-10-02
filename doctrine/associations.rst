@@ -447,7 +447,7 @@ by adding JOINs.
         $category = $product->getCategory();
 
         // prints "Proxies\AppEntityCategoryProxy"
-        dump(get_class($category));
+        dump($category::class);
         die();
 
     This proxy object extends the true ``Category`` object, and looks and
@@ -501,7 +501,7 @@ following method to the ``ProductRepository`` class::
         }
     }
 
-This will *still* return an array of ``Product`` objects. But now, when you call
+This will *still* return a ``Product`` object. But now, when you call
 ``$product->getCategory()`` and use that data, no second query is made.
 
 Now, you can use this method in your controller to query for a ``Product``

@@ -10,38 +10,40 @@ Traversing
 
 Like jQuery, the Crawler has methods to traverse the DOM of an HTML/XML
 document. For example, the following finds all ``input[type=submit]`` elements,
-selects the last one on the page, and then selects its immediate parent element::
+selects the last one on the page, and then selects its immediate ancestor element::
 
     $newCrawler = $crawler->filter('input[type=submit]')
         ->last()
-        ->parents()
+        ->ancestors()
         ->first()
     ;
 
 Many other methods are also available:
 
 ``filter('h1.title')``
-    Nodes that match the CSS selector.
+    Finds nodes that match the given CSS selector (which must be supported by
+    Symfony's :doc:`CSS Selector component </components/css_selector>`).
 ``filterXpath('h1')``
-    Nodes that match the XPath expression.
+    Finds nodes matching the given `XPath expression`_.
 ``eq(1)``
-    Node for the specified index.
+    Returns the node at the given index (``0`` is the first node).
 ``first()``
-    First node.
+    Returns the first node (equivalent to ``eq(0)``).
 ``last()``
-    Last node.
+    Returns the last node.
 ``siblings()``
-    Siblings.
+    Returns all sibling nodes (nodes with the same parent, excluding the current node).
 ``nextAll()``
-    All following siblings.
+    Returns all following siblings (same parent, after the current node).
 ``previousAll()``
-    All preceding siblings.
-``parents()``
-    Returns the parent nodes.
+    Returns all preceding siblings (same parent, before the current node).
+``ancestors()``
+    Returns all ancestor nodes (parents, grandparents, etc., up to the ``<html>``
+    element).
 ``children()``
-    Returns children nodes.
+    Returns all direct child nodes of the current node.
 ``reduce($lambda)``
-    Nodes for which the callable does not return false.
+    Filters the nodes using a callback; keeps only those for which it returns ``true``.
 
 Since each of these methods returns a new ``Crawler`` instance, you can
 narrow down your node selection by chaining the method calls::
@@ -91,3 +93,5 @@ The Crawler can extract information from the nodes::
     $data = $crawler->each(function ($node, int $i): string {
         return $node->attr('href');
     });
+
+.. _`XPath expression`: https://developer.mozilla.org/en-US/docs/Web/XML/XPath

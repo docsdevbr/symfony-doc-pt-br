@@ -72,9 +72,9 @@ will contain a credit card number.
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('cardNumber', new Assert\Luhn([
-                    'message' => 'Please check your credit card number',
-                ]));
+                $metadata->addPropertyConstraint('cardNumber', new Assert\Luhn(
+                    message: 'Please check your credit card number',
+                ));
             }
         }
 

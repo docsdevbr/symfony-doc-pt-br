@@ -649,23 +649,8 @@ another given base URI::
     UriResolver::resolve('?a=b', 'http://localhost/bar#foo'); // http://localhost/bar?a=b
     UriResolver::resolve('../../', 'http://localhost/'); // http://localhost/
 
-Using a HTML5 Parser
-~~~~~~~~~~~~~~~~~~~~
-
-If you need the :class:`Symfony\\Component\\DomCrawler\\Crawler` to use an HTML5
-parser, set its ``useHtml5Parser`` constructor argument to ``true``::
-
-    use Symfony\Component\DomCrawler\Crawler;
-
-    $crawler = new Crawler(null, $uri, useHtml5Parser: true);
-
-By doing so, the crawler will use the HTML5 parser provided by the `masterminds/html5`_
-library to parse the documents.
-
 Learn more
 ----------
 
 * :doc:`/testing`
 * :doc:`/components/css_selector`
-
-.. _`masterminds/html5`: https://packagist.org/packages/masterminds/html5

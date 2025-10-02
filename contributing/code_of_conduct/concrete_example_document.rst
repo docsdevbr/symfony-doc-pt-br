@@ -9,7 +9,7 @@ according to the Symfony code of conduct.
 Concrete Examples
 -----------------
 
-* Unwelcome comments regarding a person’s lifestyle choices and practices,
+* Unwelcome comments regarding a person's lifestyle choices and practices,
   including those related to food, health, parenting, drugs, and employment;
 * Deliberate misgendering or use of `dead names`_ (The birth name
   of a person who has since changed their name, often a transgender person);

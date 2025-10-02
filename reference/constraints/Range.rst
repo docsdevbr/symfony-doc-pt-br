@@ -78,11 +78,11 @@ you might add the following:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('height', new Assert\Range([
-                    'min' => 120,
-                    'max' => 180,
-                    'notInRangeMessage' => 'You must be between {{ min }}cm and {{ max }}cm tall to enter',
-                ]));
+                $metadata->addPropertyConstraint('height', new Assert\Range(
+                    min: 120,
+                    max: 180,
+                    notInRangeMessage: 'You must be between {{ min }}cm and {{ max }}cm tall to enter',
+                ));
             }
         }
 
@@ -154,10 +154,10 @@ date must lie within the current year like this:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('startDate', new Assert\Range([
-                    'min' => 'first day of January',
-                    'max' => 'first day of January next year',
-                ]));
+                $metadata->addPropertyConstraint('startDate', new Assert\Range(
+                    min: 'first day of January',
+                    max: 'first day of January next year',
+                ));
             }
         }
 
@@ -224,10 +224,10 @@ dates. If you want to fix the timezone, append it to the date string:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('startDate', new Assert\Range([
-                    'min' => 'first day of January UTC',
-                    'max' => 'first day of January next year UTC',
-                ]));
+                $metadata->addPropertyConstraint('startDate', new Assert\Range(
+                    min: 'first day of January UTC',
+                    max: 'first day of January next year UTC',
+                ));
             }
         }
 
@@ -294,10 +294,10 @@ can check that a delivery date starts within the next five hours like this:
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('deliveryDate', new Assert\Range([
-                    'min' => 'now',
-                    'max' => '+5 hours',
-                ]));
+                $metadata->addPropertyConstraint('deliveryDate', new Assert\Range(
+                    min: 'now',
+                    max: '+5 hours',
+                ));
             }
         }
 

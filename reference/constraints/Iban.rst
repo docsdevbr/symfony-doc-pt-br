@@ -77,13 +77,22 @@ will contain an International Bank Account Number.
 
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('bankAccountNumber', new Assert\Iban([
-                    'message' => 'This is not a valid International Bank Account Number (IBAN).',
-                ]));
+                $metadata->addPropertyConstraint('bankAccountNumber', new Assert\Iban(
+                    message: 'This is not a valid International Bank Account Number (IBAN).',
+                ));
             }
         }
 
 .. include:: /reference/constraints/_empty-values-are-valid.rst.inc
+
+.. note::
+
+    For convenience, the IBAN validator accepts values with various types of
+    whitespace (e.g., regular, non-breaking, and narrow non-breaking spaces),
+    which are automatically removed before validation. However, this flexibility
+    can cause issues when storing IBANs or sending them to APIs that expect a
+    strict format. To ensure compatibility, normalize IBANs by removing
+    whitespace and converting them to uppercase before storing or processing.
 
 Options
 -------

@@ -36,7 +36,7 @@ to handle their respective command when it is asked for::
 
         public function handle(Command $command): mixed
         {
-            $commandClass = get_class($command);
+            $commandClass = $command::class;
 
             if (!$handler = $this->handlerMap[$commandClass] ?? null) {
                 return;
@@ -94,7 +94,7 @@ in the service subscriber::
 
         public function handle(Command $command): mixed
         {
-            $commandClass = get_class($command);
+            $commandClass = $command::class;
 
             if ($this->locator->has($commandClass)) {
                 $handler = $this->locator->get($commandClass);
@@ -134,11 +134,6 @@ count and iterate over the services of the locator::
     foreach ($this->locator as $serviceId => $service) {
         // do something with the service, the service id or both
     }
-
-.. versionadded:: 7.1
-
-    The :class:`Symfony\\Contracts\\Service\\ServiceCollectionInterface` was
-    introduced in Symfony 7.1.
 
 Including Services
 ------------------
@@ -270,8 +265,8 @@ the following dependency injection attributes in the ``getSubscribedServices()``
 method directly:
 
 * :class:`Symfony\\Component\\DependencyInjection\\Attribute\\Autowire`
-* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\TaggedIterator`
-* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\TaggedLocator`
+* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireIterator`
+* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireLocator`
 * :class:`Symfony\\Component\\DependencyInjection\\Attribute\\Target`
 * :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireDecorated`
 
@@ -282,8 +277,8 @@ This is done by having ``getSubscribedServices()`` return an array of
     use Psr\Container\ContainerInterface;
     use Psr\Log\LoggerInterface;
     use Symfony\Component\DependencyInjection\Attribute\Autowire;
-    use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
-    use Symfony\Component\DependencyInjection\Attribute\TaggedLocator;
+    use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+    use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
     use Symfony\Component\DependencyInjection\Attribute\Target;
     use Symfony\Contracts\Service\Attribute\SubscribedService;
 
@@ -299,31 +294,23 @@ This is done by having ``getSubscribedServices()`` return an array of
             // Target
             new SubscribedService('event.logger', LoggerInterface::class, attributes: new Target('eventLogger')),
 
-            // TaggedIterator
-            new SubscribedService('loggers', 'iterable', attributes: new TaggedIterator('logger.tag')),
+            // AutowireIterator
+            new SubscribedService('loggers', 'iterable', attributes: new AutowireIterator('logger.tag')),
 
-            // TaggedLocator
-            new SubscribedService('handlers', ContainerInterface::class, attributes: new TaggedLocator('handler.tag')),
+            // AutowireLocator
+            new SubscribedService('handlers', ContainerInterface::class, attributes: new AutowireLocator('handler.tag')),
         ];
     }
-
-.. deprecated:: 7.1
-
-    The :class:`Symfony\\Component\\DependencyInjection\\Attribute\\TaggedIterator`
-    and :class:`Symfony\\Component\\DependencyInjection\\Attribute\\TaggedLocator`
-    attributes were deprecated in Symfony 7.1 in favor of
-    :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireIterator`
-    and :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireLocator`.
 
 .. note::
 
     The above example requires using ``3.2`` version or newer of ``symfony/service-contracts``.
 
 .. _service-locator_autowire-locator:
-.. _service-locator_autowire-iterator:
+.. _the-autowirelocator-and-autowireiterator-attributes:
 
-The AutowireLocator and AutowireIterator Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The AutowireLocator Attribute
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another way to define a service locator is to use the
 :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireLocator`
@@ -350,7 +337,7 @@ attribute::
 
         public function handle(Command $command): mixed
         {
-            $commandClass = get_class($command);
+            $commandClass = $command::class;
 
             if ($this->handlers->has($commandClass)) {
                 $handler = $this->handlers->get($commandClass);
@@ -397,13 +384,43 @@ attribute::
         }
     }
 
-.. note::
+.. _service-locator_autowire-iterator:
 
-    To receive an iterable instead of a service locator, you can switch the
-    :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireLocator`
-    attribute to
-    :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireIterator`
-    attribute.
+The AutowireIterator Attribute
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A variant of ``AutowireLocator`` that injects an iterable of services tagged
+with a specific :doc:`tag </service_container/tags>`. This is useful to loop
+over a set of tagged services instead of retrieving them individually.
+
+For example, to collect all handlers for different command types, use the
+``AutowireIterator`` attribute and pass the tag used by those services::
+
+    // src/CommandBus.php
+    namespace App;
+
+    use App\CommandHandler\BarHandler;
+    use App\CommandHandler\FooHandler;
+    use Psr\Container\ContainerInterface;
+    use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+
+    class CommandBus
+    {
+        public function __construct(
+            #[AutowireIterator('command_handler')]
+            private iterable $handlers, // collects all services tagged with 'command_handler'
+        ) {
+        }
+
+        public function handle(Command $command): mixed
+        {
+            foreach ($this->handlers as $handler) {
+                if ($handler->supports($command)) {
+                    return $handler->handle($command);
+                }
+            }
+        }
+    }
 
 .. _service-subscribers-locators_defining-service-locator:
 
@@ -907,11 +924,6 @@ services based on type-hinted helper methods::
         }
     }
 
-.. versionadded:: 7.1
-
-    The ``ServiceMethodsSubscriberTrait`` was introduced in Symfony 7.1.
-    In previous Symfony versions it was called ``ServiceSubscriberTrait``.
-
 This  allows you to create helper traits like RouterAware, LoggerAware, etc...
 and compose your services with them::
 
@@ -975,8 +987,8 @@ You can use the ``attributes`` argument of ``SubscribedService`` to add any
 of the following dependency injection attributes:
 
 * :class:`Symfony\\Component\\DependencyInjection\\Attribute\\Autowire`
-* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\TaggedIterator`
-* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\TaggedLocator`
+* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireIterator`
+* :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireLocator`
 * :class:`Symfony\\Component\\DependencyInjection\\Attribute\\Target`
 * :class:`Symfony\\Component\\DependencyInjection\\Attribute\\AutowireDecorated`
 

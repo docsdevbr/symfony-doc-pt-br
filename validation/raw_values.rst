@@ -75,7 +75,7 @@ Validation of arrays is possible using the ``Collection`` constraint::
         ]),
         'email' => new Assert\Email(),
         'simple' => new Assert\Length(['min' => 102]),
-        'eye_color' => new Assert\Choice([3, 4]),
+        'eye_color' => new Assert\Choice(choices: [3, 4]),
         'file' => new Assert\File(),
         'password' => new Assert\Length(['min' => 60]),
         'tags' => new Assert\Optional([

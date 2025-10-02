@@ -100,8 +100,7 @@ Next, create an ``index.php`` file that defines the kernel class and runs it:
             return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
         };
 
-That's it! To test it, start the :doc:`Symfony Local Web Server
-</setup/symfony_server>`:
+That's it! To test it, start the :ref:`Symfony local web server <symfony-cli-server>`:
 
 .. code-block:: terminal
 
@@ -260,11 +259,11 @@ Now it looks like this::
 
         public function registerBundles(): iterable
         {
-            yield FrameworkBundle();
-            yield TwigBundle();
+            yield new FrameworkBundle();
+            yield new TwigBundle();
 
             if ('dev' === $this->getEnvironment()) {
-                yield WebProfilerBundle();
+                yield new WebProfilerBundle();
             }
         }
 
@@ -297,8 +296,8 @@ Now it looks like this::
         {
             // import the WebProfilerRoutes, only if the bundle is enabled
             if (isset($this->bundles['WebProfilerBundle'])) {
-                $routes->import('@WebProfilerBundle/Resources/config/routing/wdt.xml')->prefix('/_wdt');
-                $routes->import('@WebProfilerBundle/Resources/config/routing/profiler.xml')->prefix('/_profiler');
+                $routes->import('@WebProfilerBundle/Resources/config/routing/wdt.php', 'php')->prefix('/_wdt');
+                $routes->import('@WebProfilerBundle/Resources/config/routing/profiler.php', 'php')->prefix('/_profiler');
             }
 
             // load the routes defined as PHP attributes
@@ -306,18 +305,10 @@ Now it looks like this::
             $routes->import(__DIR__.'/Controller/', 'attribute');
         }
 
-        // optional, to use the standard Symfony cache directory
-        public function getCacheDir(): string
-        {
-            return __DIR__.'/../var/cache/'.$this->getEnvironment();
-        }
-
-        // optional, to use the standard Symfony logs directory
-        public function getLogDir(): string
-        {
-            return __DIR__.'/../var/log';
-        }
+        // optionally, you can define the getCacheDir() and getLogDir() methods
+        // to override the default locations for these directories
     }
+
 
 Before continuing, run this command to add support for the new dependencies:
 
@@ -474,8 +465,7 @@ this:
     ├─ composer.json
     └─ composer.lock
 
-As before you can use the :doc:`Symfony Local Web Server
-</setup/symfony_server>`:
+As before you can use the :ref:`Symfony local web server <symfony-cli-server>`:
 
 .. code-block:: terminal
 

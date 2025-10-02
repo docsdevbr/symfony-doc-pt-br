@@ -138,8 +138,8 @@ For better reusability or if there is some heavy logic in your event listener,
 you can also move the logic for creating the ``name`` field to an
 :ref:`event subscriber <event_dispatcher-using-event-subscribers>`::
 
-    // src/Form/EventListener/AddNameFieldSubscriber.php
-    namespace App\Form\EventListener;
+    // src/Form/EventSubscriber/AddNameFieldSubscriber.php
+    namespace App\Form\EventSubscriber;
 
     use Symfony\Component\EventDispatcher\EventSubscriberInterface;
     use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -172,7 +172,7 @@ Great! Now use that in your form class::
     namespace App\Form\Type;
 
     // ...
-    use App\Form\EventListener\AddNameFieldSubscriber;
+    use App\Form\EventSubscriber\AddNameFieldSubscriber;
 
     class ProductType extends AbstractType
     {

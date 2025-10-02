@@ -497,11 +497,12 @@ serves at dumping the compiled container::
 
 .. tip::
 
-    The ``file_put_contents()`` function is not atomic. That could cause issues
-    in a production environment with multiple concurrent requests. Instead, use
-    the :ref:`dumpFile() method <filesystem-dumpfile>` from Symfony Filesystem
-    component or other methods provided by Symfony (e.g. ``$containerConfigCache->write()``)
-    which are atomic.
+    The ``file_put_contents()`` function is not atomic. This can cause issues in
+    production environments with multiple concurrent requests. Instead, use the
+    :ref:`dumpFile() method <filesystem-dumpfile>` from the
+    :doc:`Filesystem component </components/filesystem>` or other atomic methods
+    provided by Symfony (e.g. the ``$containerConfigCache->write()`` method from
+    the :doc:`Config component </components/config>`).
 
 ``ProjectServiceContainer`` is the default name given to the dumped container
 class. However, you can change this with the ``class`` option when you
@@ -607,3 +608,25 @@ have the cache will be considered stale.
 
     In the full-stack framework the compilation and caching of the container
     is taken care of for you.
+
+.. _resolving-env-vars-at-compile-time:
+
+Resolving Environment Variable At Compile Time
+----------------------------------------------
+
+.. warning::
+
+    **This practice is discouraged**. Use it only if you fully understand the implications.
+
+By default, environment variables are resolved at runtime. However, you can
+force their resolution at compile time using the following code::
+
+    $parameterValue = $container->resolveEnvPlaceholders(
+        $container->getParameter('%env(ENV_VAR_NAME)%'),
+        true // resolve to actual values
+    );
+
+However, a **major drawback** of this approach is that you must manually clear
+the cache when changing the value of an environment variable. This goes
+against the typical behavior of environment variables, which are designed
+to be dynamic and not require cache invalidation.

@@ -259,7 +259,7 @@ Options
 ``callback``
 ~~~~~~~~~~~~
 
-**type**: ``string``, ``array`` or ``Closure`` [:ref:`default option <validation-default-option>`]
+**type**: ``string``, ``array`` or ``Closure``
 
 The callback option accepts three different formats for specifying the
 callback method:

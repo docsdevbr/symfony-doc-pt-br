@@ -188,32 +188,31 @@ the ``tests/`` directory. Tests should follow the following principles:
 .. note::
 
     A test suite must not contain ``AllTests.php`` scripts, but must rely on the
-    existence of a ``phpunit.xml.dist`` file.
+    existence of a ``phpunit.dist.xml`` file.
 
 Continuous Integration
 ----------------------
 
 Testing bundle code continuously, including all its commits and pull requests,
 is a good practice called Continuous Integration. There are several services
-providing this feature for free for open source projects, like `GitHub Actions`_
-and `Travis CI`_.
+providing this feature for free for open source projects, like `GitHub Actions`_.
 
 A bundle should at least test:
 
 * The lower bound of their dependencies (by running ``composer update --prefer-lowest``);
 * The supported PHP versions;
-* All supported major Symfony versions (e.g. both ``4.x`` and ``5.x`` if
+* All supported major Symfony versions (e.g. both ``6.4`` and ``7.x`` if
   support is claimed for both).
 
-Thus, a bundle supporting PHP 7.3, 7.4 and 8.0, and Symfony 4.4 and 5.x should
+Thus, a bundle supporting PHP 7.4, 8.3 and 8.4, and Symfony 6.4 and 7.x should
 have at least this test matrix:
 
 ===========  ===============  ===================
 PHP version  Symfony version  Composer flags
 ===========  ===============  ===================
-7.3          ``4.*``          ``--prefer-lowest``
-7.4          ``5.*``
-8.0          ``5.*``
+7.4          ``6.4``          ``--prefer-lowest``
+8.3          ``7.*``
+8.4          ``7.*``
 ===========  ===============  ===================
 
 .. tip::
@@ -233,10 +232,10 @@ with Symfony Flex to install a specific Symfony version:
 
 .. code-block:: bash
 
-    # this requires Symfony 5.x for all Symfony packages
-    export SYMFONY_REQUIRE=5.*
+    # this requires Symfony 7.x for all Symfony packages
+    export SYMFONY_REQUIRE=7.*
     # alternatively you can run this command to update composer.json config
-    # composer config extra.symfony.require "5.*"
+    # composer config extra.symfony.require "7.*"
 
     # install Symfony Flex in the CI environment
     composer global config --no-plugins allow-plugins.symfony/flex true
@@ -397,9 +396,13 @@ Translation Files
 -----------------
 
 If a bundle provides message translations, they must be defined in the XLIFF
-format; the domain should be named after the bundle name (``acme_blog``).
+format; the domain should be named after the bundle name (``AcmeBlog``).
 
 A bundle must not override existing messages from another bundle.
+
+The translation domain must match the translation file names. For example,
+if the translation domain is ``AcmeBlog``, the English translation file name
+should be ``AcmeBlog.en.xlf``.
 
 Configuration
 -------------
@@ -556,6 +559,7 @@ Learn more
 
 * :doc:`/bundles/extension`
 * :doc:`/bundles/configuration`
+* :doc:`/frontend/create_ux_bundle`
 
 .. _`PSR-4`: https://www.php-fig.org/psr/psr-4/
 .. _`Symfony Flex recipe`: https://github.com/symfony/recipes
@@ -564,4 +568,3 @@ Learn more
 .. _`choose any license`: https://choosealicense.com/
 .. _`valid license identifier`: https://spdx.org/licenses/
 .. _`GitHub Actions`: https://docs.github.com/en/free-pro-team@latest/actions
-.. _`Travis CI`: https://docs.travis-ci.com/

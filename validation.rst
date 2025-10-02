@@ -327,98 +327,12 @@ literature genre mostly associated with the author, which can be set to either
             {
                 // ...
 
-                $metadata->addPropertyConstraint('genre', new Assert\Choice([
-                    'choices' => ['fiction', 'non-fiction'],
-                    'message' => 'Choose a valid genre.',
-                ]));
+                $metadata->addPropertyConstraint('genre', new Assert\Choice(
+                    choices: ['fiction', 'non-fiction'],
+                    message: 'Choose a valid genre.',
+                ));
             }
         }
-
-.. _validation-default-option:
-
-The options of a constraint can always be passed in as an array. Some constraints,
-however, also allow you to pass the value of one, "*default*", option in place
-of the array. In the case of the ``Choice`` constraint, the ``choices``
-options can be specified in this way.
-
-.. configuration-block::
-
-    .. code-block:: php-attributes
-
-        // src/Entity/Author.php
-        namespace App\Entity;
-
-        // ...
-        use Symfony\Component\Validator\Constraints as Assert;
-
-        class Author
-        {
-            #[Assert\Choice(['fiction', 'non-fiction'])]
-            private string $genre;
-
-            // ...
-        }
-
-    .. code-block:: yaml
-
-        # config/validator/validation.yaml
-        App\Entity\Author:
-            properties:
-                genre:
-                    - Choice: [fiction, non-fiction]
-                # ...
-
-    .. code-block:: xml
-
-        <!-- config/validator/validation.xml -->
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
-                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
-
-            <class name="App\Entity\Author">
-                <property name="genre">
-                    <constraint name="Choice">
-                        <value>fiction</value>
-                        <value>non-fiction</value>
-                    </constraint>
-                </property>
-
-                <!-- ... -->
-            </class>
-        </constraint-mapping>
-
-    .. code-block:: php
-
-        // src/Entity/Author.php
-        namespace App\Entity;
-
-        // ...
-        use Symfony\Component\Validator\Constraints as Assert;
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
-
-        class Author
-        {
-            private string $genre;
-
-            public static function loadValidatorMetadata(ClassMetadata $metadata): void
-            {
-                // ...
-
-                $metadata->addPropertyConstraint(
-                    'genre',
-                    new Assert\Choice(['fiction', 'non-fiction'])
-                );
-            }
-        }
-
-This is purely meant to make the configuration of the most common option of
-a constraint shorter and quicker.
-
-If you're ever unsure of how to specify an option, either check the namespace
-``Symfony\Component\Validator\Constraints`` for the constraint or play it safe
-by always passing in an array of options (the first method shown above).
 
 Constraints in Form Classes
 ---------------------------
@@ -520,7 +434,7 @@ class to have at least 3 characters.
                 $metadata->addPropertyConstraint('firstName', new Assert\NotBlank());
                 $metadata->addPropertyConstraint(
                     'firstName',
-                    new Assert\Length(['min' => 3])
+                    new Assert\Length(min: 3)
                 );
             }
         }
@@ -603,9 +517,9 @@ this method must return ``true``:
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addGetterConstraint('passwordSafe', new Assert\IsTrue([
-                    'message' => 'The password cannot match your first name',
-                ]));
+                $metadata->addGetterConstraint('passwordSafe', new Assert\IsTrue(
+                    message: 'The password cannot match your first name',
+                ));
             }
         }
 

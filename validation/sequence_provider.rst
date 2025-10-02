@@ -104,10 +104,10 @@ username and the password are different only if all other validation passes
                 $metadata->addPropertyConstraint('username', new Assert\NotBlank());
                 $metadata->addPropertyConstraint('password', new Assert\NotBlank());
 
-                $metadata->addGetterConstraint('passwordSafe', new Assert\IsTrue([
-                    'message' => 'The password cannot match your first name',
-                    'groups'  => ['Strict'],
-                ]));
+                $metadata->addGetterConstraint('passwordSafe', new Assert\IsTrue(
+                    message: 'The password cannot match your first name',
+                    groups: ['Strict'],
+                ));
 
                 $metadata->setGroupSequence(['User', 'Strict']);
             }
@@ -249,10 +249,10 @@ entity and a new constraint group called ``Premium``:
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
                 $metadata->addPropertyConstraint('name', new Assert\NotBlank());
-                $metadata->addPropertyConstraint('creditCard', new Assert\CardScheme([
-                    'schemes' => [Assert\CardScheme::VISA],
-                    'groups'  => ['Premium'],
-                ]));
+                $metadata->addPropertyConstraint('creditCard', new Assert\CardScheme(
+                    schemes: [Assert\CardScheme::VISA],
+                    groups: ['Premium'],
+                ));
             }
         }
 

@@ -24,9 +24,6 @@ under the ``web_profiler`` key in your application configuration.
 
     The web debug toolbar is not available for responses of type ``StreamedResponse``.
 
-Configuration
--------------
-
 excluded_ajax_paths
 ~~~~~~~~~~~~~~~~~~~
 
@@ -56,8 +53,17 @@ on the given link to perform the redirect.
 toolbar
 ~~~~~~~
 
+enabled
+.......
 **type**: ``boolean`` **default**: ``false``
 
 It enables and disables the toolbar entirely. Usually you set this to ``true``
 in the ``dev`` and ``test`` environments and to ``false`` in the ``prod``
 environment.
+
+ajax_replace
+............
+**type**: ``boolean`` **default**: ``false``
+
+If you set this option to ``true``, the toolbar is replaced on AJAX requests.
+This only works in combination with an enabled toolbar.

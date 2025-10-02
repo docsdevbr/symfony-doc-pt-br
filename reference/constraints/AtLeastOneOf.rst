@@ -115,23 +115,23 @@ The following constraints ensure that:
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata): void
             {
-                $metadata->addPropertyConstraint('password', new Assert\AtLeastOneOf([
-                    'constraints' => [
-                        new Assert\Regex(['pattern' => '/#/']),
-                        new Assert\Length(['min' => 10]),
+                $metadata->addPropertyConstraint('password', new Assert\AtLeastOneOf(
+                    constraints: [
+                        new Assert\Regex(pattern: '/#/'),
+                        new Assert\Length(min: 10),
                     ],
-                ]));
+                ));
 
-                $metadata->addPropertyConstraint('grades', new Assert\AtLeastOneOf([
-                    'constraints' => [
-                        new Assert\Count(['min' => 3]),
-                        new Assert\All([
-                            'constraints' => [
+                $metadata->addPropertyConstraint('grades', new Assert\AtLeastOneOf(
+                    constraints: [
+                        new Assert\Count(min: 3),
+                        new Assert\All(
+                            constraints: [
                                 new Assert\GreaterThanOrEqual(5),
                             ],
-                        ]),
+                        ),
                     ],
-                ]));
+                ));
             }
         }
 
@@ -141,7 +141,7 @@ Options
 constraints
 ~~~~~~~~~~~
 
-**type**: ``array`` [:ref:`default option <validation-default-option>`]
+**type**: ``array``
 
 This required option is the array of validation constraints from which at least one of
 has to be satisfied in order for the validation to succeed.

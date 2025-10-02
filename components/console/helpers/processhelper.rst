@@ -11,7 +11,7 @@ a very verbose verbosity (e.g. ``-vv``)::
 
     use Symfony\Component\Process\Process;
 
-    $helper = $this->getHelper('process');
+    $helper = new ProcessHelper();
     $process = new Process(['figlet', 'Symfony']);
 
     $helper->run($output, $process);
@@ -42,12 +42,7 @@ In case the process fails, debugging is easier:
 Arguments
 ---------
 
-There are three ways to use the process helper:
-
-* Using a command line string::
-
-    // ...
-    $helper->run($output, 'figlet Symfony');
+There are two ways to use the process helper:
 
 * An array of arguments::
 

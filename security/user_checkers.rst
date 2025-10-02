@@ -59,10 +59,6 @@ displayed to the user::
         }
     }
 
-.. versionadded:: 7.2
-
-    The ``token`` argument for the ``checkPostAuth()`` method was introduced in Symfony 7.2.
-
 Enabling the Custom User Checker
 --------------------------------
 

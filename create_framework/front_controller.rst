@@ -154,7 +154,7 @@ Now, configure your web server root directory to point to ``web/`` and all
 other files will no longer be accessible from the client.
 
 To test your changes in a browser (``http://localhost:4321/hello?name=Fabien``),
-run the :doc:`Symfony Local Web Server </setup/symfony_server>`:
+run the :ref:`Symfony local web server <symfony-cli-server>`:
 
 .. code-block:: terminal
 

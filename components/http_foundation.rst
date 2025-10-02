@@ -376,11 +376,6 @@ anonymized depending on the IP address format::
     $anonymousIpv6 = IpUtils::anonymize($ipv6, 3, 10);
     // $anonymousIpv6 = '2a01:198:603::'
 
-.. versionadded:: 7.2
-
-    The ``v4Bytes`` and ``v6Bytes`` parameters of the ``anonymize()`` method
-    were introduced in Symfony 7.2.
-
 Check If an IP Belongs to a CIDR Subnet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -458,11 +453,6 @@ You can use them individually or combine them using the
     if ($matcher->matches($request)) {
         // ...
     }
-
-.. versionadded:: 7.1
-
-    The ``HeaderRequestMatcher`` and ``QueryParameterRequestMatcher`` were
-    introduced in Symfony 7.1.
 
 Accessing other Data
 ~~~~~~~~~~~~~~~~~~~~
@@ -681,8 +671,19 @@ Streaming a Response
 ~~~~~~~~~~~~~~~~~~~~
 
 The :class:`Symfony\\Component\\HttpFoundation\\StreamedResponse` class allows
-you to stream the Response back to the client. The response content is
-represented by a PHP callable instead of a string::
+you to stream the Response back to the client. The response content can be
+represented by a string iterable::
+
+    use Symfony\Component\HttpFoundation\StreamedResponse;
+
+    $chunks = ['Hello', ' World'];
+
+    $response = new StreamedResponse();
+    $response->setChunks($chunks);
+    $response->send();
+
+For most complex use cases, the response content can be instead represented by
+a PHP callable::
 
     use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -837,9 +838,10 @@ Alternatively, if you are serving a static file, you can use a
 
 The ``BinaryFileResponse`` will automatically handle ``Range`` and
 ``If-Range`` headers from the request. It also supports ``X-Sendfile``
-(see for `nginx`_ and `Apache`_). To make use of it, you need to determine
-whether or not the ``X-Sendfile-Type`` header should be trusted and call
-:method:`Symfony\\Component\\HttpFoundation\\BinaryFileResponse::trustXSendfileTypeHeader`
+(see `FrankenPHP X-Sendfile and X-Accel-Redirect headers`_,
+`nginx X-Accel-Redirect header`_ and `Apache mod_xsendfile module`_). To make use
+of it, you need to determine whether or not the ``X-Sendfile-Type`` header should
+be trusted and call :method:`Symfony\\Component\\HttpFoundation\\BinaryFileResponse::trustXSendfileTypeHeader`
 if it should::
 
     BinaryFileResponse::trustXSendfileTypeHeader();
@@ -889,11 +891,6 @@ and that will be automatically deleted after the response is sent::
     $file->rewind();
 
     $response = new BinaryFileResponse($file);
-
-.. versionadded:: 7.1
-
-    The support for ``\SplTempFileObject`` in ``BinaryFileResponse``
-    was introduced in Symfony 7.1.
 
 If the size of the served file is unknown (e.g. because it's being generated on the fly,
 or because a PHP stream filter is registered on it, etc.), you can pass a ``Stream``
@@ -1061,8 +1058,9 @@ Learn More
     /session
     /http_cache/*
 
-.. _nginx: https://mattbrictson.com/blog/accelerated-rails-downloads
-.. _Apache: https://tn123.org/mod_xsendfile/
+.. _`FrankenPHP X-Sendfile and X-Accel-Redirect headers`: https://frankenphp.dev/docs/x-sendfile/
+.. _`nginx X-Accel-Redirect header`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers
+.. _`Apache mod_xsendfile module`: https://github.com/nmaier/mod_xsendfile
 .. _`JSON Hijacking`: https://haacked.com/archive/2009/06/25/json-hijacking.aspx/
 .. _`valid JSON top-level value`: https://www.json.org/json-en.html
 .. _OWASP guidelines: https://cheatsheetseries.owasp.org/cheatsheets/AJAX_Security_Cheat_Sheet.html#always-return-json-with-an-object-on-the-outside

@@ -22,10 +22,6 @@ The component supports:
 * **exponential** - also known as scientific (e.g. ``1.99E+3`` or ``1e-2``)
 * **comments** - using ``/*`` and ``*/`` (e.g. ``/* this is a comment */``)
 
-.. versionadded:: 7.2
-
-    The support for comments inside expressions was introduced in Symfony 7.2.
-
 .. warning::
 
     A backslash (``\``) must be escaped by 3 backslashes (``\\\\``) in a string
@@ -129,11 +125,6 @@ returns the right-hand side. Expressions can chain multiple coalescing operators
 * ``foo[3] ?? 'no'``
 * ``foo.baz ?? foo['baz'] ?? 'no'``
 
-.. versionadded:: 7.2
-
-    Starting from Symfony 7.2, no exception is thrown when trying to access a
-    non-existent variable. This is the same behavior as the `null-coalescing operator in PHP`_.
-
 .. _component-expression-functions:
 
 Working with Functions
@@ -171,7 +162,7 @@ This also works with class constants::
     }
 
     var_dump($expressionLanguage->evaluate(
-        'constant("App\\\SomeNamespace\\\Foo::API_ENDPOINT")'
+        'constant("App\\\\SomeNamespace\\\\Foo::API_ENDPOINT")'
     ));
 
 This will print out ``/api``.
@@ -189,7 +180,7 @@ This function will return the case of an enumeration::
     }
 
     var_dump(App\Enum\Foo::Bar === $expressionLanguage->evaluate(
-        'enum("App\\\SomeNamespace\\\Foo::Bar")'
+        'enum("App\\\\SomeNamespace\\\\Foo::Bar")'
     ));
 
 This will print out ``true``.
@@ -221,10 +212,6 @@ PHP function to find the highest value::
     ));
 
 This will print out ``3``.
-
-.. versionadded:: 7.1
-
-    The ``min()`` and ``max()`` functions were introduced in Symfony 7.1.
 
 .. tip::
 
@@ -288,11 +275,6 @@ Bitwise Operators
 * ``<<`` (left shift)
 * ``>>`` (right shift)
 
-.. versionadded:: 7.2
-
-    Support for the ``~``, ``<<`` and ``>>`` bitwise operators was introduced
-    in Symfony 7.2.
-
 Comparison Operators
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -346,10 +328,6 @@ Logical Operators
 * ``and`` or ``&&``
 * ``or`` or ``||``
 * ``xor``
-
-.. versionadded:: 7.2
-
-    Support for the ``xor`` logical operator was introduced in Symfony 7.2.
 
 For example::
 
@@ -507,5 +485,3 @@ expressions (e.g. the request, the current user, etc.):
 * :doc:`Variables available in security expressions </security/expressions>`;
 * :doc:`Variables available in service container expressions </service_container/expression_language>`;
 * :ref:`Variables available in routing expressions <routing-matching-expressions>`.
-
-.. _`null-coalescing operator in PHP`: https://www.php.net/manual/en/language.operators.comparison.php#language.operators.comparison.coalesce

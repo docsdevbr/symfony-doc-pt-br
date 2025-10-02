@@ -15,6 +15,11 @@ Installation
 Usage in Combination with the Mailer Component
 ----------------------------------------------
 
+.. admonition:: Screencast
+    :class: screencast
+
+    Like video tutorials? Check out the `Webhook Component for Email Events screencast`_.
+
 When using a third-party mailer provider, you can use the Webhook component to
 receive webhook calls from this provider.
 
@@ -23,6 +28,7 @@ Currently, the following third-party mailer providers support webhooks:
 ============== ============================================
 Mailer Service Parser service name
 ============== ============================================
+AhaSend        ``mailer.webhook.request_parser.ahasend``
 Brevo          ``mailer.webhook.request_parser.brevo``
 Mandrill       ``mailer.webhook.request_parser.mailchimp``
 MailerSend     ``mailer.webhook.request_parser.mailersend``
@@ -35,15 +41,6 @@ Resend         ``mailer.webhook.request_parser.resend``
 Sendgrid       ``mailer.webhook.request_parser.sendgrid``
 Sweego         ``mailer.webhook.request_parser.sweego``
 ============== ============================================
-
-.. versionadded:: 7.1
-
-    The support for ``Resend`` and ``MailerSend`` were introduced in Symfony 7.1.
-
-.. versionadded:: 7.2
-
-    The ``Mandrill``,  ``Mailomat``, ``Mailtrap``, and ``Sweego`` integrations were introduced in
-    Symfony 7.2.
 
 .. note::
 
@@ -107,7 +104,7 @@ webhook consumer code.
 The webhook routing name is part of the URL you need to configure at the
 third-party mailer provider. The URL is the concatenation of your domain name
 and the routing name you chose in the configuration (like
-``https://example.com/webhook/mailer_mailgun``.
+``https://example.com/webhook/mailer_mailgun``).
 
 For Mailgun, you will get a secret for the webhook. Store this secret as
 MAILER_MAILGUN_SECRET (in the :doc:`secrets management system
@@ -165,8 +162,10 @@ Currently, the following third-party SMS transports support webhooks:
 ============ ==========================================
 SMS service  Parser service name
 ============ ==========================================
-Twilio       ``notifier.webhook.request_parser.twilio``
+LOX24        ``notifier.webhook.request_parser.lox24``
+Smsbox       ``notifier.webhook.request_parser.smsbox``
 Sweego       ``notifier.webhook.request_parser.sweego``
+Twilio       ``notifier.webhook.request_parser.twilio``
 Vonage       ``notifier.webhook.request_parser.vonage``
 ============ ==========================================
 
@@ -207,3 +206,4 @@ Creating a Custom Webhook
     Webhook.
 
 .. _`MakerBundle`: https://symfony.com/doc/current/bundles/SymfonyMakerBundle/index.html
+.. _`Webhook Component for Email Events screencast`: https://symfonycasts.com/screencast/mailtrap/email-event-webhook

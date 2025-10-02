@@ -77,10 +77,11 @@ bundle class::
     namespace App\MyBundle;
 
     use App\DependencyInjection\Compiler\CustomPass;
+    use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
     use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
-    class MyBundle extends AbstractBundle
+    class MyBundle extends AbstractBundle implements CompilerPassInterface
     {
         public function process(ContainerBuilder $container): void
         {

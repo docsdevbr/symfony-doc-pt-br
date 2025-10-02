@@ -15,16 +15,28 @@ the ``hidden`` property of the ``AsCommand`` attribute::
     namespace App\Command;
 
     use Symfony\Component\Console\Attribute\AsCommand;
-    use Symfony\Component\Console\Command\Command;
 
     #[AsCommand(name: 'app:legacy', hidden: true)]
-    class LegacyCommand extends Command
+    class LegacyCommand
     {
         // ...
     }
 
-Hidden commands behave the same as normal commands but they are no longer displayed
-in command listings, so end-users are not aware of their existence.
+You can also define a command as hidden using the pipe (``|``) syntax of
+:ref:`command aliases <command-aliases>`. To do this, use the command name as one
+of the aliases and leave the main command name (the part before the ``|``) empty::
+
+    // src/Command/LegacyCommand.php
+    namespace App\Command;
+
+    use Symfony\Component\Console\Attribute\AsCommand;
+    use Symfony\Component\Console\Command\Command;
+
+    #[AsCommand(name: '|app:legacy')]
+    class LegacyCommand extends Command
+    {
+        // ...
+    }
 
 .. note::
 
