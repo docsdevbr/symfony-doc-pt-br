@@ -1,3 +1,17 @@
+<!--
+Copyright (c) 2004-present Fabien Potencier.
+Symfony™ is a trademark of Symfony SAS. All rights reserved.
+
+Documentation licensed under the Creative Commons Attribution-ShareAlike 3.0
+Unported License.
+The original work was translated from English into Brazilian Portuguese.
+https://github.com/symfony/symfony-docs/blob/-/LICENSE.md
+
+source_url: https://github.com/symfony/symfony-docs/blob/8.0/index.rst
+revision: 344d8baac24247f9a0637bec61a2896e9404c43b
+status: ready
+-->
+
 .. _symfony2-documentation:
 
 Documentação do Symfony
