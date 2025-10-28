@@ -28,7 +28,7 @@ Você pode apoiar o projeto através do [GitHub Sponsors][github-sponsors] ou
 ## Licença
 
 Copyright (c) 2004-present Fabien Potencier.<br>
-Symfony é uma marca registrada da Symfony SAS.
+Symfony™ é uma marca registrada da Symfony SAS. Todos os direitos reservados.
 
 Documentação licenciada sob a
 [Licença Creative Commons Atribuição-CompartilhaIgual 3.0 Não Adaptada][license].<br>

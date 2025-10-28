@@ -28,9 +28,9 @@ You can support the project through [GitHub Sponsors][github-sponsors] or
 ## License
 
 Copyright (c) 2004-present Fabien Potencier.<br>
-Symfony is a trademark of Symfony SAS.
+Symfony™ is a trademark of Symfony SAS. All rights reserved.
 
-Licensed under the
+Documentation licensed under the
 [Creative Commons Attribution-ShareAlike 3.0 Unported License][license].<br>
 The original work was translated from English into Brazilian Portuguese.
 
