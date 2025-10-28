@@ -295,29 +295,6 @@ do diretório ``config/`` usando a palavra-chave especial ``when@``:
             router:
                 strict_requirements: null
 
-  .. code-block:: xml
-
-    <!-- config/packages/framework.xml -->
-    <?xml version="1.0" encoding="UTF-8" ?>
-    <container xmlns="http://symfony.com/schema/dic/services"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:framework="http://symfony.com/schema/dic/symfony"
-        xsi:schemaLocation="http://symfony.com/schema/dic/services
-            https://symfony.com/schema/dic/services/services-1.0.xsd
-            http://symfony.com/schema/dic/symfony
-            https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
-
-        <framework:config>
-            <framework:router utf8="true"/>
-        </framework:config>
-
-        <when env="prod">
-            <framework:config>
-                <framework:router strict-requirements="null"/>
-            </framework:config>
-        </when>
-    </container>
-
   .. code-block:: php
 
     // config/packages/framework.php
