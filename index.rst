@@ -30,50 +30,50 @@ Começando
 ---------
 
 .. toctree::
-    :maxdepth: 2
+  :maxdepth: 2
 
-    getting_started/index
+  getting_started/index
 
 Tópicos
 -------
 
 .. toctree::
-    :maxdepth: 1
+  :maxdepth: 1
 
-    best_practices
-    bundles
-    cache
-    console
-    doctrine
-    deployment
-    event_dispatcher
-    forms
-    frontend
-    html_sanitizer
-    http_cache
-    http_client
-    lock
-    logging
-    mailer
-    mercure
-    messenger
-    migration
-    notifier
-    performance
-    profiler
-    rate_limiter
-    routing
-    security
-    session
-    setup
-    serializer
-    service_container
-    testing
-    translation
-    validation
-    web_link
-    webhook
-    workflow
+  best_practices
+  bundles
+  cache
+  console
+  doctrine
+  deployment
+  event_dispatcher
+  forms
+  frontend
+  html_sanitizer
+  http_cache
+  http_client
+  lock
+  logging
+  mailer
+  mercure
+  messenger
+  migration
+  notifier
+  performance
+  profiler
+  rate_limiter
+  routing
+  security
+  session
+  setup
+  serializer
+  service_container
+  testing
+  translation
+  validation
+  web_link
+  webhook
+  workflow
 
 Componentes
 -----------
@@ -100,6 +100,6 @@ Crie seu próprio framework
 Quer criar o seu próprio framework baseado no Symfony?
 
 .. toctree::
-   :maxdepth: 2
+  :maxdepth: 2
 
-   create_framework/index
+  create_framework/index

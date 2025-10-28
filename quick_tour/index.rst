@@ -16,8 +16,8 @@ O tour rápido
 =============
 
 .. toctree::
-   :maxdepth: 1
+  :maxdepth: 1
 
-   the_big_picture
-   flex_recipes
-   the_architecture
+  the_big_picture
+  flex_recipes
+  the_architecture
