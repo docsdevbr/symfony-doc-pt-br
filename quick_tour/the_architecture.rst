@@ -1,364 +1,430 @@
-The Architecture
-================
+<!--
+Copyright (c) 2004-present Fabien Potencier.
+Symfony™ is a trademark of Symfony SAS. All rights reserved.
 
-You are my hero! Who would have thought that you would still be here after the first
-two parts? Your efforts will be well-rewarded soon. The first two parts didn't look
-too deeply at the architecture of the framework. Because it makes Symfony stand apart
-from the framework crowd, let's dive into the architecture now.
+Documentation licensed under the Creative Commons Attribution-ShareAlike 3.0
+Unported License.
+The original work was translated from English into Brazilian Portuguese.
+https://github.com/symfony/symfony-docs/blob/-/LICENSE.md
 
-Add Logging
------------
+source_url: https://github.com/symfony/symfony-docs/blob/8.0/quick_tour/the_architecture.rst
+revision: fffb06d80528cca1bba16bed8e6a8f08eca09d05
+status: ready
+-->
 
-A new Symfony app is micro: it's basically just a routing & controller system. But
-thanks to Flex, installing more features is simple.
+A arquitetura
+=============
 
-Want a logging system? No problem:
+Você é uma pessoa fantástica!
+Quem imaginaria que você ainda estaria aqui depois das primeiras duas partes?
+Seus esforços serão recompensados em breve.
+As duas primeiras partes não analisaram muito profundamente a arquitetura do
+framework.
+Como isso diferencia o Symfony dos demais frameworks, vamos nos aprofundar na
+arquitetura agora.
+
+Adicionando logs
+----------------
+
+Uma nova aplicação Symfony é micro: é basicamente um sistema de roteamento e
+controlador.
+Mas graças ao Flex, instalar mais recursos é simples.
+
+Quer um sistema de logs?
+Sem problemas:
 
 .. code-block:: terminal
 
-    $ composer require logger
+  $ composer require logger
 
-This installs and configures (via a recipe) the powerful `Monolog`_ library. To
-use the logger in a controller, add a new argument type-hinted with ``LoggerInterface``::
+Isso instala e configura (por meio de uma receita) a poderosa biblioteca
+`Monolog`_.
+Para usar o logger em um controlador, adicione um novo argumento com o tipo
+``LoggerInterface``::
 
-    // src/Controller/DefaultController.php
-    namespace App\Controller;
+  // src/Controller/DefaultController.php
+  namespace App\Controller;
 
-    use Psr\Log\LoggerInterface;
-    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-    use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\Routing\Attribute\Route;
+  use Psr\Log\LoggerInterface;
+  use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+  use Symfony\Component\HttpFoundation\Response;
+  use Symfony\Component\Routing\Attribute\Route;
 
-    class DefaultController extends AbstractController
-    {
-        #[Route('/hello/{name}', methods: ['GET'])]
-        public function index(string $name, LoggerInterface $logger): Response
-        {
-            $logger->info("Saying hello to $name!");
+  class DefaultController extends AbstractController
+  {
+      #[Route('/hello/{name}', methods: ['GET'])]
+      public function index(string $name, LoggerInterface $logger): Response
+      {
+          $logger->info("Dizendo olá para $name!");
 
-            // ...
-        }
-    }
+          // ...
+      }
+  }
 
-That's it! The new log message will be written to ``var/log/dev.log``. The log
-file path or even a different method of logging can be configured by updating
-one of the config files added by the recipe.
+Pronto!
+A nova mensagem de log será gravada em ``var/log/dev.log``.
+O caminho do arquivo de log ou até mesmo um método diferente de log pode ser
+configurado atualizando um dos arquivos de configuração adicionados pela
+receita.
 
-Services & Autowiring
+Serviços e autowiring
 ---------------------
 
-But wait! Something *very* cool just happened. Symfony read the ``LoggerInterface``
-type-hint and automatically figured out that it should pass us the Logger object!
-This is called *autowiring*.
+Mas espere!
+Algo *muito* legal aconteceu.
+O Symfony leu o tipo ``LoggerInterface`` e automaticamente descobriu que deveria
+nos passar o objeto Logger!
+Isso se chama *autowiring*.
 
-Every bit of work that's done in a Symfony app is done by an *object*: the Logger
-object logs things and the Twig object renders templates. These objects are called
-*services* and they are *tools* that help you build rich features.
+Todo trabalho feito em uma aplicação Symfony é feito por um *objeto*: o objeto
+Logger cria logs de coisas e o objeto Twig renderiza templates.
+Esses objetos são chamados de *serviços* e são *ferramentas* que ajudam você a
+construir recursos avançados.
 
-To make life awesome, you can ask Symfony to pass you a service by using a type-hint.
-What other possible classes or interfaces could you use? Find out by running:
+Para tornar a vida mais incrível, você pode pedir ao Symfony para lhe passar um
+serviço usando um tipo.
+Quais outras classes ou interfaces possíveis você poderia usar?
+Descubra executando:
 
 .. code-block:: terminal
 
-    $ php bin/console debug:autowiring
+  $ php bin/console debug:autowiring
 
-      # this is just a *small* sample of the output...
+    # esta é apenas uma *pequena* amostra da saída...
 
-      Describes a logger instance.
-      Psr\Log\LoggerInterface - alias:monolog.logger
+    Describes a logger instance.
+    Psr\Log\LoggerInterface - alias:monolog.logger
 
-      Request stack that controls the lifecycle of requests.
-      Symfony\Component\HttpFoundation\RequestStack - alias:request_stack
+    Request stack that controls the lifecycle of requests.
+    Symfony\Component\HttpFoundation\RequestStack - alias:request_stack
 
-      RouterInterface is the interface that all Router classes must implement.
-      Symfony\Component\Routing\RouterInterface - alias:router.default
+    RouterInterface is the interface that all Router classes must implement.
+    Symfony\Component\Routing\RouterInterface - alias:router.default
 
-      [...]
+    [...]
 
-This is just a short summary of the full list! And as you add more packages, this
-list of tools will grow!
+Este é apenas um breve resumo da lista completa!
+E à medida que você adicionar mais pacotes, esta lista de ferramentas aumentará!
 
-Creating Services
------------------
+Criando serviços
+----------------
 
-To keep your code organized, you can even create your own services! Suppose you
-want to generate a random greeting (e.g. "Hello", "Yo", etc). Instead of putting
-this code directly in your controller, create a new class::
+Para manter seu código organizado, você pode até criar seus próprios serviços!
+Suponha que você queira gerar uma saudação aleatória (por exemplo, "Olá",
+"E aí", etc.).
+Em vez de colocar este código diretamente no seu controlador, crie uma nova
+classe::
 
+  // src/GreetingGenerator.php
+  namespace App;
+
+  class GreetingGenerator
+  {
+      public function getRandomGreeting(): string
+      {
+          $greetings = ['Olá', 'E aí', 'Aloha'];
+          $greeting = $greetings[array_rand($greetings)];
+
+          return $greeting;
+      }
+  }
+
+Ótimo!
+Você pode usá-la imediatamente no seu controlador::
+
+  // src/Controller/DefaultController.php
+  namespace App\Controller;
+
+  use App\GreetingGenerator;
+  use Psr\Log\LoggerInterface;
+  use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+  use Symfony\Component\HttpFoundation\Response;
+  use Symfony\Component\Routing\Attribute\Route;
+
+  class DefaultController extends AbstractController
+  {
+      #[Route('/hello/{name}', methods: ['GET'])]
+      public function index(string $name, LoggerInterface $logger, GreetingGenerator $generator): Response
+      {
+          $greeting = $generator->getRandomGreeting();
+
+          $logger->info("Dizendo $greeting para $name!");
+
+          // ...
+      }
+  }
+
+Pronto!
+O Symfony instanciará o ``GreetingGenerator`` automaticamente e o passará como
+argumento.
+Mas, poderíamos *também* mover a lógica do logger para ``GreetingGenerator``?
+Sim!
+Você pode usar autowiring dentro de um serviço para acessar *outros* serviços.
+A única diferença é que isso é feito no construtor:
+
+.. code-block:: diff
+
+    <?php
     // src/GreetingGenerator.php
-    namespace App;
+  + use Psr\Log\LoggerInterface;
 
     class GreetingGenerator
     {
+  +     public function __construct(
+  +         private LoggerInterface $logger,
+  +     ) {
+  +     }
+
         public function getRandomGreeting(): string
         {
-            $greetings = ['Hey', 'Yo', 'Aloha'];
-            $greeting = $greetings[array_rand($greetings)];
-
-            return $greeting;
-        }
-    }
-
-Great! You can use it immediately in your controller::
-
-    // src/Controller/DefaultController.php
-    namespace App\Controller;
-
-    use App\GreetingGenerator;
-    use Psr\Log\LoggerInterface;
-    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-    use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\Routing\Attribute\Route;
-
-    class DefaultController extends AbstractController
-    {
-        #[Route('/hello/{name}', methods: ['GET'])]
-        public function index(string $name, LoggerInterface $logger, GreetingGenerator $generator): Response
-        {
-            $greeting = $generator->getRandomGreeting();
-
-            $logger->info("Saying $greeting to $name!");
-
             // ...
+
+  +        $this->logger->info('Usando a saudação: '.$greeting);
+
+             return $greeting;
         }
     }
 
-That's it! Symfony will instantiate the ``GreetingGenerator`` automatically and
-pass it as an argument. But, could we *also* move the logger logic to ``GreetingGenerator``?
-Yes! You can use autowiring inside a service to access *other* services. The only
-difference is that it's done in the constructor:
+Sim!
+Isso também funciona: sem configuração, sem perda de tempo.
+Continue codificando!
 
-.. code-block:: diff
+A extensão Twig e a autoconfiguração
+------------------------------------
 
-      <?php
-      // src/GreetingGenerator.php
-    + use Psr\Log\LoggerInterface;
+Graças ao gerenciamento de serviços do Symfony, você pode *estender* o Symfony
+de várias maneiras, como criando um assinante de eventos ou um eleitor de
+segurança para regras de autorização complexas.
+Vamos adicionar um novo filtro ao Twig chamado ``greet``.
+Como?
+Crie uma classe com sua lógica::
 
-      class GreetingGenerator
-      {
-    +     public function __construct(
-    +         private LoggerInterface $logger,
-    +     ) {
-    +     }
+  // src/Twig/GreetExtension.php
+  namespace App\Twig;
 
-          public function getRandomGreeting(): string
-          {
-              // ...
+  use App\GreetingGenerator;
+  use Twig\Attribute\AsTwigFilter;
 
-    +        $this->logger->info('Using the greeting: '.$greeting);
-
-               return $greeting;
-          }
+  class GreetExtension
+  {
+      public function __construct(
+          private GreetingGenerator $greetingGenerator,
+      ) {
       }
 
-Yes! This works too: no configuration, no time wasted. Keep coding!
+      #[AsTwigFilter('greet')]
+      public function greetUser(string $name): string
+      {
+          $greeting =  $this->greetingGenerator->getRandomGreeting();
 
-Twig Extension & Autoconfiguration
-----------------------------------
+          return "$greeting $name!";
+      }
+  }
 
-Thanks to Symfony's service handling, you can *extend* Symfony in many ways, like
-by creating an event subscriber or a security voter for complex authorization
-rules. Let's add a new filter to Twig called ``greet``. How? Create a class
-with your logic::
-
-    // src/Twig/GreetExtension.php
-    namespace App\Twig;
-
-    use App\GreetingGenerator;
-    use Twig\Attribute\AsTwigFilter;
-
-    class GreetExtension
-    {
-        public function __construct(
-            private GreetingGenerator $greetingGenerator,
-        ) {
-        }
-
-        #[AsTwigFilter('greet')]
-        public function greetUser(string $name): string
-        {
-            $greeting =  $this->greetingGenerator->getRandomGreeting();
-
-            return "$greeting $name!";
-        }
-    }
-
-After creating just *one* file, you can use this immediately:
+Depois de criar apenas *um* arquivo, você pode usar isto imediatamente:
 
 .. code-block:: html+twig
 
-    {# templates/default/index.html.twig #}
-    {# Will print something like "Hey Symfony!" #}
-    <h1>{{ name|greet }}</h1>
+  {# templates/default/index.html.twig #}
+  {# Imprimirá algo como "Ei Symfony!" #}
+  <h1>{{ name|greet }}</h1>
 
-How does this work? Symfony notices that your class uses the ``#[AsTwigFilter]`` attribute
-and so *automatically* registers it as a Twig extension. This is called autoconfiguration,
-and it works for *many* many things. Create a class and then extend a base class
-(or implement an interface). Symfony takes care of the rest.
+Como isso funciona?
+O Symfony percebe que sua classe usa o atributo ``#[AsTwigFilter]`` e, portanto,
+*automaticamente* a registra como uma extensão do Twig.
+Isso se chama autoconfiguração e funciona para *muitas* coisas.
+Crie uma classe e, em seguida, estenda uma classe base (ou implemente uma
+interface).
+O Symfony cuida do resto.
 
-Blazing Speed: The Cached Container
------------------------------------
+Incrivelmente rápido: o contêiner em cache
+------------------------------------------
 
-After seeing how much Symfony handles automatically, you might be wondering: "Doesn't
-this hurt performance?" Actually, no! Symfony is blazing fast.
+Depois de ver o quanto o Symfony lida automaticamente, você pode estar se
+perguntando: "Isso não prejudica o desempenho?"
+Na verdade, não!
+O Symfony é incrivelmente rápido.
 
-How is that possible? The service system is managed by a very important object called
-the "container". Most frameworks have a container, but Symfony's is unique because
-it's *cached*. When you loaded your first page, all of the service information was
-compiled and saved. This means that the autowiring and autoconfiguration features
-add *no* overhead! It also means that you get *great* errors: Symfony inspects and
-validates *everything* when the container is built.
+Como isso é possível?
+O sistema de serviços é gerenciado por um objeto muito importante chamado
+"contêiner".
+A maioria dos frameworks possui um contêiner, mas o do Symfony é único porque
+ele é *armazenado em cache*.
+Quando você carregou sua primeira página, todas as informações do serviço foram
+compiladas e salvas.
+Isso significa que os recursos de autowiring e autoconfiguração não adicionam
+*nenhuma* sobrecarga!
+Isso também significa que você recebe *ótimos* erros: o Symfony inspeciona e
+valida *tudo* quando o contêiner é construído.
 
-Now you might be wondering what happens when you update a file and the cache needs
-to rebuild? I like your thinking! It's smart enough to rebuild on the next page
-load. But that's really the topic of the next section.
+Agora você deve estar se perguntando o que acontece quando você atualiza um
+arquivo e o cache precisa ser reconstruído?
+Gostei da sua ideia!
+Ele é inteligente o suficiente para reconstruir no próximo carregamento de
+página.
+Mas esse é realmente o tópico da próxima seção.
 
-Development Versus Production: Environments
--------------------------------------------
+Desenvolvimento versus produção: ambientes
+------------------------------------------
 
-One of a framework's main jobs is to make debugging easy! And our app is *full* of
-great tools for this: the web debug toolbar displays at the bottom of the page, errors
-are big, beautiful & explicit, and any configuration cache is automatically rebuilt
-whenever needed.
+Uma das principais funções de um framework é facilitar a depuração!
+E nossa aplicação está *repleta* de ótimas ferramentas para isso: a barra de
+ferramentas de depuração web é exibida na parte inferior da página, os erros são
+grandes, bonitos e explícitos, e qualquer cache de configuração é reconstruído
+automaticamente sempre que necessário.
 
-But what about when you deploy to production? We will need to hide those tools and
-optimize for speed!
+Mas e quando você implanta em produção?
+Precisaremos ocultar essas ferramentas e otimizar para velocidade!
 
-This is solved by Symfony's *environment* system. Symfony applications begin with
-three environments: ``dev``, ``prod``, and ``test``. You can define options for
-specific environments in the configuration files from the ``config/`` directory
-using the special ``when@`` keyword:
+Isso é resolvido pelo sistema de *ambientes* do Symfony.
+As aplicações Symfony começam com três ambientes: ``dev``, ``prod`` e ``test``.
+Você pode definir opções para ambientes específicos nos arquivos de configuração
+do diretório ``config/`` usando a palavra-chave especial ``when@``:
 
 .. configuration-block::
 
-    .. code-block:: yaml
+  .. code-block:: yaml
 
-        # config/packages/routing.yaml
+    # config/packages/routing.yaml
+    framework:
+        router:
+            utf8: true
+
+    when@prod:
         framework:
             router:
-                utf8: true
+                strict_requirements: null
 
-        when@prod:
-            framework:
-                router:
-                    strict_requirements: null
+  .. code-block:: xml
 
-    .. code-block:: xml
+    <!-- config/packages/framework.xml -->
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <container xmlns="http://symfony.com/schema/dic/services"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:framework="http://symfony.com/schema/dic/symfony"
+        xsi:schemaLocation="http://symfony.com/schema/dic/services
+            https://symfony.com/schema/dic/services/services-1.0.xsd
+            http://symfony.com/schema/dic/symfony
+            https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
-        <!-- config/packages/framework.xml -->
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <container xmlns="http://symfony.com/schema/dic/services"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns:framework="http://symfony.com/schema/dic/symfony"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services
-                https://symfony.com/schema/dic/services/services-1.0.xsd
-                http://symfony.com/schema/dic/symfony
-                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+        <framework:config>
+            <framework:router utf8="true"/>
+        </framework:config>
 
+        <when env="prod">
             <framework:config>
-                <framework:router utf8="true"/>
+                <framework:router strict-requirements="null"/>
             </framework:config>
+        </when>
+    </container>
 
-            <when env="prod">
-                <framework:config>
-                    <framework:router strict-requirements="null"/>
-                </framework:config>
-            </when>
-        </container>
+  .. code-block:: php
 
-    .. code-block:: php
+    // config/packages/framework.php
+    namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        // config/packages/framework.php
-        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+    use Symfony\Config\FrameworkConfig;
 
-        use Symfony\Config\FrameworkConfig;
+    return static function (FrameworkConfig $framework, ContainerConfigurator $container): void {
+        $framework->router()
+            ->utf8(true)
+        ;
 
-        return static function (FrameworkConfig $framework, ContainerConfigurator $container): void {
+        if ('prod' === $container->env()) {
             $framework->router()
-                ->utf8(true)
+                ->strictRequirements(null)
             ;
+        }
+    };
 
-            if ('prod' === $container->env()) {
-                $framework->router()
-                    ->strictRequirements(null)
-                ;
-            }
-        };
+Esta é uma ideia *poderosa*: ao alterar uma parte da configuração (o ambiente),
+sua aplicação deixa de ser uma experiência amigável à depuração e se torna
+otimizada para velocidade.
 
-This is a *powerful* idea: by changing one piece of configuration (the environment),
-your app is transformed from a debugging-friendly experience to one that's optimized
-for speed.
-
-Oh, how do you change the environment? Change the ``APP_ENV`` environment variable
-from ``dev`` to ``prod``:
+Ah, como você altera o ambiente?
+Altere a variável de ambiente ``APP_ENV`` de ``dev`` para ``prod``:
 
 .. code-block:: diff
 
-      # .env
-    - APP_ENV=dev
-    + APP_ENV=prod
+    # .env
+  - APP_ENV=dev
+  + APP_ENV=prod
 
-But I want to talk more about environment variables next. Change the value back
-to ``dev``: debugging tools are great when you're working locally.
+Mas quero falar mais sobre variáveis de ambiente a seguir.
+Altere o valor de volta para ``dev``: ferramentas de depuração são ótimas quando
+você está trabalhando localmente.
 
-Environment Variables
+Variáveis de ambiente
 ---------------------
 
-Every app contains configuration that's different on each server - like database
-connection information or passwords. How should these be stored? In files? Or another way?
+Cada aplicação contém configurações diferentes em cada servidor - como
+informações de conexão de banco de dados ou senhas.
+Como elas devem ser armazenadas?
+Em arquivos?
+Ou de outra forma?
 
-Symfony follows the industry best practice by storing server-based configuration
-as *environment* variables. This means that Symfony works *perfectly* with
-Platform as a Service (PaaS) deployment systems as well as Docker.
+O Symfony segue as melhores práticas da indústria, armazenando configurações
+baseadas em servidor como variáveis de *ambiente*.
+Isso significa que o Symfony funciona *perfeitamente* com sistemas de
+implantação de Plataforma como Serviço (PaaS), bem como com o Docker.
 
-But setting environment variables while developing can be a pain. That's why your
-app automatically loads a ``.env`` file. The keys in this file then become environment
-variables and are read by your app:
+Mas definir variáveis de ambiente durante o desenvolvimento pode ser um
+problema.
+É por isso que sua aplicação carrega automaticamente um arquivo ``.env``.
+As chaves neste arquivo se tornam variáveis de ambiente e são lidas pela sua
+aplicação:
 
 .. code-block:: bash
 
-    # .env
+  # .env
+  ###> symfony/framework-bundle ###
+  APP_ENV=dev
+  APP_SECRET=cc86c7ca937636d5ddf1b754beb22a10
+  ###< symfony/framework-bundle ###
+
+A princípio, o arquivo não contém muita coisa.
+Mas, à medida que sua aplicação cresce, você adicionará mais configurações
+conforme necessário.
+Mas, na verdade, fica muito mais interessante!
+Suponha que sua aplicação precise de um ORM de banco de dados.
+Vamos instalar o ORM Doctrine:
+
+.. code-block:: terminal
+
+  $ composer require doctrine
+
+Graças a uma nova receita instalada pelo Flex, olhe novamente para o arquivo
+``.env``:
+
+.. code-block:: diff
+
     ###> symfony/framework-bundle ###
     APP_ENV=dev
     APP_SECRET=cc86c7ca937636d5ddf1b754beb22a10
     ###< symfony/framework-bundle ###
 
-At first, the file doesn't contain much. But as your app grows, you'll add more
-configuration as you need it. But, actually, it gets much more interesting! Suppose
-your app needs a database ORM. Let's install the Doctrine ORM:
+  + ###> doctrine/doctrine-bundle ###
+  + # ...
+  + DATABASE_URL=mysql://db_user:db_password@127.0.0.1:3306/db_name
+  + ###< doctrine/doctrine-bundle ###
 
-.. code-block:: terminal
+A nova variável de ambiente ``DATABASE_URL`` foi adicionada *automaticamente* e
+já é referenciada pelo novo arquivo de configuração ``doctrine.yaml``.
+Ao combinar variáveis de ambiente e Flex, você está usando as melhores práticas
+da indústria sem nenhum esforço extra.
 
-    $ composer require doctrine
+Continue!
+---------
 
-Thanks to a new recipe installed by Flex, look at the ``.env`` file again:
+Pode parecer loucura, mas depois de ler esta parte, você deve estar confortável
+com as partes *importantes* do Symfony.
+Tudo no Symfony foi projetado para não atrapalhar você, para que você possa
+continuar codificando e adicionando recursos, tudo com a velocidade e a
+qualidade que você exige.
 
-.. code-block:: diff
-
-      ###> symfony/framework-bundle ###
-      APP_ENV=dev
-      APP_SECRET=cc86c7ca937636d5ddf1b754beb22a10
-      ###< symfony/framework-bundle ###
-
-    + ###> doctrine/doctrine-bundle ###
-    + # ...
-    + DATABASE_URL=mysql://db_user:db_password@127.0.0.1:3306/db_name
-    + ###< doctrine/doctrine-bundle ###
-
-The new ``DATABASE_URL`` environment variable was added *automatically* and is already
-referenced by the new ``doctrine.yaml`` configuration file. By combining environment
-variables and Flex, you're using industry best practices without any extra effort.
-
-Keep Going!
------------
-
-Call me crazy, but after reading this part, you should be comfortable with the most
-*important* parts of Symfony. Everything in Symfony is designed to get out of your
-way so you can keep coding and adding features, all with the speed and quality you
-demand.
-
-That's all for the quick tour. From authentication, to forms, to caching, there is
-so much more to discover. Ready to dig into these topics now? Look no further - go
-to the official :doc:`/index` and pick any guide you want.
+Isso é tudo para o tour rápido.
+Da autenticação a formulários e cache, há muito mais para descobrir.
+Pronta para se aprofundar nesses tópicos agora?
+Não procure mais - acesse o :doc:`/index` oficial e escolha o guia que desejar.
 
 .. _`Monolog`: https://github.com/Seldaek/monolog
