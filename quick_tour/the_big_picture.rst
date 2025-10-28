@@ -1,33 +1,51 @@
-The Big Picture
-===============
+<!--
+Copyright (c) 2004-present Fabien Potencier.
+Symfony™ is a trademark of Symfony SAS. All rights reserved.
 
-Start using Symfony in 10 minutes! Really! That's all you need to understand the
-most important concepts and start building a real project!
+Documentation licensed under the Creative Commons Attribution-ShareAlike 3.0
+Unported License.
+The original work was translated from English into Brazilian Portuguese.
+https://github.com/symfony/symfony-docs/blob/-/LICENSE.md
 
-If you've used a web framework before, you should feel right at home with
-Symfony. If not, welcome to a whole new way of developing web applications. Symfony
-*embraces* best practices, keeps backwards compatibility (Yes! Upgrading is always
-safe & easy!) and offers long-term support.
+source_url: https://github.com/symfony/symfony-docs/blob/8.0/quick_tour/the_big_picture.rst
+revision: d637bfc33dab1a36645b990bb8b95f1ab67f2b2b
+status: ready
+-->
+
+O panorama geral
+================
+
+Comece a usar o Symfony em 10 minutos!
+Sério!
+É tudo o que você precisa para entender os conceitos mais importantes e começar
+a construir um projeto de verdade!
+
+Se você já usou um framework web antes, deve se sentir em casa com o Symfony.
+Se não, bem-vinda a uma maneira totalmente nova de desenvolver aplicações web.
+O Symfony *abraça* as melhores práticas, mantém a compatibilidade com versões
+anteriores (sim! Atualizar é sempre seguro e fácil!) e oferece suporte de longo
+prazo.
 
 .. _installing-symfony2:
 
-Downloading Symfony
--------------------
+Baixando o Symfony
+------------------
 
-First, make sure you've installed `Composer`_ and have PHP 8.1 or higher.
+Primeiro, certifique-se de ter instalado o `Composer`_ e ter o PHP 8.1 ou
+superior.
 
-Ready? In a terminal, run:
+Preparada? Em um terminal, execute:
 
 .. code-block:: terminal
 
-    $ composer create-project symfony/skeleton quick_tour
+    $ composer create-project symfony/skeleton tour_rapido
 
-This creates a new ``quick_tour/`` directory with a small, but powerful new
-Symfony application:
+Isso cria um novo diretório ``tour_rapido/`` com uma pequena, mas poderosa, nova
+aplicação Symfony:
 
 .. code-block:: text
 
-    quick_tour/
+    tour_rapido/
     ├─ .env
     ├─ bin/console
     ├─ composer.json
@@ -39,32 +57,38 @@ Symfony application:
     ├─ var/
     └─ vendor/
 
-Can we already load the project in a browser? Yes! You can set up
-:doc:`Nginx or Apache </setup/web_server_configuration>` and configure their
-document root to be the ``public/`` directory. But, for development, it's better
-to install the :doc:`Symfony CLI </setup/symfony_cli>` tool and run its
-:ref:`local web server <symfony-cli-server>` as follows:
+Já podemos carregar o projeto em um navegador?
+Sim!
+Você pode configurar o
+:doc:`Nginx ou o Apache </setup/web_server_configuration>` e configurar a raiz
+do documento deles para o diretório ``public/``.
+Mas, para desenvolvimento, é melhor instalar a ferramenta
+:doc:`CLI Symfony </setup/symfony_cli>` e executar seu
+:ref:`servidor web local <symfony-cli-server>` da seguinte forma:
 
 .. code-block:: terminal
 
     $ symfony server:start
 
-Try your new app by going to ``http://localhost:8000`` in a browser!
+Experimente sua nova aplicação acessando ``http://localhost:8000`` em um
+navegador!
 
 .. image:: /_images/quick_tour/no_routes_page.png
-    :alt: The default Symfony welcome page.
+    :alt: A página de boas-vindas padrão do Symfony.
     :class: with-browser
 
-Fundamentals: Route, Controller, Response
------------------------------------------
+Fundamentos: rota, controlador, resposta
+----------------------------------------
 
-Our project only has about 15 files, but it's ready to become a sleek API, a robust
-web app, or a microservice. Symfony starts small, but scales with you.
+Nosso projeto tem apenas cerca de 15 arquivos, mas está pronto para se tornar
+uma API elegante, uma aplicação web robusta ou um microsserviço.
+O Symfony começa pequeno, mas cresce com você.
 
-But before we go too far, let's dig into the fundamentals by building our first page.
+Mas antes de prosseguirmos, vamos nos aprofundar nos fundamentos construindo
+nossa primeira página.
 
-In ``src/Controller``, create a new ``DefaultController`` class and an ``index``
-method inside::
+Em ``src/Controller``, crie uma nova classe ``DefaultController`` e um método
+``index`` dentro::
 
     // src/Controller/DefaultController.php
     namespace App\Controller;
@@ -77,18 +101,22 @@ method inside::
         #[Route('/', name: 'index')]
         public function index(): Response
         {
-            return new Response('Hello!');
+            return new Response('Olá!');
         }
     }
 
-That's it! Try going to the homepage: ``http://localhost:8000/``. Symfony sees
-that the URL matches our route and then executes the new ``index()`` method.
+Pronto!
+Tente acessar a página inicial: ``http://localhost:8000/``.
+O Symfony vê que a URL corresponde à nossa rota e então executa o novo método
+``index()``.
 
-A controller is just a normal function with *one* rule: it must return a Symfony
-``Response`` object. But that response can contain anything: simple text, JSON or
-a full HTML page.
+Um controlador é apenas uma função normal com *uma* regra: ele deve retornar um
+objeto ``Response`` do Symfony.
+Mas essa resposta pode conter qualquer coisa: texto simples, JSON ou uma página
+HTML completa.
 
-But the routing system is *much* more powerful. So let's make the route more interesting:
+Mas o sistema de roteamento é *muito* mais poderoso.
+Então, vamos tornar a rota mais interessante:
 
 .. code-block:: diff
 
@@ -104,12 +132,14 @@ But the routing system is *much* more powerful. So let's make the route more int
     +     #[Route('/hello/{name}', name: 'index')]
           public function index(): Response
           {
-              return new Response('Hello!');
+              return new Response('Olá!');
           }
       }
 
-The URL to this page has changed: it is *now* ``/hello/*``: the ``{name}`` acts
-like a wildcard that matches anything. And it gets better! Update the controller too:
+A URL desta página mudou: *agora* é ``/hello/*``: o ``{name}`` funciona como um
+curinga que corresponde a qualquer coisa.
+E não é só isso!
+Atualize o controlador também:
 
 .. code-block:: diff
 
@@ -126,17 +156,19 @@ like a wildcard that matches anything. And it gets better! Update the controller
     -     public function index()
     +     public function index(string $name): Response
           {
-    -         return new Response('Hello!');
-    +         return new Response("Hello $name!");
+    -         return new Response('Olá!');
+    +         return new Response("Olá $name!");
           }
       }
 
-Try the page out by going to ``http://localhost:8000/hello/Symfony``. You should
-see: Hello Symfony! The value of the ``{name}`` in the URL is available as a ``$name``
-argument in your controller.
+Experimente a página acessando ``http://localhost:8000/hello/Symfony``.
+Você deverá ver: Olá Symfony!
+O valor de ``{name}`` na URL está disponível como um argumento ``$name`` no seu
+controlador.
 
-But by using attributes, the route and controller live right next to each
-other. Need another page? Add another route and method in ``DefaultController``::
+Mas, ao usar atributos, a rota e o controlador ficam bem próximos um do outro.
+Precisa de outra página?
+Adicione outra rota e método em ``DefaultController``::
 
     // src/Controller/DefaultController.php
     namespace App\Controller;
@@ -151,13 +183,14 @@ other. Need another page? Add another route and method in ``DefaultController``:
         #[Route('/simplicity', methods: ['GET'])]
         public function simple(): Response
         {
-            return new Response('Simple! Easy! Great!');
+            return new Response('Simples! Fácil! Ótimo!');
         }
     }
 
-Routing can do *even* more, but we'll save that for another time! Right now, our
-app needs more features! Like a template engine, logging, debugging tools and more.
+O roteamento pode fazer *ainda* mais, mas deixaremos isso para outra ocasião!
+No momento, nossa aplicação precisa de mais recursos!
+Como um motor de template, logging, ferramentas de depuração e muito mais.
 
-Keep reading with :doc:`/quick_tour/flex_recipes`.
+Continue lendo em :doc:`/quick_tour/flex_recipes`.
 
 .. _`Composer`: https://getcomposer.org/
