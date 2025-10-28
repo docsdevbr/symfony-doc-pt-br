@@ -1,27 +1,27 @@
 .. _symfony2-documentation:
 
-Symfony Documentation
-=====================
+Documentação do Symfony
+=======================
 
-Quick Tour
-----------
+Tour rápido
+-----------
 
-Get started fast with the Symfony :doc:`Quick Tour <quick_tour/index>`:
+Comece rapidamente com o :doc:`Tour rápido <quick_tour/index>` do Symfony:
 
 * :doc:`quick_tour/the_big_picture`
 * :doc:`quick_tour/flex_recipes`
 * :doc:`quick_tour/the_architecture`
 
-Getting Started
----------------
+Começando
+---------
 
 .. toctree::
     :maxdepth: 2
 
     getting_started/index
 
-Topics
-------
+Tópicos
+-------
 
 .. toctree::
     :maxdepth: 1
@@ -61,29 +61,29 @@ Topics
     webhook
     workflow
 
-Components
-----------
+Componentes
+-----------
 
-Read the :doc:`Components </components/>` documentation.
+Leia a documentação dos :doc:`Componentes </components/>`.
 
-Reference Documents
--------------------
+Documentos de referência
+------------------------
 
-Get answers quickly with reference documents:
+Obtenha respostas rapidamente com os documentos de referência:
 
 .. include:: /reference/map.rst.inc
 
-Contributing
+Contribuindo
 ------------
 
-Contribute to Symfony:
+Contribua para o Symfony:
 
 .. include:: /contributing/map.rst.inc
 
-Create your Own Framework
--------------------------
+Crie seu próprio framework
+--------------------------
 
-Want to create your own framework based on Symfony?
+Quer criar o seu próprio framework baseado no Symfony?
 
 .. toctree::
    :maxdepth: 2
