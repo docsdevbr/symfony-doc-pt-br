@@ -92,7 +92,7 @@ são usados para adicionar metadados ao código):
   +     #[Route('/lucky/number')]
         public function number(): Response
         {
-            // Isso continua igual a antes.
+            // isso continua igual a antes
         }
     }
 
