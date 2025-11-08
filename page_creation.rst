@@ -1,282 +1,316 @@
+..
+  Copyright (c) 2004-present Fabien Potencier.
+  Symfony™ is a trademark of Symfony SAS. All rights reserved.
+
+  Documentation licensed under the Creative Commons Attribution-ShareAlike 3.0
+  Unported License.
+  The original work was translated from English into Brazilian Portuguese.
+  https://github.com/symfony/symfony-docs/blob/-/LICENSE.md
+
+  source_url: https://github.com/symfony/symfony-docs/blob/8.0/page_creation.rst
+  revision: 64c30da9266bf3aec686f4436a80827a3012d578
+  status: ready
+
 .. _creating-pages-in-symfony2:
 .. _creating-pages-in-symfony:
 
-Create your First Page in Symfony
-=================================
+Crie sua primeira página no Symfony
+===================================
 
-Creating a new page - whether it's an HTML page or a JSON endpoint - is a
-two-step process:
+Criar uma nova página - seja ela uma página HTML ou um endpoint JSON - é um
+processo de duas etapas:
 
-#. **Create a controller**: A controller is the PHP function you write that
-   builds the page. You take the incoming request information and use it to
-   create a Symfony ``Response`` object, which can hold HTML content, a JSON
-   string or even a binary file like an image or PDF;
+#. **Crie um controlador**: um controlador é a função PHP que você escreve para
+  construir a página.
+  Você recebe as informações da requisição e as utiliza para criar um objeto
+  ``Response`` do Symfony, que pode conter conteúdo HTML, uma string JSON ou até
+  mesmo um arquivo binário como uma imagem ou PDF;
 
-#. **Create a route**: A route is the URL (e.g. ``/about``) to your page and
-   points to a controller.
+#. **Crie uma rota**: uma rota é a URL (por exemplo, ``/sobre``) da sua página e
+  aponta para um controlador.
 
 .. admonition:: Screencast
-    :class: screencast
+  :class: screencast
 
-    Do you prefer video tutorials? Check out the `Cosmic Coding with Symfony`_
-    screencast series.
+  Você prefere tutoriais em vídeo?
+  Confira a série de screencasts `Cosmic Coding with Symfony`_
 
 .. seealso::
 
-    Symfony *embraces* the HTTP Request-Response lifecycle. To find out more,
-    see :doc:`/introduction/http_fundamentals`.
+  O Symfony *abraça* o ciclo de vida de requisição e resposta HTTP.
+  Para saber mais, consulte :doc:`/introduction/http_fundamentals`.
 
-Creating a Page: Route and Controller
--------------------------------------
+Criando uma página: rota e controlador
+--------------------------------------
 
 .. tip::
 
-    Before continuing, make sure you've read the :doc:`Setup </setup>`
-    article and can access your new Symfony app in the browser.
+  Antes de continuar, certifique-se de ter lido o artigo
+  :doc:`Configuração </setup>` e de poder acessar sua nova aplicação Symfony no
+  navegador.
 
-Suppose you want to create a page - ``/lucky/number`` - that generates a lucky (well,
-random) number and prints it. To do that, create a "Controller" class and a
-"number" method inside of it::
+Suponha que você queira criar uma página - ``/lucky/number`` - que gere um
+número da sorte (bem, aleatório) e o imprima.
+Para fazer isso, crie uma classe "Controller" e um método "number" dentro dela::
 
-    <?php
-    // src/Controller/LuckyController.php
-    namespace App\Controller;
+  <?php
+  // src/Controller/LuckyController.php
+  namespace App\Controller;
 
-    use Symfony\Component\HttpFoundation\Response;
+  use Symfony\Component\HttpFoundation\Response;
 
-    class LuckyController
-    {
-        public function number(): Response
-        {
-            $number = random_int(0, 100);
+  class LuckyController
+  {
+      public function number(): Response
+      {
+          $number = random_int(0, 100);
 
-            return new Response(
-                '<html><body>Lucky number: '.$number.'</body></html>'
-            );
-        }
-    }
+          return new Response(
+              '<html><body>Número da sorte: '.$number.'</body></html>'
+          );
+      }
+  }
 
 .. _annotation-routes:
 .. _attribute-routes:
 
-Now you need to associate this controller function with a public URL (e.g. ``/lucky/number``)
-so that the ``number()`` method is called when a user browses to it. This association
-is defined with the ``#[Route]`` attribute (in PHP, `attributes`_ are used to add
-metadata to code):
+Agora você precisa associar essa função do controlador a uma URL pública (por
+exemplo, ``/lucky/number``) para que o método ``number()`` seja chamado quando
+uma pessoa usuária navegar até ela.
+Essa associação é definida com o atributo ``#[Route]`` (em PHP, os `atributos`_
+são usados para adicionar metadados ao código):
 
 .. code-block:: diff
-
-      // src/Controller/LuckyController.php
-
-      // ...
-    + use Symfony\Component\Routing\Attribute\Route;
-
-      class LuckyController
-      {
-    +     #[Route('/lucky/number')]
-          public function number(): Response
-          {
-              // this looks exactly the same
-          }
-      }
-
-That's it! If you are using :ref:`the Symfony web server <symfony-cli-server>`,
-try it out by going to: http://localhost:8000/lucky/number
-
-.. tip::
-
-    Symfony recommends defining routes as attributes to have the controller code
-    and its route configuration at the same location. However, if you prefer, you can
-    :doc:`define routes in separate files </routing>` using YAML, XML and PHP formats.
-
-If you see a lucky number being printed back to you, congratulations! But before
-you run off to play the lottery, check out how this works. Remember the two steps
-to create a page?
-
-#. *Create a controller and a method*: This is a function where *you* build the page and ultimately
-   return a ``Response`` object. You'll learn more about :doc:`controllers </controller>`
-   in their own section, including how to return JSON responses;
-
-#. *Create a route*: In ``config/routes.yaml``, the route defines the URL to your
-   page (``path``) and what ``controller`` to call. You'll learn more about :doc:`routing </routing>`
-   in its own section, including how to make *variable* URLs.
-
-The bin/console Command
------------------------
-
-Your project already has a powerful debugging tool inside: the ``bin/console`` command.
-Try running it:
-
-.. code-block:: terminal
-
-    $ php bin/console
-
-You should see a list of commands that can give you debugging information, help generate
-code, generate database migrations and a lot more. As you install more packages,
-you'll see more commands.
-
-To get a list of *all* of the routes in your system, use the ``debug:router`` command:
-
-.. code-block:: terminal
-
-    $ php bin/console debug:router
-
-You should see your ``app_lucky_number`` route in the list:
-
-.. code-block:: terminal
-
-    ----------------  -------  --------------
-    Name              Method   Path
-    ----------------  -------  --------------
-    app_lucky_number  ANY      /lucky/number
-    ----------------  -------  --------------
-
-You will also see debugging routes besides ``app_lucky_number`` -- more on
-the debugging routes in the next section.
-
-You'll learn about many more commands as you continue!
-
-.. tip::
-
-    If your shell is supported, you can also set up console completion support.
-    This autocompletes commands and other input when using ``bin/console``.
-    See :ref:`the Console document <console-completion-setup>` for more
-    information on how to set up completion.
-
-.. _web-debug-toolbar:
-
-The Web Debug Toolbar: Debugging Dream
---------------------------------------
-
-One of Symfony's *amazing* features is the Web Debug Toolbar: a bar that displays
-a *huge* amount of debugging information along the bottom of your page while
-developing. This is all included out of the box using a :ref:`Symfony pack <symfony-packs>`
-called ``symfony/profiler-pack``.
-
-You will see a dark bar along the bottom of the page. You'll learn more about
-all the information it holds along the way, but feel free to experiment: hover
-over and click the different icons to get information about routing,
-performance, logging and more.
-
-Rendering a Template
---------------------
-
-If you're returning HTML from your controller, you'll probably want to render
-a template. Fortunately, Symfony comes with `Twig`_: a templating language that's
-minimal, powerful and actually quite fun.
-
-Install the twig package with:
-
-.. code-block:: terminal
-
-    $ composer require twig
-
-Make sure that ``LuckyController`` extends Symfony's base
-:class:`Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController` class:
-
-.. code-block:: diff
-
-      // src/Controller/LuckyController.php
-
-      // ...
-    + use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
-    - class LuckyController
-    + class LuckyController extends AbstractController
-      {
-          // ...
-      }
-
-Now, use the handy ``render()`` method to render a template. Pass it a ``number``
-variable so you can use it in Twig::
 
     // src/Controller/LuckyController.php
-    namespace App\Controller;
 
-    use Symfony\Component\HttpFoundation\Response;
     // ...
+  + use Symfony\Component\Routing\Attribute\Route;
 
-    class LuckyController extends AbstractController
+    class LuckyController
     {
-        #[Route('/lucky/number')]
+  +     #[Route('/lucky/number')]
         public function number(): Response
         {
-            $number = random_int(0, 100);
-
-            return $this->render('lucky/number.html.twig', [
-                'number' => $number,
-            ]);
+            // Isso continua igual a antes.
         }
     }
 
-Template files live in the ``templates/`` directory, which was created for you automatically
-when you installed Twig. Create a new ``templates/lucky`` directory with a new
-``number.html.twig`` file inside:
+É isso aí!
+Se você estiver usando :ref:`o servidor web Symfony <symfony-cli-server>`, teste
+isso acessando: http://localhost:8000/lucky/number
+
+.. tip::
+
+  O Symfony recomenda definir rotas como atributos para ter o código do
+  controlador e sua configuração de rotas no mesmo local.
+  No entanto, se preferir, você pode
+  :doc:`definir rotas em arquivos separados </routing>` usando os formatos YAML
+  ou PHP.
+
+Se você vir um número da sorte sendo exibido, parabéns!
+Mas antes de sair correndo para jogar na loteria, veja como isso funciona.
+Lembra-se dos dois passos para criar uma página?
+
+#. *Crie um controlador e um método*: esta é uma função onde *você* constrói a
+  página e, por fim, retorna um objeto ``Response``.
+  Você aprenderá mais sobre :doc:`controladores </controller>` em sua própria
+  seção, incluindo como retornar respostas JSON;
+
+#. *Crie uma rota*: em ``config/routes.yaml``, a rota define a URL da sua página
+  (``path``) e qual ``controller`` chamar.
+  Você aprenderá mais sobre :doc:`roteamento </routing>` em sua própria seção,
+  incluindo como criar URLs *variáveis*.
+
+O comando `bin/console`
+-----------------------
+
+Seu projeto já possui uma poderosa ferramenta de depuração: o comando
+``bin/console``.
+Tente executá-lo:
+
+.. code-block:: terminal
+
+  $ php bin/console
+
+Você verá uma lista de comandos que podem fornecer informações de depuração,
+ajudar a gerar código, gerar migrações de banco de dados e muito mais.
+Conforme você instala mais pacotes, verá mais comandos.
+
+Para obter uma lista de *todas* as rotas do seu sistema, use o comando
+``debug:router``:
+
+.. code-block:: terminal
+
+  $ php bin/console debug:router
+
+Você deverá ver sua rota ``app_lucky_number`` na lista:
+
+.. code-block:: terminal
+
+  ----------------  -------  --------------
+  Name              Method   Path
+  ----------------  -------  --------------
+  app_lucky_number  ANY      /lucky/number
+  ----------------  -------  --------------
+
+Você também verá rotas de depuração além de ``app_lucky_number`` -- mais sobre
+as rotas de depuração na próxima seção.
+
+Você aprenderá sobre muitos outros comandos à medida que continuar!
+
+.. tip::
+
+  Se o seu shell for compatível, você também pode configurar o suporte para
+  autocompletar comandos no console.
+  Isso completa automaticamente comandos e outras entradas ao usar
+  ``bin/console``.
+  Consulte :ref:`o artigo do Console <console-completion-setup>` para obter mais
+  informações sobre como configurar o autocompletar.
+
+.. _web-debug-toolbar:
+
+A Barra de Ferramentas de Depuração Web: um sonho de depuração
+--------------------------------------------------------------
+
+Um dos recursos *incríveis* do Symfony é a Barra de Ferramentas de Depuração
+Web: uma barra que exibe uma *enorme* quantidade de informações de depuração na
+parte inferior da sua página durante o desenvolvimento.
+Tudo isso já vem incluído por padrão usando um
+:ref:`pack do Symfony <symfony-packs>` chamado ``symfony/profiler-pack``.
+
+Você verá uma barra escura na parte inferior da página.
+Você aprenderá mais sobre todas as informações que ela contém ao longo do
+caminho, mas sinta-se à vontade para experimentar: passe o mouse sobre os
+diferentes ícones e clique neles para obter informações sobre roteamento,
+desempenho, registro de logs e muito mais.
+
+Renderizando um template
+------------------------
+
+Se você estiver retornando HTML do seu controlador, provavelmente desejará
+renderizar um template.
+Felizmente, o Symfony vem com o `Twig`_: uma linguagem de templates minimalista,
+poderosa e bastante divertida.
+
+Instale o pack twig com:
+
+.. code-block:: terminal
+
+  $ composer require twig
+
+Certifique-se de que ``LuckyController`` estenda a classe base do Symfony
+:class:`Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController`:
+
+.. code-block:: diff
+
+    // src/Controller/LuckyController.php
+
+    // ...
+  + use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+
+  - class LuckyController
+  + class LuckyController extends AbstractController
+    {
+        // ...
+    }
+
+Agora, use o prático método ``render()`` para renderizar um template.
+Passe para ele uma variável ``number`` para que você possa usá-la no Twig::
+
+  // src/Controller/LuckyController.php
+  namespace App\Controller;
+
+  use Symfony\Component\HttpFoundation\Response;
+  // ...
+
+  class LuckyController extends AbstractController
+  {
+      #[Route('/lucky/number')]
+      public function number(): Response
+      {
+          $number = random_int(0, 100);
+
+          return $this->render('lucky/number.html.twig', [
+              'number' => $number,
+          ]);
+      }
+  }
+
+Os arquivos de template ficam no diretório ``templates/``, que foi criado
+automaticamente para você quando você instalou o Twig.
+Crie um novo diretório ``templates/lucky`` com um novo arquivo
+``number.html.twig`` dentro:
 
 .. code-block:: html+twig
 
-    {# templates/lucky/number.html.twig #}
-    <h1>Your lucky number is {{ number }}</h1>
+  {# templates/lucky/number.html.twig #}
+  <h1>Seu número da sorte é {{ number }}</h1>
 
-The ``{{ number }}`` syntax is used to *print* variables in Twig. Refresh your browser
-to get your *new* lucky number!
+A sintaxe ``{{ number }}`` é usada para *imprimir* variáveis no Twig.
+Atualize seu navegador para obter seu *novo* número da sorte!
 
-    http://localhost:8000/lucky/number
+  http://localhost:8000/lucky/number
 
-Now you may wonder where the Web Debug Toolbar has gone: that's because there is
-no ``</body>`` tag in the current template. You can add the body element yourself,
-or extend ``base.html.twig``, which contains all default HTML elements.
+Agora você pode estar se perguntando onde foi parar a Barra de Ferramentas de
+Depuração Web: isso acontece porque não há uma tag ``</body>`` no template
+atual.
+Você pode adicionar o elemento body manualmente, ou estender ``base.html.twig``,
+que contém todos os elementos HTML padrão.
 
-In the :doc:`templates </templates>` article, you'll learn all about Twig: how
-to loop, render other templates and leverage its powerful layout inheritance system.
+No artigo :doc:`templates </templates>`, você aprenderá tudo sobre o Twig: como
+fazer laços de repetição, renderizar outros templates e aproveitar seu poderoso
+sistema de herança de layout.
 
-Checking out the Project Structure
-----------------------------------
+Analisando a estrutura do projeto
+---------------------------------
 
-Great news! You've already worked inside the most important directories in your
-project:
+Ótima notícia!
+Você já trabalhou nos diretórios mais importantes do seu projeto:
 
 ``config/``
-    Contains... configuration!. You will configure routes,
-    :doc:`services </service_container>` and packages.
+  Contém... a configuração!
+  Você configurará rotas, :doc:`serviços </service_container>` e pacotes.
 
 ``src/``
-    All your PHP code lives here.
+  Todo o seu código PHP está aqui.
 
 ``templates/``
-    All your Twig templates live here.
+  Todos os seus templates Twig estão aqui.
 
-Most of the time, you'll be working in ``src/``, ``templates/`` or ``config/``.
-As you keep reading, you'll learn what can be done inside each of these.
+Na maioria das vezes, você trabalhará em ``src/``, ``templates/`` ou
+``config/``.
+Ao continuar lendo, você aprenderá o que pode ser feito em cada um deles.
 
-So what about the other directories in the project?
+E quanto aos outros diretórios do projeto?
 
 ``bin/``
-    The famous ``bin/console`` file lives here (and other, less important
-    executable files).
+  O famoso arquivo ``bin/console`` está aqui (e outros arquivos executáveis
+  menos importantes).
 
 ``var/``
-    This is where automatically-created files are stored, like cache files
-    (``var/cache/``) and logs (``var/log/``).
+  É aqui que os arquivos criados automaticamente são armazenados, como arquivos
+  de cache (``var/cache/``) e logs (``var/log/``).
 
 ``vendor/``
-    Third-party (i.e. "vendor") libraries live here! These are downloaded via the `Composer`_
-    package manager.
+  Bibliotecas de terceiros (ou seja, "vendor") ficam aqui!
+  Elas são baixadas pelo gerenciador de pacotes `Composer`_
 
 ``public/``
-    This is the document root for your project: you put any publicly accessible files
-    here.
+  Este é o diretório raiz do seu projeto: você coloca todos os arquivos
+  publicamente acessíveis aqui.
 
-And when you install new packages, new directories will be created automatically
-when needed.
+E quando você instalar novos pacotes, novos diretórios serão criados
+automaticamente quando necessário.
 
-What's Next?
-------------
+O que vem a seguir?
+-------------------
 
-Congrats! You're already starting to learn Symfony and discover a whole new
-way of building beautiful, functional, fast and maintainable applications.
+Parabéns!
+Você já está começando a aprender Symfony e a descobrir uma nova maneira de
+construir aplicações bonitas, funcionais, rápidas e fáceis de manter.
 
-OK, time to finish learning the fundamentals by reading these articles:
+OK, hora de terminar de aprender os fundamentos lendo estes artigos:
 
 * :doc:`/routing`
 * :doc:`/controller`
@@ -284,23 +318,23 @@ OK, time to finish learning the fundamentals by reading these articles:
 * :doc:`/frontend`
 * :doc:`/configuration`
 
-Then, learn about other important topics like the
-:doc:`service container </service_container>`,
-the :doc:`form system </forms>`, using :doc:`Doctrine </doctrine>`
-(if you need to query a database) and more!
+Em seguida, aprenda sobre outros tópicos importantes como o
+:doc:`container de serviços </service_container>`,
+o :doc:`sistema de formulários </forms>`, o uso do :doc:`Doctrine </doctrine>`
+(se precisar consultar um banco de dados) e muito mais!
 
-Have fun!
+Divirta-se!
 
-Go Deeper with HTTP & Framework Fundamentals
---------------------------------------------
+Aprofunde-se nos fundamentos de HTTP e frameworks
+-------------------------------------------------
 
 .. toctree::
-    :maxdepth: 1
-    :glob:
+  :maxdepth: 1
+  :glob:
 
-    introduction/*
+  introduction/*
 
 .. _`Twig`: https://twig.symfony.com
 .. _`Composer`: https://getcomposer.org
 .. _`Cosmic Coding with Symfony`: https://symfonycasts.com/screencast/symfony/setup
-.. _`attributes`: https://www.php.net/manual/en/language.attributes.overview.php
+.. _`atributos`: https://www.php.net/manual/pt_BR/language.attributes.overview.php
